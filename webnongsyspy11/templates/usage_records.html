@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block title %}使用记录 - 农资管理系统{% endblock %}
+
+{% block page_title %}使用记录{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">使用记录</li>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title">
+            <i class="fas fa-clipboard-list mr-2"></i>使用记录列表
+        </h5>
+        <button class="btn btn-primary" onclick="openAddModal()">
+            <i class="fas fa-plus mr-2"></i>新增使用记录
+        </button>
+    </div>
+    <div class="card-body">
+        {% if usage_records %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>使用日期</th>
+                        <th>农资名称</th>
+                        <th>批次号</th>
+                        <th>地块</th>
+                        <th>作物</th>
+                        <th>使用数量</th>
+                        <th>使用方法</th>
+                        <th>操作人</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in usage_records %}
+                    <tr>
+                        <td>{{ record.usage_date.strftime('%Y-%m-%d') if record.usage_date else '-' }}</td>
+                        <td>
+                            <strong>{{ record.supply.name if record.supply else '-' }}</strong>
+                            <div class="small text-muted">
+                                {{ record.supply.brand if record.supply else '' }}
+                            </div>
+                        </td>
+                        <td><span class="badge badge-info">{{ record.inventory.batch_no if record.inventory else '-' }}</span></td>
+                        <td>{{ record.plot.name if record.plot else '-' }}</td>
+                        <td>{{ record.crop.name if record.crop else '-' }}</td>
+                        <td>
+                            <span class="font-weight-bold text-danger">{{ record.quantity }}</span>
+                            {{ record.supply.unit if record.supply else '' }}
+                        </td>
+                        <td>{{ record.usage_method or '-' }}</td>
+                        <td>{{ record.operator or '-' }}</td>
+                        <td class="action-btns">
+                            <button class="btn btn-sm btn-info" onclick="editUsage({{ record.id }})">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteUsage({{ record.id }})">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if pagination and pagination.total_pages > 1 %}
+        <div class="mt-3" id="paginationContainer"></div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-clipboard-list empty-icon"></i>
+            <div class="empty-text">暂无使用记录</div>
+            <small class="text-muted">点击上方"新增使用记录"按钮添加</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title">
+            <i class="fas fa-info-circle mr-2"></i>功能说明
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <strong><i class="fas fa-info-circle mr-2"></i>先进先出（FIFO）说明：</strong>
+            <ul class="mt-2 mb-0">
+                <li>系统自动按保质期先后和入库时间排序，确保先入库的农资先被使用</li>
+                <li>新增使用记录时，可选择具体批次或让系统自动分配</li>
+                <li>删除使用记录时，系统会自动归还库存到原批次</li>
+                <li>形成"投入品-地块-作物"完整闭环，可追溯每项农资的使用情况</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="usageModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="usageModalTitle">新增使用记录</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="usageForm">
+                <input type="hidden" id="usageId">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>使用日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="usage_date" name="usage_date" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>操作人</label>
+                            <input type="text" class="form-control" id="operator" name="operator" placeholder="请输入操作人">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>农资 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="supply_id" name="supply_id" required onchange="loadInventoryBySupply()">
+                                <option value="">请选择农资</option>
+                                {% for supply in supplies %}
+                                <option value="{{ supply.id }}">{{ supply.name }} ({{ supply.unit }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>库存批次 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="inventory_id" name="inventory_id" required>
+                                <option value="">请先选择农资</option>
+                            </select>
+                            <small class="text-muted">按FIFO顺序排列（先过期先显示）</small>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>地块 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="plot_id" name="plot_id" required>
+                                <option value="">请选择地块</option>
+                                {% for plot in plots %}
+                                <option value="{{ plot.id }}">{{ plot.name }} ({{ plot.area }}亩)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>作物 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="crop_id" name="crop_id" required>
+                                <option value="">请选择作物</option>
+                                {% for crop in crops %}
+                                <option value="{{ crop.id }}">{{ crop.name }} ({{ crop.variety or '品种' }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>使用数量 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="quantity" name="quantity" required min="0.01" step="0.01" placeholder="请输入使用数量">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="unitDisplay">单位</span>
+                                </div>
+                            </div>
+                            <small class="text-muted" id="inventoryInfo"></small>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>使用方法</label>
+                            <select class="form-control" id="usage_method" name="usage_method">
+                                <option value="">请选择使用方法</option>
+                                <option value="撒施">撒施</option>
+                                <option value="条施">条施</option>
+                                <option value="穴施">穴施</option>
+                                <option value="叶面喷施">叶面喷施</option>
+                                <option value="灌根">灌根</option>
+                                <option value="拌种">拌种</option>
+                                <option value="土壤消毒">土壤消毒</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="remark" name="remark" rows="2" placeholder="请输入备注"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-save mr-2"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let isUsageEdit = false;
+
+const usageValidationRules = {
+    usage_date: [
+        (v) => Validators.required(v, '使用日期为必填项'),
+        (v) => Validators.dateNotAfterToday(v, '使用日期不能晚于今天')
+    ],
+    supply_id: [
+        (v) => Validators.required(v, '请选择农资')
+    ],
+    inventory_id: [
+        (v) => Validators.required(v, '请选择库存批次')
+    ],
+    plot_id: [
+        (v) => Validators.required(v, '请选择地块')
+    ],
+    crop_id: [
+        (v) => Validators.required(v, '请选择作物')
+    ],
+    quantity: [
+        (v) => Validators.required(v, '使用数量为必填项'),
+        (v) => Validators.positive(v, '使用数量必须大于0')
+    ],
+    operator: [
+        (v) => Validators.maxLength(v, 50, '操作人不能超过50个字符')
+    ],
+    usage_method: [
+        (v) => Validators.maxLength(v, 50, '使用方法不能超过50个字符')
+    ],
+    remark: [
+        (v) => Validators.maxLength(v, 500, '备注不能超过500个字符')
+    ]
+};
+
+document.getElementById('usage_date').value = getTodayDate();
+
+{% if pagination and pagination.total_pages > 1 %}
+initPagination('paginationContainer', {{ pagination|tojson }});
+{% endif %}
+
+function openAddModal() {
+    isUsageEdit = false;
+    document.getElementById('usageModalTitle').textContent = '新增使用记录';
+    document.getElementById('usageId').value = '';
+    document.getElementById('usageForm').reset();
+    document.getElementById('usage_date').value = getTodayDate();
+    document.getElementById('inventory_id').innerHTML = '<option value="">请先选择农资</option>';
+    document.getElementById('unitDisplay').textContent = '单位';
+    document.getElementById('inventoryInfo').textContent = '';
+    clearAllErrors();
+    $('#usageModal').modal('show');
+}
+
+async function loadInventoryBySupply() {
+    const supplyId = document.getElementById('supply_id').value;
+    const inventorySelect = document.getElementById('inventory_id');
+    const unitDisplay = document.getElementById('unitDisplay');
+    const inventoryInfo = document.getElementById('inventoryInfo');
+    
+    if (!supplyId) {
+        inventorySelect.innerHTML = '<option value="">请先选择农资</option>';
+        unitDisplay.textContent = '单位';
+        inventoryInfo.textContent = '';
+        return;
+    }
+    
+    const result = await apiRequest('/api/inventory/supply/' + supplyId);
+    if (result.success) {
+        const inventories = result.data;
+        let options = '<option value="">请选择批次</option>';
+        let totalQuantity = 0;
+        
+        for (const inv of inventories) {
+            if (inv.quantity > 0) {
+                totalQuantity += inv.quantity;
+                const expiryText = inv.expiry_date ? ' 保质期:' + inv.expiry_date : '';
+                options += `<option value="${inv.id}" data-quantity="${inv.quantity}">
+                    ${inv.batch_no} - 库存:${inv.quantity}${expiryText}
+                </option>`;
+            }
+        }
+        
+        inventorySelect.innerHTML = options;
+        
+        const supplyResult = await apiRequest('/api/supplies/' + supplyId);
+        if (supplyResult.success) {
+            unitDisplay.textContent = supplyResult.data.unit || '单位';
+        }
+        
+        inventoryInfo.textContent = `可用库存总量: ${totalQuantity}`;
+        if (totalQuantity === 0) {
+            inventoryInfo.innerHTML += ' <span class="text-danger">(库存不足)</span>';
+        }
+    }
+}
+
+document.getElementById('inventory_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const quantity = selectedOption.dataset.quantity;
+    const inventoryInfo = document.getElementById('inventoryInfo');
+    
+    if (quantity) {
+        inventoryInfo.textContent = `当前批次可用: ${quantity}`;
+        document.getElementById('quantity').max = quantity;
+    }
+});
+
+async function editUsage(id) {
+    isUsageEdit = true;
+    const result = await apiRequest('/api/usage_records/' + id);
+    if (result.success) {
+        document.getElementById('usageModalTitle').textContent = '编辑使用记录';
+        document.getElementById('usageId').value = id;
+        fillForm('usageForm', result.data);
+        
+        if (result.data.supply_id) {
+            document.getElementById('supply_id').value = result.data.supply_id;
+            await loadInventoryBySupply();
+            document.getElementById('inventory_id').value = result.data.inventory_id;
+        }
+        
+        clearAllErrors();
+        $('#usageModal').modal('show');
+    } else {
+        showToast(result.error, 'error');
+    }
+}
+
+async function deleteUsage(id) {
+    const confirmed = await confirmDelete('确定要删除此使用记录吗？\n删除后库存将自动归还。');
+    if (confirmed) {
+        const result = await apiRequest('/api/usage_records/' + id, 'DELETE');
+        if (result.success) {
+            showToast('删除成功，库存已归还', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(result.error, 'error');
+        }
+    }
+}
+
+function clearAllErrors() {
+    const form = document.getElementById('usageForm');
+    form.querySelectorAll('.is-invalid').forEach(input => {
+        clearFieldError(input);
+    });
+}
+
+document.getElementById('usageForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const validation = validateForm('usageForm', usageValidationRules);
+    if (!validation.valid) {
+        showToast('请检查表单填写是否正确', 'error');
+        return;
+    }
+    
+    const data = serializeForm(this);
+    const id = document.getElementById('usageId').value;
+    
+    showLoading('submitBtn');
+    
+    let result;
+    if (isUsageEdit && id) {
+        result = await apiRequest('/api/usage_records/' + id, 'PUT', data);
+    } else {
+        result = await apiRequest('/api/usage_records', 'POST', data);
+    }
+    
+    hideLoading('submitBtn');
+    
+    if (result.success) {
+        showToast(isUsageEdit ? '更新成功' : '添加成功', 'success');
+        $('#usageModal').modal('hide');
+        setTimeout(() => location.reload(), 1000);
+    } else {
+        showToast(result.error, 'error');
+    }
+});
+
+document.getElementById('usageModal').addEventListener('shown.bs.modal', function() {
+    document.getElementById('usage_date').focus();
+});
+</script>
+{% endblock %}

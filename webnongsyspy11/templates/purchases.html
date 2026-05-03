@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}采购管理 - 农资管理系统{% endblock %}
+
+{% block page_title %}采购管理{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">采购管理</li>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title">
+            <i class="fas fa-shopping-cart mr-2"></i>采购记录列表
+        </h5>
+        <button class="btn btn-primary" onclick="openAddModal()">
+            <i class="fas fa-plus mr-2"></i>新增采购
+        </button>
+    </div>
+    <div class="card-body">
+        {% if purchases %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>采购单号</th>
+                        <th>农资名称</th>
+                        <th>供应商</th>
+                        <th>采购日期</th>
+                        <th>数量</th>
+                        <th>单价</th>
+                        <th>总价</th>
+                        <th>批次号</th>
+                        <th>保质期</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for purchase in purchases %}
+                    <tr>
+                        <td><span class="badge badge-info">{{ purchase.purchase_no }}</span></td>
+                        <td><strong>{{ purchase.supply.name if purchase.supply else '-' }}</strong></td>
+                        <td>{{ purchase.supplier.name if purchase.supplier else '-' }}</td>
+                        <td>{{ purchase.purchase_date.strftime('%Y-%m-%d') if purchase.purchase_date else '-' }}</td>
+                        <td>{{ purchase.quantity }} {{ purchase.supply.unit if purchase.supply else '' }}</td>
+                        <td>¥{{ "%.2f"|format(purchase.unit_price) }}</td>
+                        <td><strong class="text-primary">¥{{ "%.2f"|format(purchase.total_price or 0) }}</strong></td>
+                        <td><span class="badge badge-secondary">{{ purchase.batch_no }}</span></td>
+                        <td>{{ purchase.expiry_date.strftime('%Y-%m-%d') if purchase.expiry_date else '-' }}</td>
+                        <td class="action-btns">
+                            <button class="btn btn-sm btn-info" onclick="editPurchase({{ purchase.id }})">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deletePurchase({{ purchase.id }})">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if pagination and pagination.total_pages > 1 %}
+        <div class="mt-3" id="paginationContainer"></div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-shopping-cart empty-icon"></i>
+            <div class="empty-text">暂无采购记录</div>
+            <small class="text-muted">点击上方"新增采购"按钮添加</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal fade" id="purchaseModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="purchaseModalTitle">新增采购</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="purchaseForm">
+                <input type="hidden" id="purchaseId">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>供应商 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="supplier_id" name="supplier_id" required>
+                                <option value="">请选择供应商</option>
+                                {% for supplier in suppliers %}
+                                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>农资 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="supply_id" name="supply_id" required>
+                                <option value="">请选择农资</option>
+                                {% for supply in supplies %}
+                                <option value="{{ supply.id }}">{{ supply.name }} ({{ supply.unit }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>采购日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="purchase_date" name="purchase_date" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>批次号 <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="batch_no" name="batch_no" required placeholder="自动生成">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="generateBatchNo()">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>数量 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" required min="0.01" step="0.01" placeholder="请输入数量">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>单价 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="unit_price" name="unit_price" required min="0.01" step="0.01" placeholder="请输入单价">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>保质期</label>
+                            <input type="date" class="form-control" id="expiry_date" name="expiry_date">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>预估总价</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">¥</span>
+                                </div>
+                                <input type="text" class="form-control" id="totalPreview" readonly placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="remark" name="remark" rows="2" placeholder="请输入备注"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-save mr-2"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let isPurchaseEdit = false;
+
+const purchaseValidationRules = {
+    supplier_id: [
+        (v) => Validators.required(v, '请选择供应商')
+    ],
+    supply_id: [
+        (v) => Validators.required(v, '请选择农资')
+    ],
+    purchase_date: [
+        (v) => Validators.required(v, '采购日期为必填项'),
+        (v) => Validators.dateNotAfterToday(v, '采购日期不能晚于今天')
+    ],
+    batch_no: [
+        (v) => Validators.required(v, '批次号为必填项'),
+        (v) => Validators.minLength(v, 1, '批次号不能为空'),
+        (v) => Validators.maxLength(v, 50, '批次号不能超过50个字符')
+    ],
+    quantity: [
+        (v) => Validators.required(v, '数量为必填项'),
+        (v) => Validators.positive(v, '数量必须大于0')
+    ],
+    unit_price: [
+        (v) => Validators.required(v, '单价为必填项'),
+        (v) => Validators.positive(v, '单价必须大于0')
+    ],
+    expiry_date: [
+        (v) => {
+            const purchaseDate = document.getElementById('purchase_date').value;
+            if (v && purchaseDate) {
+                return Validators.dateAfter(v, purchaseDate, '保质期必须晚于采购日期');
+            }
+            return null;
+        }
+    ],
+    remark: [
+        (v) => Validators.maxLength(v, 500, '备注不能超过500个字符')
+    ]
+};
+
+{% if pagination and pagination.total_pages > 1 %}
+initPagination('paginationContainer', {{ pagination|tojson }});
+{% endif %}
+
+document.getElementById('purchase_date').value = getTodayDate();
+
+function openAddModal() {
+    isPurchaseEdit = false;
+    document.getElementById('purchaseModalTitle').textContent = '新增采购';
+    document.getElementById('purchaseId').value = '';
+    document.getElementById('purchaseForm').reset();
+    document.getElementById('purchase_date').value = getTodayDate();
+    document.getElementById('totalPreview').value = '0.00';
+    generateBatchNo();
+    clearAllErrors();
+    $('#purchaseModal').modal('show');
+}
+
+function generateBatchNo() {
+    document.getElementById('batch_no').value = generateBatchNo('P');
+}
+
+function calculateTotal() {
+    const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+    const unitPrice = parseFloat(document.getElementById('unit_price').value) || 0;
+    const total = quantity * unitPrice;
+    document.getElementById('totalPreview').value = total.toFixed(2);
+}
+
+document.getElementById('quantity').addEventListener('input', calculateTotal);
+document.getElementById('unit_price').addEventListener('input', calculateTotal);
+
+async function editPurchase(id) {
+    isPurchaseEdit = true;
+    const result = await apiRequest('/api/purchases/' + id);
+    if (result.success) {
+        document.getElementById('purchaseModalTitle').textContent = '编辑采购';
+        document.getElementById('purchaseId').value = id;
+        fillForm('purchaseForm', result.data);
+        calculateTotal();
+        clearAllErrors();
+        $('#purchaseModal').modal('show');
+    } else {
+        showToast(result.error, 'error');
+    }
+}
+
+async function deletePurchase(id) {
+    const confirmed = await confirmDelete('确定要删除此采购记录吗？\n注意：只有库存为空时才能删除。');
+    if (confirmed) {
+        const result = await apiRequest('/api/purchases/' + id, 'DELETE');
+        if (result.success) {
+            showToast('删除成功', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(result.error, 'error');
+        }
+    }
+}
+
+function clearAllErrors() {
+    const form = document.getElementById('purchaseForm');
+    form.querySelectorAll('.is-invalid').forEach(input => {
+        clearFieldError(input);
+    });
+}
+
+document.getElementById('purchaseForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const validation = validateForm('purchaseForm', purchaseValidationRules);
+    if (!validation.valid) {
+        showToast('请检查表单填写是否正确', 'error');
+        return;
+    }
+    
+    const data = serializeForm(this);
+    const id = document.getElementById('purchaseId').value;
+    
+    showLoading('submitBtn');
+    
+    let result;
+    if (isPurchaseEdit && id) {
+        result = await apiRequest('/api/purchases/' + id, 'PUT', data);
+    } else {
+        result = await apiRequest('/api/purchases', 'POST', data);
+    }
+    
+    hideLoading('submitBtn');
+    
+    if (result.success) {
+        showToast(isPurchaseEdit ? '更新成功' : '添加成功', 'success');
+        $('#purchaseModal').modal('hide');
+        setTimeout(() => location.reload(), 1000);
+    } else {
+        showToast(result.error, 'error');
+    }
+});
+
+document.getElementById('purchaseModal').addEventListener('shown.bs.modal', function() {
+    document.getElementById('supplier_id').focus();
+});
+</script>
+{% endblock %}

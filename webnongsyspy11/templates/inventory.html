@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}库存管理 - 农资管理系统{% endblock %}
+
+{% block page_title %}库存管理{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">库存管理</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title">
+                    <i class="fas fa-bell mr-2"></i>库存预警
+                </h5>
+                <span class="badge badge-{{ 'danger' if alerts|length > 0 else 'success' }}">{{ alerts|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if alerts %}
+                    {% for alert in alerts %}
+                    <div class="alert-card warning mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-circle alert-icon"></i>
+                            <div class="flex-1">
+                                <strong>{{ alert.supply_name }}</strong>
+                                <div class="small">
+                                    {{ alert.category_name }}
+                                </div>
+                                <div class="small mt-1">
+                                    当前: <span class="text-warning">{{ alert.current_quantity }}</span> / 
+                                    阈值: <span class="text-white">{{ alert.warning_threshold }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state py-4">
+                        <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                        <div class="text-success font-weight-bold">所有库存正常</div>
+                        <small class="text-muted">暂无库存预警</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="fas fa-chart-pie mr-2"></i>库存汇总
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if inventory_summary %}
+                    {% for item in inventory_summary %}
+                    <div class="inventory-summary-card {{ 'low-stock' if item.is_below_threshold else '' }}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ item.supply_name }}</strong>
+                                <div class="small text-muted">{{ item.category_name }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-weight-bold">{{ item.total_quantity }} {{ item.unit }}</div>
+                                {% if item.is_below_threshold %}
+                                <span class="stock-badge danger">库存不足</span>
+                                {% else %}
+                                <span class="stock-badge normal">正常</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="progress mt-2" style="height: 5px;">
+                            {% set percentage = (item.total_quantity / (item.warning_threshold * 5) * 100) if item.warning_threshold > 0 else 100 %}
+                            {% if percentage > 100 %}{% set percentage = 100 %}{% endif %}
+                            <div class="progress-bar {{ 'bg-danger' if item.is_below_threshold else 'bg-success' }}" 
+                                 style="width: {{ percentage }}%"></div>
+                        </div>
+                        <div class="small text-muted mt-1">
+                            预警阈值: {{ item.warning_threshold }} {{ item.unit }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state py-4">
+                        <i class="fas fa-warehouse text-muted fa-2x mb-2"></i>
+                        <div class="text-muted">暂无库存数据</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title">
+                    <i class="fas fa-boxes mr-2"></i>库存明细（批次管理）
+                </h5>
+                <div>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        按先进先出（FIFO）原则排序
+                    </small>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if inventories %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>批次号</th>
+                                <th>农资名称</th>
+                                <th>当前库存</th>
+                                <th>保质期</th>
+                                <th>采购日期</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inventory in inventories %}
+                            <tr>
+                                <td><span class="badge badge-info">{{ inventory.batch_no }}</span></td>
+                                <td>
+                                    <strong>{{ inventory.supply.name if inventory.supply else '-' }}</strong>
+                                    <div class="small text-muted">
+                                        {{ inventory.supply.brand if inventory.supply else '' }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="font-weight-bold">{{ inventory.quantity }}</span>
+                                    {{ inventory.supply.unit if inventory.supply else '' }}
+                                </td>
+                                <td>
+                                    {% if inventory.expiry_date %}
+                                        <span class="{% if inventory.is_expired %}text-danger{% else %}text-success{% endif %}">
+                                            {{ inventory.expiry_date.strftime('%Y-%m-%d') }}
+                                        </span>
+                                        {% if inventory.is_expired %}
+                                            <span class="badge badge-danger ml-2">已过期</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if inventory.purchase and inventory.purchase.purchase_date %}
+                                    {{ inventory.purchase.purchase_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if inventory.quantity <= 0 %}
+                                        <span class="badge badge-secondary">已耗尽</span>
+                                    {% elif inventory.is_expired %}
+                                        <span class="badge badge-danger">已过期</span>
+                                    {% else %}
+                                        <span class="badge badge-success">正常</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if pagination and pagination.total_pages > 1 %}
+                <div class="mt-3" id="paginationContainer"></div>
+                {% endif %}
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-boxes empty-icon"></i>
+                    <div class="empty-text">暂无库存数据</div>
+                    <small class="text-muted">请先进行采购操作</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+{% if pagination and pagination.total_pages > 1 %}
+initPagination('paginationContainer', {{ pagination|tojson }});
+{% endif %}
+</script>
+{% endblock %}

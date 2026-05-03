@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}农资分类 - 农资管理系统{% endblock %}
+
+{% block page_title %}农资分类{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">农资分类</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title">
+                    <i class="fas fa-tags mr-2"></i>分类列表
+                </h5>
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    <i class="fas fa-plus mr-2"></i>新增分类
+                </button>
+            </div>
+            <div class="card-body">
+                {% if categories %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>分类编码</th>
+                                <th>分类名称</th>
+                                <th>描述</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                            <tr>
+                                <td>{{ category.id }}</td>
+                                <td><span class="badge badge-primary">{{ category.code }}</span></td>
+                                <td><strong>{{ category.name }}</strong></td>
+                                <td>{{ category.description or '-' }}</td>
+                                <td>{{ category.created_at.strftime('%Y-%m-%d %H:%M') if category.created_at else '-' }}</td>
+                                <td class="action-btns">
+                                    <button class="btn btn-sm btn-info" onclick="editCategory({{ category.id }})">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteCategory({{ category.id }})">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if pagination and pagination.total_pages > 1 %}
+                <div class="mt-3" id="paginationContainer"></div>
+                {% endif %}
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-tags empty-icon"></i>
+                    <div class="empty-text">暂无分类数据</div>
+                    <small class="text-muted">点击上方"新增分类"按钮添加</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle mr-2"></i>系统预设分类
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-seedling text-success mr-2"></i>
+                        <strong>种子</strong>
+                        <div class="small text-muted">SEED - 各类作物种子</div>
+                    </div>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-spray-can text-primary mr-2"></i>
+                        <strong>肥料</strong>
+                        <div class="small text-muted">FERT - 化肥、有机肥等</div>
+                    </div>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-bug text-danger mr-2"></i>
+                        <strong>农药</strong>
+                        <div class="small text-muted">PEST - 杀虫剂、杀菌剂等</div>
+                    </div>
+                </div>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-layer-group text-warning mr-2"></i>
+                        <strong>农膜</strong>
+                        <div class="small text-muted">FILM - 地膜、棚膜等</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="categoryModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryModalTitle">新增分类</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>分类编码 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="code" name="code" required placeholder="例如：SEED">
+                        <small class="text-muted">建议使用英文大写编码</small>
+                    </div>
+                    <div class="form-group">
+                        <label>分类名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required placeholder="例如：种子">
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="分类描述"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-save mr-2"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let isCategoryEdit = false;
+
+const categoryValidationRules = {
+    code: [
+        (v) => Validators.required(v, '分类编码为必填项'),
+        (v) => Validators.minLength(v, 1, '分类编码不能为空'),
+        (v) => Validators.maxLength(v, 20, '分类编码不能超过20个字符')
+    ],
+    name: [
+        (v) => Validators.required(v, '分类名称为必填项'),
+        (v) => Validators.minLength(v, 1, '分类名称不能为空'),
+        (v) => Validators.maxLength(v, 50, '分类名称不能超过50个字符')
+    ],
+    description: [
+        (v) => Validators.maxLength(v, 200, '描述不能超过200个字符')
+    ]
+};
+
+{% if pagination and pagination.total_pages > 1 %}
+initPagination('paginationContainer', {{ pagination|tojson }});
+{% endif %}
+
+function openAddModal() {
+    isCategoryEdit = false;
+    document.getElementById('categoryModalTitle').textContent = '新增分类';
+    document.getElementById('categoryId').value = '';
+    document.getElementById('categoryForm').reset();
+    clearAllErrors();
+    $('#categoryModal').modal('show');
+}
+
+async function editCategory(id) {
+    isCategoryEdit = true;
+    const result = await apiRequest('/api/categories/' + id);
+    if (result.success) {
+        document.getElementById('categoryModalTitle').textContent = '编辑分类';
+        document.getElementById('categoryId').value = id;
+        fillForm('categoryForm', result.data);
+        clearAllErrors();
+        $('#categoryModal').modal('show');
+    } else {
+        showToast(result.error, 'error');
+    }
+}
+
+async function deleteCategory(id) {
+    const confirmed = await confirmDelete('确定要删除此分类吗？\n注意：如果分类有关联的农资，则无法删除。');
+    if (confirmed) {
+        const result = await apiRequest('/api/categories/' + id, 'DELETE');
+        if (result.success) {
+            showToast('删除成功', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(result.error, 'error');
+        }
+    }
+}
+
+function clearAllErrors() {
+    const form = document.getElementById('categoryForm');
+    form.querySelectorAll('.is-invalid').forEach(input => {
+        clearFieldError(input);
+    });
+}
+
+document.getElementById('categoryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const validation = validateForm('categoryForm', categoryValidationRules);
+    if (!validation.valid) {
+        showToast('请检查表单填写是否正确', 'error');
+        return;
+    }
+    
+    const data = serializeForm(this);
+    const id = document.getElementById('categoryId').value;
+    
+    showLoading('submitBtn');
+    
+    let result;
+    if (isCategoryEdit && id) {
+        result = await apiRequest('/api/categories/' + id, 'PUT', data);
+    } else {
+        result = await apiRequest('/api/categories', 'POST', data);
+    }
+    
+    hideLoading('submitBtn');
+    
+    if (result.success) {
+        showToast(isCategoryEdit ? '更新成功' : '添加成功', 'success');
+        $('#categoryModal').modal('hide');
+        setTimeout(() => location.reload(), 1000);
+    } else {
+        showToast(result.error, 'error');
+    }
+});
+
+document.getElementById('categoryModal').addEventListener('shown.bs.modal', function() {
+    document.getElementById('code').focus();
+});
+</script>
+{% endblock %}

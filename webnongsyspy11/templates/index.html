@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}仪表盘 - 农资管理系统{% endblock %}
+
+{% block page_title %}仪表盘{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <i class="fas fa-truck stat-icon"></i>
+            <div class="stat-value">{{ stats.supplier_count }}</div>
+            <div class="stat-label">供应商数量</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card green">
+            <i class="fas fa-boxes stat-icon"></i>
+            <div class="stat-value">{{ stats.supply_count }}</div>
+            <div class="stat-label">农资种类</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card blue">
+            <i class="fas fa-shopping-cart stat-icon"></i>
+            <div class="stat-value">{{ stats.purchase_count }}</div>
+            <div class="stat-label">采购记录</div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card orange">
+            <i class="fas fa-clipboard-list stat-icon"></i>
+            <div class="stat-value">{{ stats.usage_count }}</div>
+            <div class="stat-label">使用记录</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle mr-2"></i>系统概览
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-2">地块信息</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-map-marked-alt text-primary fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0">{{ stats.plot_count }} 个</h4>
+                                    <small class="text-muted">已登记地块</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-2">作物信息</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-seedling text-success fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0">{{ stats.crop_count }} 种</h4>
+                                    <small class="text-muted">已登记作物</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-2">采购总额</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-coins text-warning fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0">¥{{ "%.2f"|format(stats.total_purchase_amount) }}</h4>
+                                    <small class="text-muted">累计采购金额</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-2">库存预警</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-exclamation-triangle text-{{ 'danger' if stats.low_inventory_count > 0 else 'success' }} fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0">{{ stats.low_inventory_count }} 项</h4>
+                                    <small class="text-muted">低于预警阈值</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title">
+                    <i class="fas fa-bell mr-2"></i>库存预警
+                </h5>
+                <span class="badge badge-danger">{{ alerts|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if alerts %}
+                    {% for alert in alerts %}
+                    <div class="alert-card warning">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-circle alert-icon"></i>
+                            <div>
+                                <strong>{{ alert.supply_name }}</strong>
+                                <div class="small">
+                                    {{ alert.category_name }} · 
+                                    当前: {{ alert.current_quantity }} · 
+                                    阈值: {{ alert.warning_threshold }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle empty-icon text-success"></i>
+                        <div class="empty-text">所有库存正常</div>
+                        <small class="text-muted">暂无库存预警</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title">
+                    <i class="fas fa-chart-pie mr-2"></i>快捷操作
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <a href="/purchases" class="text-decoration-none">
+                            <div class="text-center p-4 border rounded-lg hover-shadow">
+                                <i class="fas fa-shopping-cart text-primary fa-3x mb-3"></i>
+                                <h6 class="text-dark">新增采购</h6>
+                                <small class="text-muted">登记农资采购</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <a href="/inventory" class="text-decoration-none">
+                            <div class="text-center p-4 border rounded-lg hover-shadow">
+                                <i class="fas fa-warehouse text-success fa-3x mb-3"></i>
+                                <h6 class="text-dark">库存查询</h6>
+                                <small class="text-muted">查看当前库存</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <a href="/usage_records" class="text-decoration-none">
+                            <div class="text-center p-4 border rounded-lg hover-shadow">
+                                <i class="fas fa-clipboard-list text-info fa-3x mb-3"></i>
+                                <h6 class="text-dark">农资使用</h6>
+                                <small class="text-muted">登记使用记录</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <a href="/suppliers" class="text-decoration-none">
+                            <div class="text-center p-4 border rounded-lg hover-shadow">
+                                <i class="fas fa-truck text-warning fa-3x mb-3"></i>
+                                <h6 class="text-dark">供应商管理</h6>
+                                <small class="text-muted">维护供应商信息</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <a href="/plots" class="text-decoration-none">
+                            <div class="text-center p-4 border rounded-lg hover-shadow">
+                                <i class="fas fa-map-marked-alt text-danger fa-3x mb-3"></i>
+                                <h6 class="text-dark">地块管理</h6>
+                                <small class="text-muted">维护地块信息</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <a href="/crops" class="text-decoration-none">
+                            <div class="text-center p-4 border rounded-lg hover-shadow">
+                                <i class="fas fa-seedling text-success fa-3x mb-3"></i>
+                                <h6 class="text-dark">作物管理</h6>
+                                <small class="text-muted">维护作物信息</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

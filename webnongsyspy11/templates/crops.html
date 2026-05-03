@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}作物管理 - 农资管理系统{% endblock %}
+
+{% block page_title %}作物管理{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">作物管理</li>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title">
+            <i class="fas fa-seedling mr-2"></i>作物列表
+        </h5>
+        <button class="btn btn-primary" onclick="openAddModal()">
+            <i class="fas fa-plus mr-2"></i>新增作物
+        </button>
+    </div>
+    <div class="card-body">
+        {% if crops %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>作物名称</th>
+                        <th>品种</th>
+                        <th>生长周期（天）</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for crop in crops %}
+                    <tr>
+                        <td>{{ crop.id }}</td>
+                        <td><strong>{{ crop.name }}</strong></td>
+                        <td>{{ crop.variety or '-' }}</td>
+                        <td>
+                            {% if crop.growth_cycle %}
+                            <span class="badge badge-success">{{ crop.growth_cycle }} 天</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ crop.remark or '-' }}</td>
+                        <td class="action-btns">
+                            <button class="btn btn-sm btn-info" onclick="editCrop({{ crop.id }})">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteCrop({{ crop.id }})">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if pagination and pagination.total_pages > 1 %}
+        <div class="mt-3" id="paginationContainer"></div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-seedling empty-icon"></i>
+            <div class="empty-text">暂无作物数据</div>
+            <small class="text-muted">点击上方"新增作物"按钮添加</small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal fade" id="cropModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cropModalTitle">新增作物</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="cropForm">
+                <input type="hidden" id="cropId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>作物名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required placeholder="例如：水稻">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>品种</label>
+                            <input type="text" class="form-control" id="variety" name="variety" placeholder="例如：籼稻950">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>生长周期（天）</label>
+                            <input type="number" class="form-control" id="growth_cycle" name="growth_cycle" min="1" placeholder="例如：120">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="remark" name="remark" rows="2" placeholder="请输入备注"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="fas fa-save mr-2"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let isCropEdit = false;
+
+const cropValidationRules = {
+    name: [
+        (v) => Validators.required(v, '作物名称为必填项'),
+        (v) => Validators.minLength(v, 1, '作物名称不能为空'),
+        (v) => Validators.maxLength(v, 100, '作物名称不能超过100个字符')
+    ],
+    variety: [
+        (v) => Validators.maxLength(v, 100, '品种不能超过100个字符')
+    ],
+    growth_cycle: [
+        (v) => {
+            if (v) {
+                const num = parseInt(v);
+                if (!isNaN(num) && num <= 0) {
+                    return '生长周期必须大于0';
+                }
+            }
+            return null;
+        }
+    ],
+    remark: [
+        (v) => Validators.maxLength(v, 500, '备注不能超过500个字符')
+    ]
+};
+
+{% if pagination and pagination.total_pages > 1 %}
+initPagination('paginationContainer', {{ pagination|tojson }});
+{% endif %}
+
+function openAddModal() {
+    isCropEdit = false;
+    document.getElementById('cropModalTitle').textContent = '新增作物';
+    document.getElementById('cropId').value = '';
+    document.getElementById('cropForm').reset();
+    clearAllErrors();
+    $('#cropModal').modal('show');
+}
+
+async function editCrop(id) {
+    isCropEdit = true;
+    const result = await apiRequest('/api/crops/' + id);
+    if (result.success) {
+        document.getElementById('cropModalTitle').textContent = '编辑作物';
+        document.getElementById('cropId').value = id;
+        fillForm('cropForm', result.data);
+        clearAllErrors();
+        $('#cropModal').modal('show');
+    } else {
+        showToast(result.error, 'error');
+    }
+}
+
+async function deleteCrop(id) {
+    const confirmed = await confirmDelete('确定要删除此作物吗？\n注意：如果作物有关联的使用记录，则无法删除。');
+    if (confirmed) {
+        const result = await apiRequest('/api/crops/' + id, 'DELETE');
+        if (result.success) {
+            showToast('删除成功', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(result.error, 'error');
+        }
+    }
+}
+
+function clearAllErrors() {
+    const form = document.getElementById('cropForm');
+    form.querySelectorAll('.is-invalid').forEach(input => {
+        clearFieldError(input);
+    });
+}
+
+document.getElementById('cropForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const validation = validateForm('cropForm', cropValidationRules);
+    if (!validation.valid) {
+        showToast('请检查表单填写是否正确', 'error');
+        return;
+    }
+    
+    const data = serializeForm(this);
+    const id = document.getElementById('cropId').value;
+    
+    showLoading('submitBtn');
+    
+    let result;
+    if (isCropEdit && id) {
+        result = await apiRequest('/api/crops/' + id, 'PUT', data);
+    } else {
+        result = await apiRequest('/api/crops', 'POST', data);
+    }
+    
+    hideLoading('submitBtn');
+    
+    if (result.success) {
+        showToast(isCropEdit ? '更新成功' : '添加成功', 'success');
+        $('#cropModal').modal('hide');
+        setTimeout(() => location.reload(), 1000);
+    } else {
+        showToast(result.error, 'error');
+    }
+});
+
+document.getElementById('cropModal').addEventListener('shown.bs.modal', function() {
+    document.getElementById('name').focus();
+});
+</script>
+{% endblock %}
