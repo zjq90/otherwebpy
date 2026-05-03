@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '编辑产品' if edit_mode else '添加产品' }} - 农产品电商管理系统{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首页</a></li>
+        <li class="breadcrumb-item"><a href="/products">产品管理</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ '编辑产品' if edit_mode else '添加产品' }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fa fa-{{ 'edit' if edit_mode else 'plus' }} mr-2"></i>
+                    {{ '编辑产品' if edit_mode else '添加产品' }}
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="productForm">
+                    <div class="form-group">
+                        <label for="name">产品名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               placeholder="请输入农产品名称">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="specification">规格 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="specification" name="specification" required
+                                   placeholder="例如：500g/袋、1kg/箱等">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="grade">等级 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="grade" name="grade" required>
+                                <option value="">请选择等级</option>
+                                <option value="特级">特级</option>
+                                <option value="一级">一级</option>
+                                <option value="二级">二级</option>
+                                <option value="三级">三级</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="production_date">生产日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="production_date" name="production_date" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="shelf_life">保质期(天) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="shelf_life" name="shelf_life" required
+                                   min="1" placeholder="请输入保质期天数">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="suggested_retail_price">建议零售价(元) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="suggested_retail_price" name="suggested_retail_price" required
+                               min="0" step="0.01" placeholder="请输入建议零售价">
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-success mr-2">
+                            <i class="fa fa-save mr-1"></i>保存
+                        </button>
+                        <a href="/products" class="btn btn-secondary">
+                            <i class="fa fa-times mr-1"></i>取消
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const editMode = {{ 'true' if edit_mode else 'false' }};
+const productId = {{ product_id if product_id else 'null' }};
+
+$(document).ready(function() {
+    if (editMode && productId) {
+        loadProductData();
+    }
+    
+    $('#productForm').submit(async function(e) {
+        e.preventDefault();
+        await saveProduct();
+    });
+});
+
+async function loadProductData() {
+    try {
+        const product = await apiGet(`/api/products/${productId}`);
+        $('#name').val(product.name);
+        $('#specification').val(product.specification);
+        $('#grade').val(product.grade);
+        $('#production_date').val(product.production_date);
+        $('#shelf_life').val(product.shelf_life);
+        $('#suggested_retail_price').val(product.suggested_retail_price);
+    } catch (error) {
+        showToast(error.message || '加载产品信息失败', '错误', 'error');
+    }
+}
+
+async function saveProduct() {
+    const formData = {
+        name: $('#name').val().trim(),
+        specification: $('#specification').val().trim(),
+        grade: $('#grade').val(),
+        production_date: $('#production_date').val(),
+        shelf_life: parseInt($('#shelf_life').val()),
+        suggested_retail_price: parseFloat($('#suggested_retail_price').val())
+    };
+    
+    if (!formData.name) {
+        showToast('请输入产品名称', '错误', 'error');
+        return;
+    }
+    if (!formData.specification) {
+        showToast('请输入规格', '错误', 'error');
+        return;
+    }
+    if (!formData.grade) {
+        showToast('请选择等级', '错误', 'error');
+        return;
+    }
+    if (!formData.production_date) {
+        showToast('请选择生产日期', '错误', 'error');
+        return;
+    }
+    if (!formData.shelf_life || formData.shelf_life <= 0) {
+        showToast('请输入有效的保质期', '错误', 'error');
+        return;
+    }
+    if (!formData.suggested_retail_price || formData.suggested_retail_price < 0) {
+        showToast('请输入有效的价格', '错误', 'error');
+        return;
+    }
+    
+    try {
+        if (editMode && productId) {
+            await apiPut(`/api/products/${productId}`, formData);
+            showToast('更新成功', '成功');
+        } else {
+            await apiPost('/api/products/', formData);
+            showToast('添加成功', '成功');
+        }
+        
+        setTimeout(() => {
+            location.href = '/products';
+        }, 1000);
+    } catch (error) {
+        showToast(error.message || '保存失败', '错误', 'error');
+    }
+}
+</script>
+{% endblock %}

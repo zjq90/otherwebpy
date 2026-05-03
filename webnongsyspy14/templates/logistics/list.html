@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}物流管理 - 农产品电商管理系统{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首页</a></li>
+        <li class="breadcrumb-item active" aria-current="page">物流管理</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-warning">
+                    <i class="fa fa-truck mr-2"></i>物流列表
+                </h6>
+                <div>
+                    <button class="btn btn-primary btn-sm" onclick="refreshData()">
+                        <i class="fa fa-refresh mr-1"></i>刷新
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="search-bar">
+                    <form id="searchForm" class="form-inline">
+                        <div class="form-group mr-2">
+                            <input type="text" class="form-control form-control-sm" id="searchKeyword" 
+                                   placeholder="搜索物流单号、订单号...">
+                        </div>
+                        <div class="form-group mr-2">
+                            <select class="form-control form-control-sm" id="searchStatus">
+                                <option value="">全部状态</option>
+                                <option value="已揽收">已揽收</option>
+                                <option value="运输中">运输中</option>
+                                <option value="派送中">派送中</option>
+                                <option value="已签收">已签收</option>
+                                <option value="已退回">已退回</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fa fa-search mr-1"></i>搜索
+                        </button>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="logisticsTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>物流单号</th>
+                                <th>关联订单</th>
+                                <th>物流公司</th>
+                                <th>当前状态</th>
+                                <th>当前位置</th>
+                                <th>预计到达</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logisticsTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row mt-4" id="paginationRow" style="display: none;">
+                    <div class="col-md-6">
+                        <span id="paginationInfo" class="text-muted"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <nav>
+                            <ul class="pagination justify-content-end" id="paginationUl">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="logisticsDetailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logisticsModalTitle">物流详情</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="logisticsModalBody">
+                <div class="text-center">加载中...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="viewTracksBtn">
+                    <i class="fa fa-map-marker mr-1"></i>查看轨迹
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+const pageSize = 10;
+let currentLogisticsId = null;
+
+$(document).ready(function() {
+    loadLogistics();
+    
+    $('#searchForm').submit(function(e) {
+        e.preventDefault();
+        currentPage = 1;
+        loadLogistics();
+    });
+});
+
+async function loadLogistics() {
+    try {
+        const params = {
+            page: currentPage,
+            limit: pageSize
+        };
+        
+        const keyword = $('#searchKeyword').val().trim();
+        const status = $('#searchStatus').val();
+        
+        if (keyword) {
+            params.keyword = keyword;
+        }
+        if (status) {
+            params.current_status = status;
+        }
+        
+        const data = await apiGet('/api/logistics/', params);
+        
+        const logisticsList = data.logistics || data || [];
+        const total = data.total || logisticsList.length;
+        
+        renderTable(logisticsList);
+        renderPagination(total);
+        
+    } catch (error) {
+        showToast(error.message || '加载物流列表失败', '错误', 'error');
+        renderTable([]);
+    }
+}
+
+function renderTable(logisticsList) {
+    const tbody = $('#logisticsTableBody');
+    
+    if (!logisticsList || logisticsList.length === 0) {
+        tbody.html('<tr><td colspan="8" class="text-center">暂无数据</td></tr>');
+        return;
+    }
+    
+    let html = '';
+    logisticsList.forEach(logistics => {
+        const statusBadge = getStatusBadge(logistics.current_status);
+        html += `
+            <tr>
+                <td>${logistics.id}</td>
+                <td><code>${logistics.tracking_number}</code></td>
+                <td>
+                    <a href="/orders/detail/${logistics.order_id}" class="text-primary">
+                        #${logistics.order_id}
+                    </a>
+                </td>
+                <td>${logistics.logistics_company || '-'}</td>
+                <td>${statusBadge}</td>
+                <td>${logistics.current_location || '-'}</td>
+                <td>${logistics.estimated_arrival ? formatDate(logistics.estimated_arrival) : '-'}</td>
+                <td>
+                    <button class="btn btn-outline-info btn-sm mr-1" 
+                            onclick="viewLogistics(${logistics.id})" title="查看详情">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <a href="/logistics/track/${logistics.id}" class="btn btn-outline-primary btn-sm mr-1" title="查看轨迹">
+                        <i class="fa fa-map-marker"></i>
+                    </a>
+                    <button class="btn btn-outline-danger btn-sm" 
+                            onclick="deleteLogistics(${logistics.id})" title="删除">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.html(html);
+}
+
+function renderPagination(total) {
+    const paginationRow = $('#paginationRow');
+    const paginationInfo = $('#paginationInfo');
+    const paginationUl = $('#paginationUl');
+    
+    if (total === 0) {
+        paginationRow.hide();
+        return;
+    }
+    
+    paginationRow.show();
+    
+    const start = (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, total);
+    paginationInfo.text(`显示 ${start}-${end} 条，共 ${total} 条`);
+    
+    const totalPages = Math.ceil(total / pageSize);
+    
+    let html = '';
+    
+    if (currentPage > 1) {
+        html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(${currentPage - 1})">上一页</a></li>`;
+    } else {
+        html += `<li class="page-item disabled"><a class="page-link" href="javascript:void(0)">上一页</a></li>`;
+    }
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            html += `<li class="page-item active"><a class="page-link" href="javascript:void(0)">${i}</a></li>`;
+        } else if (i >= currentPage - 2 && i <= currentPage + 2) {
+            html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(${i})">${i}</a></li>`;
+        }
+    }
+    
+    if (currentPage < totalPages) {
+        html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(${currentPage + 1})">下一页</a></li>`;
+    } else {
+        html += `<li class="page-item disabled"><a class="page-link" href="javascript:void(0)">下一页</a></li>`;
+    }
+    
+    paginationUl.html(html);
+}
+
+function goToPage(page) {
+    currentPage = page;
+    loadLogistics();
+}
+
+function refreshData() {
+    currentPage = 1;
+    $('#searchKeyword').val('');
+    $('#searchStatus').val('');
+    loadLogistics();
+}
+
+function getStatusBadge(status) {
+    const statusMap = {
+        '已揽收': { class: 'badge-secondary', text: '已揽收' },
+        '运输中': { class: 'badge-primary', text: '运输中' },
+        '派送中': { class: 'badge-warning', text: '派送中' },
+        '已签收': { class: 'badge-success', text: '已签收' },
+        '已退回': { class: 'badge-danger', text: '已退回' }
+    };
+    const info = statusMap[status] || { class: 'badge-secondary', text: status };
+    return `<span class="badge ${info.class}">${info.text}</span>`;
+}
+
+async function viewLogistics(id) {
+    currentLogisticsId = id;
+    $('#logisticsModalTitle').text('物流详情');
+    $('#logisticsModalBody').html('<div class="text-center"><i class="fa fa-spinner fa-spin mr-2"></i>加载中...</div>');
+    
+    try {
+        const logistics = await apiGet(`/api/logistics/${id}`);
+        
+        const statusBadge = getStatusBadge(logistics.current_status);
+        const html = `
+            <div class="logistics-detail">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>物流单号：</strong><code>${logistics.tracking_number}</code></p>
+                        <p><strong>关联订单：</strong>
+                            <a href="/orders/detail/${logistics.order_id}" class="text-primary" target="_blank">
+                                #${logistics.order_id}
+                            </a>
+                        </p>
+                        <p><strong>物流公司：</strong>${logistics.logistics_company || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>当前状态：</strong>${statusBadge}</p>
+                        <p><strong>当前位置：</strong>${logistics.current_location || '-'}</p>
+                        <p><strong>预计到达：</strong>${logistics.estimated_arrival ? formatDate(logistics.estimated_arrival) : '-'}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#logisticsModalBody').html(html);
+        
+    } catch (error) {
+        $('#logisticsModalBody').html(`<div class="alert alert-danger">${error.message || '加载物流详情失败'}</div>`);
+    }
+    
+    $('#logisticsDetailModal').modal('show');
+}
+
+async function deleteLogistics(id) {
+    if (!confirm('确定要删除此物流信息吗？')) {
+        return;
+    }
+    
+    try {
+        await apiDelete(`/api/logistics/${id}`);
+        showToast('物流信息删除成功', '成功');
+        loadLogistics();
+    } catch (error) {
+        showToast(error.message || '删除失败', '错误', 'error');
+    }
+}
+
+$('#viewTracksBtn').click(function() {
+    if (currentLogisticsId) {
+        location.href = `/logistics/track/${currentLogisticsId}`;
+    }
+});
+</script>
+{% endblock %}

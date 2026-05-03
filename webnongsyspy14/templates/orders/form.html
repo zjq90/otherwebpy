@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '编辑订单' if edit_mode else '新建订单' }} - 农产品电商管理系统{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首页</a></li>
+        <li class="breadcrumb-item"><a href="/orders">订单管理</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ '编辑订单' if edit_mode else '新建订单' }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-warning">
+                    <i class="fa fa-{{ 'edit' if edit_mode else 'plus' }} mr-2"></i>
+                    {{ '编辑订单' if edit_mode else '新建订单' }}
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="orderForm">
+                    <div class="form-section-title">客户信息</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="customerId">选择客户 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="customerId" required>
+                                <option value="">请选择客户</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="customerName">客户名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="customerName" required
+                                   placeholder="请输入客户名称">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customerPhone">联系电话 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="customerPhone" required
+                               placeholder="请输入联系电话">
+                    </div>
+                    
+                    <div class="form-section-title">订单信息</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="orderDate">订单日期</label>
+                            <input type="date" class="form-control" id="orderDate">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="shippingStatus">发货状态</label>
+                            <select class="form-control" id="shippingStatus">
+                                <option value="pending">待发货</option>
+                                <option value="shipped">已发货</option>
+                                <option value="delivered">已送达</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="estimatedDeliveryDate">预计送达日期</label>
+                        <input type="date" class="form-control" id="estimatedDeliveryDate">
+                    </div>
+                    
+                    <div class="form-section-title">订单明细</div>
+                    
+                    <div class="order-items-container" id="orderItemsContainer">
+                        <div class="text-center mb-3">
+                            <button type="button" class="btn btn-outline-success" onclick="addOrderItem()">
+                                <i class="fa fa-plus mr-1"></i>添加产品
+                            </button>
+                        </div>
+                        <div id="orderItemsList">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <div class="text-right">
+                            <h4>订单总金额: <span class="text-danger" id="totalAmount">¥0.00</span></h4>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-warning mr-2">
+                            <i class="fa fa-save mr-1"></i>保存
+                        </button>
+                        <a href="/orders" class="btn btn-secondary">
+                            <i class="fa fa-times mr-1"></i>取消
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const editMode = {{ 'true' if edit_mode else 'false' }};
+const orderId = {{ order_id if order_id else 'null' }};
+let products = [];
+let customers = [];
+let orderItems = [];
+let itemIndex = 0;
+
+$(document).ready(function() {
+    loadProducts();
+    loadCustomers();
+    
+    const today = new Date().toISOString().split('T')[0];
+    $('#orderDate').val(today);
+    
+    if (editMode && orderId) {
+        loadOrderData();
+    }
+    
+    $('#customerId').change(function() {
+        const selectedId = $(this).val();
+        if (selectedId) {
+            const customer = customers.find(c => c.id === parseInt(selectedId));
+            if (customer) {
+                $('#customerName').val(customer.name);
+                $('#customerPhone').val(customer.phone);
+            }
+        }
+    });
+    
+    $('#orderForm').submit(async function(e) {
+        e.preventDefault();
+        await saveOrder();
+    });
+});
+
+async function loadProducts() {
+    try {
+        const data = await apiGet('/api/products/', { limit: 100 });
+        products = data.products || [];
+    } catch (error) {
+        console.error('加载产品失败:', error);
+    }
+}
+
+async function loadCustomers() {
+    try {
+        const data = await apiGet('/api/customers/', { limit: 100 });
+        customers = data.customers || [];
+        
+        const select = $('#customerId');
+        customers.forEach(customer => {
+            select.append(`<option value="${customer.id}">${customer.name}</option>`);
+        });
+    } catch (error) {
+        console.error('加载客户失败:', error);
+    }
+}
+
+async function loadOrderData() {
+    try {
+        const order = await apiGet(`/api/orders/${orderId}`);
+        
+        $('#customerId').val(order.customer_id);
+        $('#customerName').val(order.customer_name);
+        $('#customerPhone').val(order.customer_phone);
+        $('#orderDate').val(order.order_date);
+        $('#shippingStatus').val(order.shipping_status);
+        if (order.estimated_delivery_date) {
+            $('#estimatedDeliveryDate').val(order.estimated_delivery_date);
+        }
+        
+        if (order.items && order.items.length > 0) {
+            order.items.forEach(item => {
+                addOrderItemWithData(item);
+            });
+        }
+    } catch (error) {
+        showToast(error.message || '加载订单信息失败', '错误', 'error');
+    }
+}
+
+function addOrderItem() {
+    const index = itemIndex++;
+    const productOptions = products.map(p => 
+        `<option value="${p.id}" data-price="${p.suggested_retail_price}" data-name="${p.name}">${p.name} - ${p.specification}</option>`
+    ).join('');
+    
+    const itemHtml = `
+        <div class="order-item-row" id="orderItem_${index}">
+            <div class="form-row align-items-center">
+                <div class="col-md-4">
+                    <label>产品</label>
+                    <select class="form-control product-select" data-index="${index}" required>
+                        <option value="">请选择产品</option>
+                        ${productOptions}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label>数量</label>
+                    <input type="number" class="form-control item-quantity" data-index="${index}" 
+                           min="1" value="1" required>
+                </div>
+                <div class="col-md-2">
+                    <label>单价</label>
+                    <input type="number" class="form-control item-price" data-index="${index}" 
+                           min="0" step="0.01" value="0" readonly>
+                </div>
+                <div class="col-md-2">
+                    <label>小计</label>
+                    <input type="text" class="form-control item-subtotal" data-index="${index}" readonly>
+                </div>
+                <div class="col-md-2">
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn btn-outline-danger btn-block" onclick="removeOrderItem(${index})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('#orderItemsList').append(itemHtml);
+    
+    $(`#orderItem_${index} .product-select`).change(function() {
+        updateItemPrice(index);
+        calculateTotal();
+    });
+    
+    $(`#orderItem_${index} .item-quantity`).change(function() {
+        calculateSubtotal(index);
+        calculateTotal();
+    });
+}
+
+function addOrderItemWithData(item) {
+    const index = itemIndex++;
+    const productOptions = products.map(p => 
+        `<option value="${p.id}" data-price="${p.suggested_retail_price}" data-name="${p.name}" ${p.id === item.product_id ? 'selected' : ''}>${p.name} - ${p.specification}</option>`
+    ).join('');
+    
+    const itemHtml = `
+        <div class="order-item-row" id="orderItem_${index}">
+            <div class="form-row align-items-center">
+                <div class="col-md-4">
+                    <label>产品</label>
+                    <select class="form-control product-select" data-index="${index}" required>
+                        <option value="">请选择产品</option>
+                        ${productOptions}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label>数量</label>
+                    <input type="number" class="form-control item-quantity" data-index="${index}" 
+                           min="1" value="${item.quantity}" required>
+                </div>
+                <div class="col-md-2">
+                    <label>单价</label>
+                    <input type="number" class="form-control item-price" data-index="${index}" 
+                           min="0" step="0.01" value="${item.unit_price}" readonly>
+                </div>
+                <div class="col-md-2">
+                    <label>小计</label>
+                    <input type="text" class="form-control item-subtotal" data-index="${index}" 
+                           value="${formatMoney(item.subtotal)}" readonly>
+                </div>
+                <div class="col-md-2">
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn btn-outline-danger btn-block" onclick="removeOrderItem(${index})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('#orderItemsList').append(itemHtml);
+    
+    $(`#orderItem_${index} .product-select`).change(function() {
+        updateItemPrice(index);
+        calculateTotal();
+    });
+    
+    $(`#orderItem_${index} .item-quantity`).change(function() {
+        calculateSubtotal(index);
+        calculateTotal();
+    });
+    
+    calculateTotal();
+}
+
+function removeOrderItem(index) {
+    $(`#orderItem_${index}`).remove();
+    calculateTotal();
+}
+
+function updateItemPrice(index) {
+    const select = $(`#orderItem_${index} .product-select`);
+    const selectedOption = select.find('option:selected');
+    const price = selectedOption.data('price') || 0;
+    
+    $(`#orderItem_${index} .item-price`).val(price);
+    calculateSubtotal(index);
+}
+
+function calculateSubtotal(index) {
+    const quantity = parseInt($(`#orderItem_${index} .item-quantity`).val()) || 0;
+    const price = parseFloat($(`#orderItem_${index} .item-price`).val()) || 0;
+    const subtotal = quantity * price;
+    
+    $(`#orderItem_${index} .item-subtotal`).val(formatMoney(subtotal));
+}
+
+function calculateTotal() {
+    let total = 0;
+    
+    $('.order-item-row').each(function() {
+        const quantity = parseInt($(this).find('.item-quantity').val()) || 0;
+        const price = parseFloat($(this).find('.item-price').val()) || 0;
+        total += quantity * price;
+    });
+    
+    $('#totalAmount').text(formatMoney(total));
+}
+
+async function saveOrder() {
+    const customerId = parseInt($('#customerId').val());
+    const customerName = $('#customerName').val().trim();
+    const customerPhone = $('#customerPhone').val().trim();
+    
+    if (!customerId || !customerName || !customerPhone) {
+        showToast('请填写客户信息', '错误', 'error');
+        return;
+    }
+    
+    const items = [];
+    $('.order-item-row').each(function() {
+        const productId = parseInt($(this).find('.product-select').val());
+        const productName = $(this).find('.product-select option:selected').data('name');
+        const quantity = parseInt($(this).find('.item-quantity').val()) || 0;
+        const unitPrice = parseFloat($(this).find('.item-price').val()) || 0;
+        const subtotal = quantity * unitPrice;
+        
+        if (productId && quantity > 0) {
+            items.push({
+                product_id: productId,
+                product_name: productName,
+                quantity: quantity,
+                unit_price: unitPrice,
+                subtotal: subtotal
+            });
+        }
+    });
+    
+    if (items.length === 0) {
+        showToast('请至少添加一个产品', '错误', 'error');
+        return;
+    }
+    
+    let totalAmount = 0;
+    items.forEach(item => {
+        totalAmount += item.subtotal;
+    });
+    
+    const formData = {
+        customer_id: customerId,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        total_amount: totalAmount,
+        shipping_status: $('#shippingStatus').val(),
+        items: items
+    };
+    
+    const orderDate = $('#orderDate').val();
+    const estimatedDeliveryDate = $('#estimatedDeliveryDate').val();
+    
+    if (orderDate) {
+        formData.order_date = orderDate;
+    }
+    if (estimatedDeliveryDate) {
+        formData.estimated_delivery_date = estimatedDeliveryDate;
+    }
+    
+    try {
+        if (editMode && orderId) {
+            const updateData = {
+                customer_id: customerId,
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                total_amount: totalAmount,
+                shipping_status: $('#shippingStatus').val()
+            };
+            if (orderDate) updateData.order_date = orderDate;
+            if (estimatedDeliveryDate) updateData.estimated_delivery_date = estimatedDeliveryDate;
+            
+            await apiPut(`/api/orders/${orderId}`, updateData);
+            showToast('订单更新成功', '成功');
+        } else {
+            await apiPost('/api/orders/', formData);
+            showToast('订单创建成功', '成功');
+        }
+        
+        setTimeout(() => {
+            location.href = '/orders';
+        }, 1000);
+    } catch (error) {
+        showToast(error.message || '保存失败', '错误', 'error');
+    }
+}
+</script>
+{% endblock %}

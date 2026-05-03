@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+
+{% block title %}订单详情 - 农产品电商管理系统{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首页</a></li>
+        <li class="breadcrumb-item"><a href="/orders">订单管理</a></li>
+        <li class="breadcrumb-item active" aria-current="page">订单详情</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fa fa-file-text-o mr-2"></i>订单详情</h2>
+            <div>
+                <a href="/orders/edit/{{ order_id }}" class="btn btn-warning mr-2">
+                    <i class="fa fa-edit mr-1"></i>编辑
+                </a>
+                <a href="/orders" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left mr-1"></i>返回
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-warning">
+                    <i class="fa fa-info-circle mr-2"></i>订单信息
+                </h6>
+            </div>
+            <div class="card-body" id="orderInfo">
+                <div class="text-center text-muted">加载中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fa fa-user-circle mr-2"></i>客户信息
+                </h6>
+            </div>
+            <div class="card-body" id="customerInfo">
+                <div class="text-center text-muted">加载中...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fa fa-cubes mr-2"></i>订单明细
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>产品名称</th>
+                                <th>规格</th>
+                                <th>数量</th>
+                                <th>单价</th>
+                                <th>小计</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderItemsTable">
+                            <tr><td colspan="5" class="text-center text-muted">加载中...</td></tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-right font-weight-bold">订单总金额:</td>
+                                <td class="font-weight-bold text-danger" id="totalAmount">-</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fa fa-file-text mr-2"></i>电子合同
+                </h6>
+                <button class="btn btn-sm btn-outline-info" onclick="showContractModal()">
+                    <i class="fa fa-plus mr-1"></i>创建合同
+                </button>
+            </div>
+            <div class="card-body" id="contractInfo">
+                <div class="text-center text-muted">暂无合同</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fa fa-truck mr-2"></i>物流追踪
+                </h6>
+                <button class="btn btn-sm btn-outline-primary" onclick="showLogisticsModal()">
+                    <i class="fa fa-plus mr-1"></i>添加物流
+                </button>
+            </div>
+            <div class="card-body" id="logisticsInfo">
+                <div class="text-center text-muted">暂无物流信息</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="contractModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">创建电子合同</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="contractForm">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>合同编号 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="contractNumber" required
+                                   placeholder="例如：HT2024001">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>合同日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="contractDate" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>甲方 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="partyA" required
+                                   placeholder="例如：本公司">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>乙方 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="partyB" required
+                                   placeholder="客户名称">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>合同内容 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="contractContent" rows="6" required
+                                  placeholder="请输入合同内容"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" onclick="saveContract()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="logisticsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加物流信息</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="logisticsForm">
+                    <div class="form-group">
+                        <label>物流单号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="trackingNumber" required
+                               placeholder="请输入物流单号">
+                    </div>
+                    <div class="form-group">
+                        <label>物流公司 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="logisticsCompany" required
+                               placeholder="例如：顺丰速运、京东物流等">
+                    </div>
+                    <div class="form-group">
+                        <label>当前状态 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="logisticsStatus" required>
+                            <option value="待发货">待发货</option>
+                            <option value="已揽收">已揽收</option>
+                            <option value="运输中">运输中</option>
+                            <option value="派送中">派送中</option>
+                            <option value="已签收">已签收</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>当前位置</label>
+                        <input type="text" class="form-control" id="currentLocation"
+                               placeholder="请输入当前位置">
+                    </div>
+                    <div class="form-group">
+                        <label>预计到达时间</label>
+                        <input type="date" class="form-control" id="estimatedArrival">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveLogistics()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const orderId = {{ order_id }};
+let currentLogisticsId = null;
+
+$(document).ready(function() {
+    loadOrderDetail();
+});
+
+async function loadOrderDetail() {
+    try {
+        const order = await apiGet(`/api/orders/${orderId}`);
+        renderOrderInfo(order);
+        renderCustomerInfo(order);
+        renderOrderItems(order.items || []);
+        loadContract();
+        loadLogistics();
+    } catch (error) {
+        showToast(error.message || '加载订单详情失败', '错误', 'error');
+    }
+}
+
+function renderOrderInfo(order) {
+    const html = `
+        <table class="table table-borderless">
+            <tr>
+                <td class="font-weight-bold">订单号:</td>
+                <td>#${order.id}</td>
+            </tr>
+            <tr>
+                <td class="font-weight-bold">订单日期:</td>
+                <td>${formatDate(order.order_date)}</td>
+            </tr>
+            <tr>
+                <td class="font-weight-bold">发货状态:</td>
+                <td>${getShippingStatusBadge(order.shipping_status)}</td>
+            </tr>
+            <tr>
+                <td class="font-weight-bold">预计送达:</td>
+                <td>${formatDate(order.estimated_delivery_date)}</td>
+            </tr>
+        </table>
+    `;
+    $('#orderInfo').html(html);
+}
+
+function renderCustomerInfo(order) {
+    const html = `
+        <table class="table table-borderless">
+            <tr>
+                <td class="font-weight-bold">客户名称:</td>
+                <td>${order.customer_name}</td>
+            </tr>
+            <tr>
+                <td class="font-weight-bold">联系电话:</td>
+                <td>${order.customer_phone}</td>
+            </tr>
+        </table>
+    `;
+    $('#customerInfo').html(html);
+}
+
+function renderOrderItems(items) {
+    const tbody = $('#orderItemsTable');
+    
+    if (items.length === 0) {
+        tbody.html('<tr><td colspan="5" class="text-center text-muted">暂无明细</td></tr>');
+        return;
+    }
+    
+    let html = '';
+    let totalAmount = 0;
+    items.forEach(item => {
+        totalAmount += parseFloat(item.subtotal);
+        html += `
+            <tr>
+                <td>${item.product_name}</td>
+                <td>-</td>
+                <td>${item.quantity}</td>
+                <td>${formatMoney(item.unit_price)}</td>
+                <td>${formatMoney(item.subtotal)}</td>
+            </tr>
+        `;
+    });
+    tbody.html(html);
+    $('#totalAmount').text(formatMoney(totalAmount));
+}
+
+async function loadContract() {
+    try {
+        const contract = await apiGet(`/api/contracts/order/${orderId}`);
+        currentLogisticsId = contract.id;
+        
+        const html = `
+            <table class="table table-borderless">
+                <tr>
+                    <td class="font-weight-bold">合同编号:</td>
+                    <td>${contract.contract_number}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">合同日期:</td>
+                    <td>${formatDate(contract.contract_date)}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">状态:</td>
+                    <td>${getContractStatusBadge(contract.status)}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">签署日期:</td>
+                    <td>${formatDate(contract.signed_date)}</td>
+                </tr>
+            </table>
+            <div class="mt-2">
+                <button class="btn btn-sm btn-outline-success mr-2" onclick="signContract()">
+                    <i class="fa fa-signature mr-1"></i>签署合同
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="viewContract()">
+                    <i class="fa fa-eye mr-1"></i>查看合同
+                </button>
+            </div>
+        `;
+        $('#contractInfo').html(html);
+    } catch (error) {
+        console.log('暂无合同信息');
+    }
+}
+
+async function loadLogistics() {
+    try {
+        const logistics = await apiGet(`/api/logistics/order/${orderId}`);
+        currentLogisticsId = logistics.id;
+        
+        const html = `
+            <table class="table table-borderless">
+                <tr>
+                    <td class="font-weight-bold">物流单号:</td>
+                    <td>${logistics.tracking_number}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">物流公司:</td>
+                    <td>${logistics.logistics_company}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">当前状态:</td>
+                    <td><span class="badge badge-info">${logistics.current_status}</span></td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">当前位置:</td>
+                    <td>${logistics.current_location || '-'}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">预计到达:</td>
+                    <td>${formatDate(logistics.estimated_arrival)}</td>
+                </tr>
+            </table>
+            <div class="mt-2">
+                <a href="/logistics/track/${logistics.id}" class="btn btn-sm btn-outline-primary">
+                    <i class="fa fa-map-marker mr-1"></i>查看物流轨迹
+                </a>
+            </div>
+        `;
+        $('#logisticsInfo').html(html);
+    } catch (error) {
+        console.log('暂无物流信息');
+    }
+}
+
+function showContractModal() {
+    $('#contractModal').modal('show');
+}
+
+async function saveContract() {
+    const formData = {
+        order_id: orderId,
+        contract_number: $('#contractNumber').val().trim(),
+        contract_date: $('#contractDate').val(),
+        party_a: $('#partyA').val().trim(),
+        party_b: $('#partyB').val().trim(),
+        contract_content: $('#contractContent').val().trim(),
+        status: 'draft'
+    };
+    
+    if (!formData.contract_number || !formData.contract_date || 
+        !formData.party_a || !formData.party_b || !formData.contract_content) {
+        showToast('请填写所有必填项', '错误', 'error');
+        return;
+    }
+    
+    try {
+        await apiPost('/api/contracts/', formData);
+        $('#contractModal').modal('hide');
+        showToast('合同创建成功', '成功');
+        loadContract();
+    } catch (error) {
+        showToast(error.message || '保存失败', '错误', 'error');
+    }
+}
+
+function showLogisticsModal() {
+    $('#logisticsModal').modal('show');
+}
+
+async function saveLogistics() {
+    const formData = {
+        order_id: orderId,
+        tracking_number: $('#trackingNumber').val().trim(),
+        logistics_company: $('#logisticsCompany').val().trim(),
+        current_status: $('#logisticsStatus').val(),
+        current_location: $('#currentLocation').val().trim() || null,
+        estimated_arrival: $('#estimatedArrival').val() || null
+    };
+    
+    if (!formData.tracking_number || !formData.logistics_company) {
+        showToast('请填写所有必填项', '错误', 'error');
+        return;
+    }
+    
+    try {
+        await apiPost('/api/logistics/', formData);
+        $('#logisticsModal').modal('hide');
+        showToast('物流信息添加成功', '成功');
+        loadLogistics();
+    } catch (error) {
+        showToast(error.message || '保存失败', '错误', 'error');
+    }
+}
+
+async function signContract() {
+    if (!confirm('确定要签署合同吗？')) return;
+    
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        await apiPut(`/api/contracts/${currentLogisticsId}`, {
+            status: 'signed',
+            signed_date: today
+        });
+        showToast('合同签署成功', '成功');
+        loadContract();
+    } catch (error) {
+        showToast(error.message || '签署失败', '错误', 'error');
+    }
+}
+
+function viewContract() {
+    showToast('查看合同功能开发中', '提示');
+}
+</script>
+{% endblock %}

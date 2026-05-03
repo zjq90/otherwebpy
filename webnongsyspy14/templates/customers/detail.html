@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}客户详情 - 农产品电商管理系统{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首页</a></li>
+        <li class="breadcrumb-item"><a href="/customers">客户档案</a></li>
+        <li class="breadcrumb-item active" aria-current="page">客户详情</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fa fa-user-circle mr-2"></i>客户详情</h2>
+            <div>
+                <a href="/customers/edit/{{ customer_id }}" class="btn btn-warning mr-2">
+                    <i class="fa fa-edit mr-1"></i>编辑
+                </a>
+                <a href="/customers" class="btn btn-secondary">
+                    <i class="fa fa-arrow-left mr-1"></i>返回
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fa fa-info-circle mr-2"></i>基本信息
+                </h6>
+            </div>
+            <div class="card-body" id="customerInfo">
+                <div class="text-center text-muted">加载中...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <ul class="nav nav-tabs card-header-tabs" id="customerTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#ordersTab" data-toggle="tab">
+                            <i class="fa fa-shopping-cart mr-1"></i>购买历史
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#feedbacksTab" data-toggle="tab">
+                            <i class="fa fa-comments mr-1"></i>反馈记录
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="ordersTab">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>订单号</th>
+                                        <th>产品</th>
+                                        <th>数量</th>
+                                        <th>单价</th>
+                                        <th>购买日期</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="purchaseHistoryTable">
+                                    <tr><td colspan="5" class="text-center text-muted">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="feedbacksTab">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>反馈类型</th>
+                                        <th>内容</th>
+                                        <th>评分</th>
+                                        <th>状态</th>
+                                        <th>反馈日期</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="feedbacksTable">
+                                    <tr><td colspan="5" class="text-center text-muted">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const customerId = {{ customer_id }};
+
+$(document).ready(function() {
+    loadCustomerInfo();
+    loadPurchaseHistory();
+    loadFeedbacks();
+});
+
+async function loadCustomerInfo() {
+    try {
+        const customer = await apiGet(`/api/customers/${customerId}`);
+        const statusBadge = customer.status === 'active' 
+            ? '<span class="badge badge-success">活跃</span>'
+            : '<span class="badge badge-secondary">停用</span>';
+        
+        const html = `
+            <table class="table table-borderless">
+                <tr>
+                    <td class="font-weight-bold">客户名称:</td>
+                    <td>${customer.name}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">联系电话:</td>
+                    <td>${customer.phone}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">邮箱:</td>
+                    <td>${customer.email || '-'}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">地址:</td>
+                    <td>${customer.address || '-'}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">联系人:</td>
+                    <td>${customer.contact_person || '-'}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">购买偏好:</td>
+                    <td>${customer.preferences || '-'}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">状态:</td>
+                    <td>${statusBadge}</td>
+                </tr>
+                <tr>
+                    <td class="font-weight-bold">创建日期:</td>
+                    <td>${formatDate(customer.created_at)}</td>
+                </tr>
+            </table>
+        `;
+        $('#customerInfo').html(html);
+    } catch (error) {
+        $('#customerInfo').html('<div class="text-center text-danger">加载失败</div>');
+    }
+}
+
+async function loadPurchaseHistory() {
+    try {
+        const history = await apiGet(`/api/customers/${customerId}/purchase-history`);
+        const tbody = $('#purchaseHistoryTable');
+        
+        if (history.length === 0) {
+            tbody.html('<tr><td colspan="5" class="text-center text-muted">暂无购买记录</td></tr>');
+            return;
+        }
+        
+        let html = '';
+        history.forEach(item => {
+            html += `
+                <tr>
+                    <td>#${item.order_id}</td>
+                    <td>${item.product_name}</td>
+                    <td>${item.quantity}</td>
+                    <td>${formatMoney(item.unit_price)}</td>
+                    <td>${formatDate(item.purchase_date)}</td>
+                </tr>
+            `;
+        });
+        tbody.html(html);
+    } catch (error) {
+        $('#purchaseHistoryTable').html('<tr><td colspan="5" class="text-center text-danger">加载失败</td></tr>');
+    }
+}
+
+async function loadFeedbacks() {
+    try {
+        const feedbacks = await apiGet(`/api/customers/${customerId}/feedbacks`);
+        const tbody = $('#feedbacksTable');
+        
+        if (feedbacks.length === 0) {
+            tbody.html('<tr><td colspan="5" class="text-center text-muted">暂无反馈记录</td></tr>');
+            return;
+        }
+        
+        let html = '';
+        feedbacks.forEach(f => {
+            const ratingText = f.rating ? '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating) : '-';
+            html += `
+                <tr>
+                    <td>${getFeedbackTypeText(f.feedback_type)}</td>
+                    <td class="text-ellipsis" style="max-width: 200px;" title="${f.content}">${f.content}</td>
+                    <td>${ratingText}</td>
+                    <td>${getFeedbackStatusBadge(f.status)}</td>
+                    <td>${formatDate(f.feedback_date)}</td>
+                </tr>
+            `;
+        });
+        tbody.html(html);
+    } catch (error) {
+        $('#feedbacksTable').html('<tr><td colspan="5" class="text-center text-danger">加载失败</td></tr>');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}产品列表 - 农产品电商管理系统{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首页</a></li>
+        <li class="breadcrumb-item active" aria-current="page">产品管理</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fa fa-cubes mr-2"></i>产品管理</h2>
+            <a href="/products/add" class="btn btn-success">
+                <i class="fa fa-plus mr-1"></i>添加产品
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fa fa-search mr-2"></i>搜索筛选
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="searchForm" class="form-inline">
+                    <div class="form-group mr-3 mb-2">
+                        <label class="mr-2">产品名称:</label>
+                        <input type="text" class="form-control" id="searchName" placeholder="请输入产品名称">
+                    </div>
+                    <div class="form-group mr-3 mb-2">
+                        <label class="mr-2">等级:</label>
+                        <select class="form-control" id="searchGrade">
+                            <option value="">全部</option>
+                            <option value="特级">特级</option>
+                            <option value="一级">一级</option>
+                            <option value="二级">二级</option>
+                            <option value="三级">三级</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary mb-2 mr-2">
+                        <i class="fa fa-search mr-1"></i>搜索
+                    </button>
+                    <button type="button" class="btn btn-secondary mb-2" onclick="resetSearch()">
+                        <i class="fa fa-refresh mr-1"></i>重置
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fa fa-list mr-2"></i>产品列表
+                    <span class="badge badge-success ml-2" id="totalCount">0</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>产品名称</th>
+                                <th>规格</th>
+                                <th>等级</th>
+                                <th>生产日期</th>
+                                <th>保质期(天)</th>
+                                <th>建议零售价</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTable">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <nav id="paginationNav" class="mt-3">
+                    <ul class="pagination justify-content-center" id="pagination">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除该产品吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+const pageSize = 10;
+let deleteProductId = null;
+
+$(document).ready(function() {
+    loadProducts();
+    
+    $('#searchForm').submit(function(e) {
+        e.preventDefault();
+        currentPage = 1;
+        loadProducts();
+    });
+});
+
+async function loadProducts() {
+    try {
+        const name = $('#searchName').val();
+        const grade = $('#searchGrade').val();
+        
+        const params = {
+            page: currentPage,
+            limit: pageSize
+        };
+        
+        if (name) params.name = name;
+        if (grade) params.grade = grade;
+        
+        const data = await apiGet('/api/products/', params);
+        renderProductTable(data.products || []);
+        renderPagination(data.total);
+        $('#totalCount').text(data.total);
+    } catch (error) {
+        console.error('加载产品列表失败:', error);
+        $('#productTable').html('<tr><td colspan="8" class="text-center text-danger">加载失败</td></tr>');
+    }
+}
+
+function renderProductTable(products) {
+    const tbody = $('#productTable');
+    
+    if (products.length === 0) {
+        tbody.html('<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
+        return;
+    }
+    
+    let html = '';
+    products.forEach(product => {
+        html += `
+            <tr>
+                <td>${product.id}</td>
+                <td>${product.name}</td>
+                <td>${product.specification}</td>
+                <td><span class="badge badge-info">${product.grade}</span></td>
+                <td>${formatDate(product.production_date)}</td>
+                <td>${product.shelf_life}天</td>
+                <td>${formatMoney(product.suggested_retail_price)}</td>
+                <td class="table-action-btns">
+                    <button class="btn btn-sm btn-primary" onclick="viewProduct(${product.id})">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="editProduct(${product.id})">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="showDeleteModal(${product.id})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.html(html);
+}
+
+function renderPagination(total) {
+    const totalPages = Math.ceil(total / pageSize);
+    const pagination = $('#pagination');
+    
+    if (totalPages <= 1) {
+        pagination.html('');
+        return;
+    }
+    
+    let html = '';
+    
+    html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="goToPage(${currentPage - 1})">上一页</a>
+    </li>`;
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="goToPage(${i})">${i}</a>
+            </li>`;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="goToPage(${currentPage + 1})">下一页</a>
+    </li>`;
+    
+    pagination.html(html);
+}
+
+function goToPage(page) {
+    currentPage = page;
+    loadProducts();
+    return false;
+}
+
+function resetSearch() {
+    $('#searchName').val('');
+    $('#searchGrade').val('');
+    currentPage = 1;
+    loadProducts();
+}
+
+function viewProduct(id) {
+    showToast('查看产品详情功能开发中', '提示');
+}
+
+function editProduct(id) {
+    location.href = `/products/edit/${id}`;
+}
+
+function showDeleteModal(id) {
+    deleteProductId = id;
+    $('#deleteModal').modal('show');
+}
+
+$('#confirmDeleteBtn').click(async function() {
+    if (deleteProductId === null) return;
+    
+    try {
+        await apiDelete(`/api/products/${deleteProductId}`);
+        $('#deleteModal').modal('hide');
+        showToast('删除成功', '成功');
+        loadProducts();
+    } catch (error) {
+        showToast(error.message || '删除失败', '错误', 'error');
+    }
+});
+</script>
+{% endblock %}

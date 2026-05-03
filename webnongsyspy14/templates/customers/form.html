@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '编辑客户' if edit_mode else '添加客户' }} - 农产品电商管理系统{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首页</a></li>
+        <li class="breadcrumb-item"><a href="/customers">客户档案</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ '编辑客户' if edit_mode else '添加客户' }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<style>
+.form-group.has-error .form-control {
+    border-color: #dc3545;
+}
+.form-group.has-error .error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+.form-group.has-success .form-control {
+    border-color: #28a745;
+}
+.form-section-title {
+    font-weight: bold;
+    color: #28a745;
+    border-bottom: 2px solid #28a745;
+    padding-bottom: 8px;
+    margin: 20px 0 15px 0;
+}
+</style>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fa fa-{{ 'edit' if edit_mode else 'plus' }} mr-2"></i>
+                    {{ '编辑客户' if edit_mode else '添加客户' }}
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="customerForm" novalidate>
+                    <div class="form-section-title">基本信息</div>
+                    
+                    <div class="form-group" id="nameGroup">
+                        <label for="name">
+                            客户名称 <span class="text-danger">*</span>
+                            <small class="text-muted">（2-100个字符）</small>
+                        </label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="请输入客户名称" required
+                               maxlength="100">
+                        <div class="error-message" id="nameError" style="display:none;"></div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group col-md-6" id="phoneGroup">
+                            <label for="phone">
+                                联系电话 <span class="text-danger">*</span>
+                                <small class="text-muted">（手机号：11位 或 固定电话：带区号）</small>
+                            </label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   placeholder="例如：13812345678 或 010-12345678" required
+                                   maxlength="20">
+                            <div class="error-message" id="phoneError" style="display:none;"></div>
+                        </div>
+                        <div class="form-group col-md-6" id="emailGroup">
+                            <label for="email">
+                                电子邮箱
+                                <small class="text-muted">（选填）</small>
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email"
+                                   placeholder="例如：example@company.com"
+                                   maxlength="100">
+                            <div class="error-message" id="emailError" style="display:none;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="addressGroup">
+                        <label for="address">
+                            地址
+                            <small class="text-muted">（选填，最多200个字符）</small>
+                        </label>
+                        <input type="text" class="form-control" id="address" name="address"
+                               placeholder="请输入详细地址"
+                               maxlength="200">
+                        <div class="error-message" id="addressError" style="display:none;"></div>
+                    </div>
+                    
+                    <div class="form-group" id="contactPersonGroup">
+                        <label for="contact_person">
+                            联系人
+                            <small class="text-muted">（选填，最多50个字符）</small>
+                        </label>
+                        <input type="text" class="form-control" id="contact_person" name="contact_person"
+                               placeholder="请输入联系人姓名"
+                               maxlength="50">
+                        <div class="error-message" id="contactPersonError" style="display:none;"></div>
+                    </div>
+                    
+                    <div class="form-section-title">其他信息</div>
+                    
+                    <div class="form-group">
+                        <label for="preferences">
+                            购买偏好
+                            <small class="text-muted">（选填，记录客户的购买偏好、习惯等）</small>
+                        </label>
+                        <textarea class="form-control" id="preferences" name="preferences" rows="3"
+                                  placeholder="例如：偏好有机蔬菜、定期采购等"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status">状态</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="active">活跃</option>
+                            <option value="inactive">停用</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-primary mr-2" id="submitBtn">
+                            <i class="fa fa-save mr-1"></i>保存
+                        </button>
+                        <a href="/customers" class="btn btn-secondary">
+                            <i class="fa fa-times mr-1"></i>取消
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const editMode = {{ 'true' if edit_mode else 'false' }};
+const customerId = {{ customer_id if customer_id else 'null' }};
+let isValidForm = true;
+
+function validateName() {
+    const name = $('#name').val().trim();
+    const $group = $('#nameGroup');
+    const $error = $('#nameError');
+    
+    if (!name) {
+        showError($group, $error, '请输入客户名称');
+        return false;
+    }
+    
+    if (name.length < 2) {
+        showError($group, $error, '客户名称至少需要2个字符');
+        return false;
+    }
+    
+    if (name.length > 100) {
+        showError($group, $error, '客户名称不能超过100个字符');
+        return false;
+    }
+    
+    showSuccess($group, $error);
+    return true;
+}
+
+function validatePhone() {
+    const phone = $('#phone').val().trim();
+    const $group = $('#phoneGroup');
+    const $error = $('#phoneError');
+    
+    if (!phone) {
+        showError($group, $error, '请输入联系电话');
+        return false;
+    }
+    
+    if (phone.length < 7 || phone.length > 20) {
+        showError($group, $error, '联系电话长度应在7-20个字符之间');
+        return false;
+    }
+    
+    const mobilePattern = /^1[3-9]\d{9}$/;
+    const landlinePattern = /^0\d{2,3}-?\d{7,8}$/;
+    const landlineWithoutHyphen = /^0\d{9,11}$/;
+    const pureDigits = /^\d{7,11}$/;
+    
+    if (!(mobilePattern.test(phone) || 
+          landlinePattern.test(phone) || 
+          landlineWithoutHyphen.test(phone) ||
+          pureDigits.test(phone))) {
+        showError($group, $error, '请输入有效的手机号码（11位）或固定电话（如：010-12345678）');
+        return false;
+    }
+    
+    showSuccess($group, $error);
+    return true;
+}
+
+function validateEmail() {
+    const email = $('#email').val().trim();
+    const $group = $('#emailGroup');
+    const $error = $('#emailError');
+    
+    if (!email) {
+        clearStatus($group, $error);
+        return true;
+    }
+    
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(email)) {
+        showError($group, $error, '请输入有效的电子邮箱地址');
+        return false;
+    }
+    
+    if (email.length > 100) {
+        showError($group, $error, '电子邮箱不能超过100个字符');
+        return false;
+    }
+    
+    showSuccess($group, $error);
+    return true;
+}
+
+function validateAddress() {
+    const address = $('#address').val().trim();
+    const $group = $('#addressGroup');
+    const $error = $('#addressError');
+    
+    if (!address) {
+        clearStatus($group, $error);
+        return true;
+    }
+    
+    if (address.length > 200) {
+        showError($group, $error, '地址不能超过200个字符');
+        return false;
+    }
+    
+    showSuccess($group, $error);
+    return true;
+}
+
+function validateContactPerson() {
+    const contactPerson = $('#contact_person').val().trim();
+    const $group = $('#contactPersonGroup');
+    const $error = $('#contactPersonError');
+    
+    if (!contactPerson) {
+        clearStatus($group, $error);
+        return true;
+    }
+    
+    if (contactPerson.length > 50) {
+        showError($group, $error, '联系人姓名不能超过50个字符');
+        return false;
+    }
+    
+    showSuccess($group, $error);
+    return true;
+}
+
+function showError($group, $error, message) {
+    $group.removeClass('has-success').addClass('has-error');
+    $error.text(message).show();
+    isValidForm = false;
+}
+
+function showSuccess($group, $error) {
+    $group.removeClass('has-error').addClass('has-success');
+    $error.hide();
+}
+
+function clearStatus($group, $error) {
+    $group.removeClass('has-error has-success');
+    $error.hide();
+}
+
+function validateAllFields() {
+    isValidForm = true;
+    
+    const nameValid = validateName();
+    const phoneValid = validatePhone();
+    const emailValid = validateEmail();
+    const addressValid = validateAddress();
+    const contactPersonValid = validateContactPerson();
+    
+    return nameValid && phoneValid && emailValid && addressValid && contactPersonValid;
+}
+
+function setButtonLoading(loading) {
+    const $btn = $('#submitBtn');
+    if (loading) {
+        $btn.prop('disabled', true);
+        $btn.html('<i class="fa fa-spinner fa-spin mr-1"></i>保存中...');
+    } else {
+        $btn.prop('disabled', false);
+        $btn.html('<i class="fa fa-save mr-1"></i>保存');
+    }
+}
+
+$(document).ready(function() {
+    if (editMode && customerId) {
+        loadCustomerData();
+    }
+    
+    $('#name').on('blur', validateName);
+    $('#phone').on('blur', validatePhone);
+    $('#email').on('blur', validateEmail);
+    $('#address').on('blur', validateAddress);
+    $('#contact_person').on('blur', validateContactPerson);
+    
+    $('#name').on('input', function() {
+        if ($('#nameGroup').hasClass('has-error')) {
+            validateName();
+        }
+    });
+    
+    $('#phone').on('input', function() {
+        if ($('#phoneGroup').hasClass('has-error')) {
+            validatePhone();
+        }
+    });
+    
+    $('#email').on('input', function() {
+        if ($('#emailGroup').hasClass('has-error')) {
+            validateEmail();
+        }
+    });
+    
+    $('#customerForm').submit(async function(e) {
+        e.preventDefault();
+        
+        if (!validateAllFields()) {
+            showToast('请检查表单填写是否正确', '错误', 'error');
+            return;
+        }
+        
+        await saveCustomer();
+    });
+});
+
+async function loadCustomerData() {
+    try {
+        const customer = await apiGet(`/api/customers/${customerId}`);
+        $('#name').val(customer.name);
+        $('#phone').val(customer.phone);
+        $('#email').val(customer.email || '');
+        $('#address').val(customer.address || '');
+        $('#contact_person').val(customer.contact_person || '');
+        $('#preferences').val(customer.preferences || '');
+        $('#status').val(customer.status);
+    } catch (error) {
+        showToast(error.message || '加载客户信息失败', '错误', 'error');
+    }
+}
+
+async function saveCustomer() {
+    const formData = {
+        name: $('#name').val().trim(),
+        phone: $('#phone').val().trim(),
+        email: $('#email').val().trim() || null,
+        address: $('#address').val().trim() || null,
+        contact_person: $('#contact_person').val().trim() || null,
+        preferences: $('#preferences').val().trim() || null,
+        status: $('#status').val()
+    };
+    
+    setButtonLoading(true);
+    
+    try {
+        if (editMode && customerId) {
+            await apiPut(`/api/customers/${customerId}`, formData);
+            showToast('更新成功', '成功');
+        } else {
+            await apiPost('/api/customers/', formData);
+            showToast('添加成功', '成功');
+        }
+        
+        setTimeout(() => {
+            location.href = '/customers';
+        }, 1000);
+    } catch (error) {
+        let errorMsg = error.message || '保存失败';
+        
+        if (error.response) {
+            try {
+                const errorData = await error.response.json();
+                if (errorData.detail) {
+                    if (Array.isArray(errorData.detail)) {
+                        errorMsg = errorData.detail.map(e => e.msg || e).join('；');
+                    } else {
+                        errorMsg = errorData.detail;
+                    }
+                }
+            } catch (e) {
+                // 忽略解析错误
+            }
+        }
+        
+        showToast(errorMsg, '错误', 'error');
+    } finally {
+        setButtonLoading(false);
+    }
+}
+</script>
+{% endblock %}

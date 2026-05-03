@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block title %}反馈管理 - 农产品电商管理系统{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首页</a></li>
+        <li class="breadcrumb-item active" aria-current="page">反馈管理</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fa fa-comments mr-2"></i>反馈列表
+                </h6>
+                <div>
+                    <button class="btn btn-primary btn-sm" onclick="refreshData()">
+                        <i class="fa fa-refresh mr-1"></i>刷新
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="search-bar">
+                    <form id="searchForm" class="form-inline">
+                        <div class="form-group mr-2">
+                            <input type="text" class="form-control form-control-sm" id="searchKeyword" 
+                                   placeholder="搜索客户名称、反馈内容...">
+                        </div>
+                        <div class="form-group mr-2">
+                            <select class="form-control form-control-sm" id="searchType">
+                                <option value="">全部类型</option>
+                                <option value="suggestion">建议</option>
+                                <option value="complaint">投诉</option>
+                                <option value="praise">表扬</option>
+                            </select>
+                        </div>
+                        <div class="form-group mr-2">
+                            <select class="form-control form-control-sm" id="searchStatus">
+                                <option value="">全部状态</option>
+                                <option value="pending">待处理</option>
+                                <option value="processing">处理中</option>
+                                <option value="resolved">已解决</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fa fa-search mr-1"></i>搜索
+                        </button>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="feedbacksTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>客户</th>
+                                <th>关联订单</th>
+                                <th>反馈类型</th>
+                                <th>评分</th>
+                                <th>内容摘要</th>
+                                <th>状态</th>
+                                <th>反馈时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedbacksTableBody">
+                            <tr>
+                                <td colspan="9" class="text-center">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row mt-4" id="paginationRow" style="display: none;">
+                    <div class="col-md-6">
+                        <span id="paginationInfo" class="text-muted"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <nav>
+                            <ul class="pagination justify-content-end" id="paginationUl">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="feedbackDetailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="feedbackModalTitle">反馈详情</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="feedbackModalBody">
+                <div class="text-center">加载中...</div>
+            </div>
+            <div class="modal-footer" id="feedbackModalFooter">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="replyFeedbackBtn" style="display: none;">
+                    <i class="fa fa-reply mr-1"></i>回复
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="replyModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">回复反馈</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="replyForm">
+                    <div class="form-group">
+                        <label for="replyStatus">更新状态</label>
+                        <select class="form-control" id="replyStatus">
+                            <option value="pending">待处理</option>
+                            <option value="processing">处理中</option>
+                            <option value="resolved">已解决</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="replyContent">回复内容 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="replyContent" rows="5" required
+                                  placeholder="请输入回复内容..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="submitReply()">
+                    <i class="fa fa-send mr-1"></i>提交
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+const pageSize = 10;
+let currentFeedbackId = null;
+let currentFeedback = null;
+
+$(document).ready(function() {
+    loadFeedbacks();
+    
+    $('#searchForm').submit(function(e) {
+        e.preventDefault();
+        currentPage = 1;
+        loadFeedbacks();
+    });
+});
+
+async function loadFeedbacks() {
+    try {
+        const params = {
+            page: currentPage,
+            limit: pageSize
+        };
+        
+        const keyword = $('#searchKeyword').val().trim();
+        const feedbackType = $('#searchType').val();
+        const status = $('#searchStatus').val();
+        
+        if (keyword) {
+            params.keyword = keyword;
+        }
+        if (feedbackType) {
+            params.feedback_type = feedbackType;
+        }
+        if (status) {
+            params.status = status;
+        }
+        
+        const data = await apiGet('/api/feedbacks/', params);
+        
+        const feedbacks = data.feedbacks || data || [];
+        const total = data.total || feedbacks.length;
+        
+        renderTable(feedbacks);
+        renderPagination(total);
+        
+    } catch (error) {
+        showToast(error.message || '加载反馈列表失败', '错误', 'error');
+        renderTable([]);
+    }
+}
+
+function renderTable(feedbacks) {
+    const tbody = $('#feedbacksTableBody');
+    
+    if (!feedbacks || feedbacks.length === 0) {
+        tbody.html('<tr><td colspan="9" class="text-center">暂无数据</td></tr>');
+        return;
+    }
+    
+    let html = '';
+    feedbacks.forEach(feedback => {
+        const typeBadge = getTypeBadge(feedback.feedback_type);
+        const statusBadge = getStatusBadge(feedback.status);
+        const stars = getRatingStars(feedback.rating);
+        const contentPreview = feedback.content && feedback.content.length > 50 
+            ? feedback.content.substring(0, 50) + '...' 
+            : (feedback.content || '-');
+        
+        html += `
+            <tr>
+                <td>${feedback.id}</td>
+                <td>${feedback.customer_name || '-'}</td>
+                <td>
+                    ${feedback.order_id ? `<a href="/orders/detail/${feedback.order_id}" class="text-primary">#${feedback.order_id}</a>` : '-'}
+                </td>
+                <td>${typeBadge}</td>
+                <td>${stars}</td>
+                <td title="${feedback.content || ''}">${contentPreview}</td>
+                <td>${statusBadge}</td>
+                <td>${formatDate(feedback.feedback_date)}</td>
+                <td>
+                    <button class="btn btn-outline-info btn-sm mr-1" 
+                            onclick="viewFeedback(${feedback.id})" title="查看详情">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    ${feedback.status !== 'resolved' ? `
+                    <button class="btn btn-outline-primary btn-sm mr-1" 
+                            onclick="openReplyModal(${feedback.id})" title="回复">
+                        <i class="fa fa-reply"></i>
+                    </button>
+                    ` : ''}
+                    <button class="btn btn-outline-danger btn-sm" 
+                            onclick="deleteFeedback(${feedback.id})" title="删除">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.html(html);
+}
+
+function renderPagination(total) {
+    const paginationRow = $('#paginationRow');
+    const paginationInfo = $('#paginationInfo');
+    const paginationUl = $('#paginationUl');
+    
+    if (total === 0) {
+        paginationRow.hide();
+        return;
+    }
+    
+    paginationRow.show();
+    
+    const start = (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, total);
+    paginationInfo.text(`显示 ${start}-${end} 条，共 ${total} 条`);
+    
+    const totalPages = Math.ceil(total / pageSize);
+    
+    let html = '';
+    
+    if (currentPage > 1) {
+        html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(${currentPage - 1})">上一页</a></li>`;
+    } else {
+        html += `<li class="page-item disabled"><a class="page-link" href="javascript:void(0)">上一页</a></li>`;
+    }
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            html += `<li class="page-item active"><a class="page-link" href="javascript:void(0)">${i}</a></li>`;
+        } else if (i >= currentPage - 2 && i <= currentPage + 2) {
+            html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(${i})">${i}</a></li>`;
+        }
+    }
+    
+    if (currentPage < totalPages) {
+        html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(${currentPage + 1})">下一页</a></li>`;
+    } else {
+        html += `<li class="page-item disabled"><a class="page-link" href="javascript:void(0)">下一页</a></li>`;
+    }
+    
+    paginationUl.html(html);
+}
+
+function goToPage(page) {
+    currentPage = page;
+    loadFeedbacks();
+}
+
+function refreshData() {
+    currentPage = 1;
+    $('#searchKeyword').val('');
+    $('#searchType').val('');
+    $('#searchStatus').val('');
+    loadFeedbacks();
+}
+
+function getTypeBadge(type) {
+    const typeMap = {
+        'suggestion': { class: 'badge-info', text: '建议' },
+        'complaint': { class: 'badge-danger', text: '投诉' },
+        'praise': { class: 'badge-success', text: '表扬' }
+    };
+    const info = typeMap[type] || { class: 'badge-secondary', text: type };
+    return `<span class="badge ${info.class}">${info.text}</span>`;
+}
+
+function getStatusBadge(status) {
+    const statusMap = {
+        'pending': { class: 'badge-warning', text: '待处理' },
+        'processing': { class: 'badge-info', text: '处理中' },
+        'resolved': { class: 'badge-success', text: '已解决' }
+    };
+    const info = statusMap[status] || { class: 'badge-secondary', text: status };
+    return `<span class="badge ${info.class}">${info.text}</span>`;
+}
+
+function getRatingStars(rating) {
+    if (!rating) return '-';
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+            stars += '<i class="fa fa-star text-warning"></i>';
+        } else {
+            stars += '<i class="fa fa-star-o text-muted"></i>';
+        }
+    }
+    return stars;
+}
+
+async function viewFeedback(id) {
+    currentFeedbackId = id;
+    $('#feedbackModalTitle').text('反馈详情');
+    $('#feedbackModalBody').html('<div class="text-center"><i class="fa fa-spinner fa-spin mr-2"></i>加载中...</div>');
+    $('#replyFeedbackBtn').hide();
+    
+    try {
+        currentFeedback = await apiGet(`/api/feedbacks/${id}`);
+        
+        const typeBadge = getTypeBadge(currentFeedback.feedback_type);
+        const statusBadge = getStatusBadge(currentFeedback.status);
+        const stars = getRatingStars(currentFeedback.rating);
+        
+        const html = `
+            <div class="feedback-detail">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p><strong>客户名称：</strong>${currentFeedback.customer_name || '-'}</p>
+                        <p><strong>关联订单：</strong>
+                            ${currentFeedback.order_id ? `<a href="/orders/detail/${currentFeedback.order_id}" class="text-primary" target="_blank">#${currentFeedback.order_id}</a>` : '-'}
+                        </p>
+                        <p><strong>反馈类型：</strong>${typeBadge}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>评分：</strong>${stars}</p>
+                        <p><strong>状态：</strong>${statusBadge}</p>
+                        <p><strong>反馈时间：</strong>${formatDateTime(currentFeedback.feedback_date)}</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label><strong>反馈内容：</strong></label>
+                    <div class="border p-3 bg-light">
+                        <p class="mb-0">${currentFeedback.content || '无'}</p>
+                    </div>
+                </div>
+                ${currentFeedback.response ? `
+                <hr>
+                <div class="form-group">
+                    <label><strong>回复内容：</strong></label>
+                    <div class="border p-3 bg-info text-white">
+                        <p class="mb-0">${currentFeedback.response}</p>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        
+        $('#feedbackModalBody').html(html);
+        
+        if (currentFeedback.status !== 'resolved') {
+            $('#replyFeedbackBtn').show();
+        }
+        
+    } catch (error) {
+        $('#feedbackModalBody').html(`<div class="alert alert-danger">${error.message || '加载反馈详情失败'}</div>`);
+    }
+    
+    $('#feedbackDetailModal').modal('show');
+}
+
+function openReplyModal(id) {
+    currentFeedbackId = id;
+    $('#replyForm')[0].reset();
+    $('#replyModal').modal('show');
+}
+
+async function submitReply() {
+    const response = $('#replyContent').val().trim();
+    const status = $('#replyStatus').val();
+    
+    if (!response) {
+        showToast('请输入回复内容', '错误', 'error');
+        return;
+    }
+    
+    try {
+        await apiPut(`/api/feedbacks/${currentFeedbackId}`, {
+            response: response,
+            status: status
+        });
+        
+        showToast('回复成功', '成功');
+        $('#replyModal').modal('hide');
+        loadFeedbacks();
+        
+    } catch (error) {
+        showToast(error.message || '回复失败', '错误', 'error');
+    }
+}
+
+async function deleteFeedback(id) {
+    if (!confirm('确定要删除此反馈吗？')) {
+        return;
+    }
+    
+    try {
+        await apiDelete(`/api/feedbacks/${id}`);
+        showToast('反馈删除成功', '成功');
+        loadFeedbacks();
+    } catch (error) {
+        showToast(error.message || '删除失败', '错误', 'error');
+    }
+}
+
+$('#replyFeedbackBtn').click(function() {
+    $('#feedbackDetailModal').modal('hide');
+    openReplyModal(currentFeedbackId);
+});
+</script>
+{% endblock %}
