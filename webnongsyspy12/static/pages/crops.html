@@ -1,0 +1,405 @@
+<div id="cropsPage">
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h2><i class="fa fa-seedling text-success mr-2"></i>作物管理</h2>
+        <button class="btn btn-primary" onclick="showAddCropModal()">
+            <i class="fa fa-plus mr-1"></i>添加作物
+        </button>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-success display-4"><i class="fa fa-seedling"></i></div>
+                    <h3 class="mt-2" id="cropsTotal">0</h3>
+                    <p class="text-muted mb-0">作物总数</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-primary display-4"><i class="fa fa-leaf"></i></div>
+                    <h3 class="mt-2" id="cropsGrowing">0</h3>
+                    <p class="text-muted mb-0">生长中</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-warning display-4"><i class="fa fa-shopping-basket"></i></div>
+                    <h3 class="mt-2" id="cropsHarvested">0</h3>
+                    <p class="text-muted mb-0">已收获</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-danger display-4"><i class="fa fa-exclamation-triangle"></i></div>
+                    <h3 class="mt-2" id="cropsDiseased">0</h3>
+                    <p class="text-muted mb-0">有病害</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 作物列表 -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">作物列表</h5>
+            <div class="form-inline">
+                <select class="form-control form-control-sm mr-2" id="cropTypeFilter">
+                    <option value="">全部类型</option>
+                </select>
+                <select class="form-control form-control-sm" id="cropStatusFilter">
+                    <option value="">全部状态</option>
+                    <option value="growing">生长中</option>
+                    <option value="harvested">已收获</option>
+                    <option value="diseased">有病害</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>作物名称</th>
+                            <th>类型</th>
+                            <th>品种</th>
+                            <th>种植位置</th>
+                            <th>状态</th>
+                            <th>种植日期</th>
+                            <th>预计收获</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cropsTableBody">
+                        <tr><td colspan="9" class="text-center text-muted">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0" id="cropsPagination">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑作物模态框 -->
+<div class="modal fade" id="cropModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cropModalTitle">添加作物</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="cropForm">
+                <input type="hidden" id="editCropId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>作物名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cropName" required placeholder="例如：番茄、黄瓜等">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>作物类型</label>
+                            <select class="form-control" id="cropType">
+                                <option value="">请选择</option>
+                                <option value="蔬菜">蔬菜</option>
+                                <option value="水果">水果</option>
+                                <option value="粮食">粮食</option>
+                                <option value="花卉">花卉</option>
+                                <option value="药材">药材</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>品种</label>
+                            <input type="text" class="form-control" id="cropVariety" placeholder="例如：樱桃番茄">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>种植日期</label>
+                            <input type="date" class="form-control" id="plantingDate">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>预计收获日期</label>
+                            <input type="date" class="form-control" id="expectedHarvestDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>种植位置</label>
+                        <input type="text" class="form-control" id="cropLocation" placeholder="例如：A区1号大棚">
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="cropStatus">
+                            <option value="growing">生长中</option>
+                            <option value="harvested">已收获</option>
+                            <option value="diseased">有病害</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea class="form-control" id="cropNotes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentCropsPage = 1;
+const cropsPerPage = 10;
+
+function loadCropsData() {
+    // 加载统计
+    $.getJSON(`${API_BASE}/crops/statistics`, function(res) {
+        if (res.success) {
+            const stats = res.data;
+            $('#cropsTotal').text(stats.total || 0);
+            $('#cropsGrowing').text(stats.by_status ? (stats.by_status.growing || 0) : 0);
+            $('#cropsHarvested').text(stats.by_status ? (stats.by_status.harvested || 0) : 0);
+            $('#cropsDiseased').text(stats.by_status ? (stats.by_status.diseased || 0) : 0);
+            
+            // 填充类型筛选
+            if (stats.by_type) {
+                let options = '<option value="">全部类型</option>';
+                Object.keys(stats.by_type).forEach(type => {
+                    options += `<option value="${type}">${type}</option>`;
+                });
+                $('#cropTypeFilter').html(options);
+            }
+        }
+    });
+
+    // 加载列表
+    loadCropsList();
+}
+
+function loadCropsList() {
+    const cropType = $('#cropTypeFilter').val();
+    const status = $('#cropStatusFilter').val();
+    
+    let url = `${API_BASE}/crops?skip=${(currentCropsPage - 1) * cropsPerPage}&limit=${cropsPerPage}`;
+    if (cropType) url += `&crop_type=${encodeURIComponent(cropType)}`;
+    if (status) url += `&status=${status}`;
+    
+    $.getJSON(url, function(res) {
+        if (res.success) {
+            renderCropsTable(res.data);
+            renderCropsPagination(res.total);
+        }
+    });
+}
+
+function renderCropsTable(data) {
+    if (!data || data.length === 0) {
+        $('#cropsTableBody').html('<tr><td colspan="9" class="text-center text-muted">暂无数据</td></tr>');
+        return;
+    }
+    
+    let html = '';
+    data.forEach(item => {
+        const statusClass = item.status === 'growing' ? 'success' : 
+                           item.status === 'harvested' ? 'warning' : 'danger';
+        const statusText = item.status === 'growing' ? '生长中' : 
+                          item.status === 'harvested' ? '已收获' : '有病害';
+        
+        html += `
+            <tr>
+                <td>${item.id}</td>
+                <td><strong>${item.crop_name}</strong></td>
+                <td>${item.crop_type || '-'}</td>
+                <td>${item.variety || '-'}</td>
+                <td>${item.location || '-'}</td>
+                <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                <td>${item.planting_date ? new Date(item.planting_date).toLocaleDateString() : '-'}</td>
+                <td>${item.expected_harvest_date ? new Date(item.expected_harvest_date).toLocaleDateString() : '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewCrop(${item.id})">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" onclick="editCrop(${item.id})">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteCrop(${item.id})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    $('#cropsTableBody').html(html);
+}
+
+function renderCropsPagination(total) {
+    const totalPages = Math.ceil(total / cropsPerPage);
+    if (totalPages <= 1) {
+        $('#cropsPagination').html('');
+        return;
+    }
+    
+    let html = '';
+    html += `<li class="page-item ${currentCropsPage === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changeCropsPage(${currentCropsPage - 1})">上一页</a>
+    </li>`;
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentCropsPage - 2 && i <= currentCropsPage + 2)) {
+            html += `<li class="page-item ${i === currentCropsPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changeCropsPage(${i})">${i}</a>
+            </li>`;
+        } else if (i === currentCropsPage - 3 || i === currentCropsPage + 3) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    html += `<li class="page-item ${currentCropsPage === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changeCropsPage(${currentCropsPage + 1})">下一页</a>
+    </li>`;
+    
+    $('#cropsPagination').html(html);
+}
+
+function changeCropsPage(page) {
+    if (page < 1) return;
+    currentCropsPage = page;
+    loadCropsList();
+}
+
+function showAddCropModal() {
+    $('#cropModalTitle').text('添加作物');
+    $('#editCropId').val('');
+    $('#cropForm')[0].reset();
+    $('#cropStatus').val('growing');
+    $('#cropModal').modal('show');
+}
+
+function viewCrop(id) {
+    alert('查看作物详情功能，请在生长记录页面查看该作物的完整信息');
+}
+
+function editCrop(id) {
+    $.getJSON(`${API_BASE}/crops/${id}`, function(res) {
+        if (res.success) {
+            const crop = res.data;
+            $('#cropModalTitle').text('编辑作物');
+            $('#editCropId').val(crop.id);
+            $('#cropName').val(crop.crop_name);
+            $('#cropType').val(crop.crop_type || '');
+            $('#cropVariety').val(crop.variety || '');
+            $('#cropLocation').val(crop.location || '');
+            $('#cropStatus').val(crop.status);
+            $('#cropNotes').val(crop.notes || '');
+            
+            if (crop.planting_date) {
+                $('#plantingDate').val(new Date(crop.planting_date).toISOString().split('T')[0]);
+            }
+            if (crop.expected_harvest_date) {
+                $('#expectedHarvestDate').val(new Date(crop.expected_harvest_date).toISOString().split('T')[0]);
+            }
+            
+            $('#cropModal').modal('show');
+        }
+    });
+}
+
+function deleteCrop(id) {
+    if (confirm('确定要删除该作物吗？相关的生长记录也会受到影响。')) {
+        $.ajax({
+            url: `${API_BASE}/crops/${id}`,
+            type: 'DELETE',
+            success: function(res) {
+                if (res.success) {
+                    loadCropsData();
+                }
+            },
+            error: function(xhr) {
+                const err = JSON.parse(xhr.responseText);
+                alert('删除失败: ' + (err.detail || '未知错误'));
+            }
+        });
+    }
+}
+
+// 表单提交
+$('#cropForm').submit(function(e) {
+    e.preventDefault();
+    
+    const id = $('#editCropId').val();
+    const data = {
+        crop_name: $('#cropName').val(),
+        crop_type: $('#cropType').val() || null,
+        variety: $('#cropVariety').val() || null,
+        planting_date: $('#plantingDate').val() ? new Date($('#plantingDate').val()).toISOString() : null,
+        expected_harvest_date: $('#expectedHarvestDate').val() ? new Date($('#expectedHarvestDate').val()).toISOString() : null,
+        location: $('#cropLocation').val() || null,
+        status: $('#cropStatus').val(),
+        notes: $('#cropNotes').val() || null
+    };
+    
+    if (id) {
+        // 更新
+        $.ajax({
+            url: `${API_BASE}/crops/${id}`,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(res) {
+                if (res.success) {
+                    $('#cropModal').modal('hide');
+                    loadCropsData();
+                }
+            },
+            error: function(xhr) {
+                const err = JSON.parse(xhr.responseText);
+                alert('保存失败: ' + (err.detail || '未知错误'));
+            }
+        });
+    } else {
+        // 创建
+        $.ajax({
+            url: `${API_BASE}/crops`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(res) {
+                if (res.success) {
+                    $('#cropModal').modal('hide');
+                    loadCropsData();
+                }
+            },
+            error: function(xhr) {
+                const err = JSON.parse(xhr.responseText);
+                alert('保存失败: ' + (err.detail || '未知错误'));
+            }
+        });
+    }
+});
+
+// 筛选器变化
+$('#cropTypeFilter, #cropStatusFilter').change(function() {
+    currentCropsPage = 1;
+    loadCropsList();
+});
+
+// 初始化
+loadCropsData();
+</script>

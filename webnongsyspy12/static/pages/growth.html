@@ -1,0 +1,441 @@
+<div id="growthPage">
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h2><i class="fa fa-camera text-warning mr-2"></i>生长记录</h2>
+        <button class="btn btn-primary" onclick="showAddRecordModal()">
+            <i class="fa fa-plus mr-1"></i>添加记录
+        </button>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-primary display-4"><i class="fa fa-file-text-o"></i></div>
+                    <h3 class="mt-2" id="recordsTotal">0</h3>
+                    <p class="text-muted mb-0">记录总数</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-success display-4"><i class="fa fa-image"></i></div>
+                    <h3 class="mt-2" id="recordsImage">0</h3>
+                    <p class="text-muted mb-0">图片记录</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-info display-4"><i class="fa fa-video-camera"></i></div>
+                    <h3 class="mt-2" id="recordsVideo">0</h3>
+                    <p class="text-muted mb-0">视频记录</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="text-danger display-4"><i class="fa fa-exclamation-circle"></i></div>
+                    <h3 class="mt-2" id="recordsDisease">0</h3>
+                    <p class="text-muted mb-0">检测到病害</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 筛选和列表 -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">记录列表</h5>
+            <div class="form-inline">
+                <select class="form-control form-control-sm mr-2" id="growthCropFilter">
+                    <option value="">全部作物</option>
+                </select>
+                <select class="form-control form-control-sm mr-2" id="growthTypeFilter">
+                    <option value="">全部类型</option>
+                    <option value="image">图片</option>
+                    <option value="video">视频</option>
+                    <option value="text">文字</option>
+                </select>
+                <select class="form-control form-control-sm" id="growthStageFilter">
+                    <option value="">全部生育期</option>
+                    <option value="出苗期">出苗期</option>
+                    <option value="幼苗期">幼苗期</option>
+                    <option value="开花期">开花期</option>
+                    <option value="结果期">结果期</option>
+                    <option value="成熟期">成熟期</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>作物</th>
+                            <th>类型</th>
+                            <th>标题</th>
+                            <th>生育期</th>
+                            <th>AI诊断</th>
+                            <th>记录时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="growthTableBody">
+                        <tr><td colspan="8" class="text-center text-muted">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0" id="growthPagination">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- 添加记录模态框 -->
+<div class="modal fade" id="growthModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加生长记录</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="growthForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>选择作物 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="recordCropId" required>
+                                <option value="">请选择作物</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>记录类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="recordType" required>
+                                <option value="image">图片</option>
+                                <option value="video">视频</option>
+                                <option value="text">文字记录</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>标题</label>
+                        <input type="text" class="form-control" id="recordTitle" placeholder="例如：开花期观察记录">
+                    </div>
+                    <div class="form-group">
+                        <label>生育期</label>
+                        <select class="form-control" id="recordGrowthStage">
+                            <option value="">请选择</option>
+                            <option value="出苗期">出苗期</option>
+                            <option value="幼苗期">幼苗期</option>
+                            <option value="开花期">开花期</option>
+                            <option value="结果期">结果期</option>
+                            <option value="成熟期">成熟期</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="fileUploadGroup">
+                        <label>上传文件</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="recordFile" accept="image/*,video/*">
+                            <label class="custom-file-label" for="recordFile">选择文件</label>
+                        </div>
+                        <small class="form-text text-muted">支持图片（jpg, png, gif）和视频（mp4, avi, mov）格式</small>
+                    </div>
+                    <div class="form-group">
+                        <label>详细描述</label>
+                        <textarea class="form-control" id="recordDescription" rows="3" placeholder="记录作物生长的详细情况..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 查看记录详情模态框 -->
+<div class="modal fade" id="recordDetailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="recordDetailTitle">记录详情</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="recordDetailBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentGrowthPage = 1;
+const growthPerPage = 10;
+
+function loadGrowthData() {
+    // 加载统计
+    $.getJSON(`${API_BASE}/growth-records/statistics`, function(res) {
+        if (res.success) {
+            const stats = res.data;
+            $('#recordsTotal').text(stats.total || 0);
+            $('#recordsImage').text(stats.by_type ? (stats.by_type.image || 0) : 0);
+            $('#recordsVideo').text(stats.by_type ? (stats.by_type.video || 0) : 0);
+            $('#recordsDisease').text(stats.disease_detected_count || 0);
+        }
+    });
+
+    // 加载作物列表到筛选器
+    $.getJSON(`${API_BASE}/crops?limit=100`, function(res) {
+        if (res.success && res.data.length > 0) {
+            let options = '<option value="">全部作物</option>';
+            res.data.forEach(crop => {
+                options += `<option value="${crop.id}">${crop.crop_name} (${crop.id})</option>`;
+            });
+            $('#growthCropFilter').html(options);
+            $('#recordCropId').html(options);
+        }
+    });
+
+    // 加载列表
+    loadGrowthList();
+}
+
+function loadGrowthList() {
+    const cropId = $('#growthCropFilter').val();
+    const recordType = $('#growthTypeFilter').val();
+    const growthStage = $('#growthStageFilter').val();
+    
+    let url = `${API_BASE}/growth-records?skip=${(currentGrowthPage - 1) * growthPerPage}&limit=${growthPerPage}`;
+    if (cropId) url += `&crop_id=${cropId}`;
+    if (recordType) url += `&record_type=${recordType}`;
+    if (growthStage) url += `&growth_stage=${encodeURIComponent(growthStage)}`;
+    
+    $.getJSON(url, function(res) {
+        if (res.success) {
+            renderGrowthTable(res.data);
+            renderGrowthPagination(res.total);
+        }
+    });
+}
+
+function renderGrowthTable(data) {
+    if (!data || data.length === 0) {
+        $('#growthTableBody').html('<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
+        return;
+    }
+    
+    let html = '';
+    data.forEach(item => {
+        const typeIcon = item.record_type === 'image' ? 'fa-image text-success' : 
+                       item.record_type === 'video' ? 'fa-video-camera text-info' : 'fa-file-text-o text-secondary';
+        
+        let diagnosisHtml = '-';
+        if (item.ai_diagnosis) {
+            if (item.disease_detected) {
+                diagnosisHtml = `<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> 检测到${item.disease_detected}</span>`;
+            } else {
+                diagnosisHtml = `<span class="text-success"><i class="fa fa-check-circle"></i> 健康</span>`;
+            }
+        }
+        
+        html += `
+            <tr>
+                <td>${item.id}</td>
+                <td>作物${item.crop_id}</td>
+                <td><i class="fa ${typeIcon}"></i></td>
+                <td>${item.title || '-'}</td>
+                <td>${item.growth_stage ? `<span class="growth-stage">${item.growth_stage}</span>` : '-'}</td>
+                <td>${diagnosisHtml}</td>
+                <td>${new Date(item.recorded_at).toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewRecord(${item.id})">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteRecord(${item.id})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    $('#growthTableBody').html(html);
+}
+
+function renderGrowthPagination(total) {
+    const totalPages = Math.ceil(total / growthPerPage);
+    if (totalPages <= 1) {
+        $('#growthPagination').html('');
+        return;
+    }
+    
+    let html = '';
+    html += `<li class="page-item ${currentGrowthPage === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changeGrowthPage(${currentGrowthPage - 1})">上一页</a>
+    </li>`;
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentGrowthPage - 2 && i <= currentGrowthPage + 2)) {
+            html += `<li class="page-item ${i === currentGrowthPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changeGrowthPage(${i})">${i}</a>
+            </li>`;
+        } else if (i === currentGrowthPage - 3 || i === currentGrowthPage + 3) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    html += `<li class="page-item ${currentGrowthPage === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changeGrowthPage(${currentGrowthPage + 1})">下一页</a>
+    </li>`;
+    
+    $('#growthPagination').html(html);
+}
+
+function changeGrowthPage(page) {
+    if (page < 1) return;
+    currentGrowthPage = page;
+    loadGrowthList();
+}
+
+function showAddRecordModal() {
+    $('#growthForm')[0].reset();
+    $('.custom-file-label').text('选择文件');
+    $('#growthModal').modal('show');
+}
+
+function viewRecord(id) {
+    $.getJSON(`${API_BASE}/growth-records/${id}`, function(res) {
+        if (res.success) {
+            const record = res.data;
+            
+            let mediaHtml = '';
+            if (record.file_path && record.record_type === 'image') {
+                mediaHtml = `<div class="text-center mb-3">
+                    <img src="${record.file_path}" class="img-fluid rounded" style="max-height: 300px;">
+                </div>`;
+            } else if (record.file_path && record.record_type === 'video') {
+                mediaHtml = `<div class="text-center mb-3">
+                    <video src="${record.file_path}" controls class="img-fluid rounded" style="max-height: 300px;"></video>
+                </div>`;
+            }
+            
+            let diagnosisHtml = '';
+            if (record.ai_diagnosis) {
+                if (record.disease_detected) {
+                    diagnosisHtml = `
+                        <div class="disease-alert">
+                            <h6><i class="fa fa-exclamation-triangle text-danger mr-2"></i>AI检测到病害</h6>
+                            <p class="mb-1"><strong>病害类型：</strong>${record.disease_detected}</p>
+                            <p class="mb-0"><strong>置信度：</strong>${(record.diagnosis_confidence * 100).toFixed(1)}%</p>
+                        </div>`;
+                } else {
+                    diagnosisHtml = `
+                        <div class="ai-diagnosis">
+                            <h6><i class="fa fa-robot text-warning mr-2"></i>AI诊断结果</h6>
+                            <p class="mb-1">${record.ai_diagnosis}</p>
+                            <p class="mb-0"><strong>营养状况：</strong>${record.nutrition_status || '正常'}</p>
+                        </div>`;
+                }
+            }
+            
+            $('#recordDetailTitle').text(`记录 #${record.id} - ${record.title || '无标题'}`);
+            $('#recordDetailBody').html(`
+                ${mediaHtml}
+                <table class="table table-borderless">
+                    <tr><td style="width: 150px;"><strong>作物ID：</strong></td><td>${record.crop_id}</td></tr>
+                    <tr><td><strong>记录类型：</strong></td><td>${record.record_type === 'image' ? '图片' : record.record_type === 'video' ? '视频' : '文字'}</td></tr>
+                    <tr><td><strong>生育期：</strong></td><td>${record.growth_stage || '-'}</td></tr>
+                    <tr><td><strong>记录时间：</strong></td><td>${new Date(record.recorded_at).toLocaleString()}</td></tr>
+                </table>
+                ${record.description ? `<div class="form-group"><label>详细描述：</label><p class="text-muted">${record.description}</p></div>` : ''}
+                ${diagnosisHtml}
+            `);
+            $('#recordDetailModal').modal('show');
+        }
+    });
+}
+
+function deleteRecord(id) {
+    if (confirm('确定要删除该记录吗？关联的文件也会被删除。')) {
+        $.ajax({
+            url: `${API_BASE}/growth-records/${id}`,
+            type: 'DELETE',
+            success: function(res) {
+                if (res.success) {
+                    loadGrowthData();
+                }
+            },
+            error: function(xhr) {
+                const err = JSON.parse(xhr.responseText);
+                alert('删除失败: ' + (err.detail || '未知错误'));
+            }
+        });
+    }
+}
+
+// 文件选择显示
+$('#recordFile').change(function() {
+    const fileName = $(this).val().split('\\').pop();
+    $(this).next('.custom-file-label').text(fileName || '选择文件');
+});
+
+// 表单提交
+$('#growthForm').submit(function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('crop_id', $('#recordCropId').val());
+    formData.append('record_type', $('#recordType').val());
+    if ($('#recordTitle').val()) formData.append('title', $('#recordTitle').val());
+    if ($('#recordGrowthStage').val()) formData.append('growth_stage', $('#recordGrowthStage').val());
+    if ($('#recordDescription').val()) formData.append('description', $('#recordDescription').val());
+    
+    const fileInput = $('#recordFile')[0];
+    if (fileInput.files.length > 0) {
+        formData.append('file', fileInput.files[0]);
+    }
+    
+    $.ajax({
+        url: `${API_BASE}/growth-records`,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            if (res.success) {
+                $('#growthModal').modal('hide');
+                loadGrowthData();
+                alert('记录创建成功！AI诊断已自动完成。');
+            }
+        },
+        error: function(xhr) {
+            const err = JSON.parse(xhr.responseText);
+            alert('保存失败: ' + (err.detail || '未知错误'));
+        }
+    });
+});
+
+// 筛选器变化
+$('#growthCropFilter, #growthTypeFilter, #growthStageFilter').change(function() {
+    currentGrowthPage = 1;
+    loadGrowthList();
+});
+
+// 初始化
+loadGrowthData();
+</script>

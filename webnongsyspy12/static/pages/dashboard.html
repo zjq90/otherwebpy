@@ -1,0 +1,152 @@
+<div id="dashboardPage">
+    <div class="page-header">
+        <h2><i class="fa fa-dashboard text-success mr-2"></i>仪表盘</h2>
+    </div>
+
+    <!-- 环境数据统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card temp">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-value" id="tempValue">--</div>
+                        <div class="stat-label">当前温度 (℃)</div>
+                    </div>
+                    <i class="fa fa-thermometer-half stat-icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card humidity">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-value" id="humidityValue">--</div>
+                        <div class="stat-label">空气湿度 (%)</div>
+                    </div>
+                    <i class="fa fa-tint stat-icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-value" id="lightValue">--</div>
+                        <div class="stat-label">光照强度 (Lux)</div>
+                    </div>
+                    <i class="fa fa-sun-o stat-icon"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card soil">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-value" id="soilValue">--</div>
+                        <div class="stat-label">土壤水分 (%)</div>
+                    </div>
+                    <i class="fa fa-leaf stat-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表区域 -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fa fa-line-chart text-primary mr-2"></i>环境数据趋势</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fa fa-info-circle text-info mr-2"></i>系统概览</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fa fa-microchip text-primary mr-2"></i>在线设备</span>
+                            <span class="badge badge-primary badge-pill" id="onlineDevices">0</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fa fa-seedling text-success mr-2"></i>监测作物</span>
+                            <span class="badge badge-success badge-pill" id="totalCrops">0</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fa fa-camera text-warning mr-2"></i>生长记录</span>
+                            <span class="badge badge-warning badge-pill" id="totalRecords">0</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><i class="fa fa-exclamation-triangle text-danger mr-2"></i>告警数量</span>
+                            <span class="badge badge-danger badge-pill" id="alertCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最新数据列表 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fa fa-history text-info mr-2"></i>最新环境数据</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>设备</th>
+                                    <th>温度</th>
+                                    <th>湿度</th>
+                                    <th>时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="latestEnvTable">
+                                <tr><td colspan="4" class="text-center text-muted">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fa fa-camera-retro text-warning mr-2"></i>最新生长记录</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>作物</th>
+                                    <th>类型</th>
+                                    <th>生育期</th>
+                                    <th>时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="latestGrowthTable">
+                                <tr><td colspan="4" class="text-center text-muted">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+loadDashboardData();
+</script>

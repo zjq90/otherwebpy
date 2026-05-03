@@ -1,0 +1,468 @@
+<div id="environmentPage">
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h2><i class="fa fa-bar-chart text-info mr-2"></i>环境数据</h2>
+        <div>
+            <select class="form-control form-control-sm d-inline-block" id="envDeviceFilter" style="width: 200px;">
+                <option value="">全部设备</option>
+            </select>
+            <select class="form-control form-control-sm d-inline-block ml-2" id="envHoursFilter">
+                <option value="1">最近1小时</option>
+                <option value="6">最近6小时</option>
+                <option value="12">最近12小时</option>
+                <option value="24" selected>最近24小时</option>
+                <option value="48">最近48小时</option>
+                <option value="168">最近7天</option>
+            </select>
+            <button class="btn btn-primary btn-sm ml-2" onclick="refreshEnvironmentData()">
+                <i class="fa fa-refresh"></i> 刷新
+            </button>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">平均温度</p>
+                            <h3 class="mb-0 text-danger" id="avgTemp">--</h3>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-muted mb-1">范围</p>
+                            <p class="mb-0" id="tempRange">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">平均湿度</p>
+                            <h3 class="mb-0 text-primary" id="avgHumidity">--</h3>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-muted mb-1">范围</p>
+                            <p class="mb-0" id="humidityRange">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">平均光照</p>
+                            <h3 class="mb-0 text-warning" id="avgLight">--</h3>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-muted mb-1">数据量</p>
+                            <p class="mb-0" id="envDataCount">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted mb-1">平均土壤水分</p>
+                            <h3 class="mb-0 text-success" id="avgSoil">--</h3>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-muted mb-1">CO2浓度</p>
+                            <p class="mb-0" id="avgCo2">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表区域 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fa fa-line-chart mr-2"></i>温度湿度趋势</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="tempHumidityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fa fa-area-chart mr-2"></i>光照和土壤水分</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="lightSoilChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据列表 -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">数据记录</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>设备ID</th>
+                            <th>温度 (℃)</th>
+                            <th>湿度 (%)</th>
+                            <th>光照 (Lux)</th>
+                            <th>土壤水分 (%)</th>
+                            <th>CO₂ (ppm)</th>
+                            <th>记录时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="envDataTableBody">
+                        <tr><td colspan="9" class="text-center text-muted">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0" id="envDataPagination">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentEnvPage = 1;
+const envPerPage = 20;
+let tempHumidityChart = null;
+let lightSoilChart = null;
+
+function loadEnvironmentData() {
+    // 加载设备列表
+    $.getJSON(`${API_BASE}/devices`, function(res) {
+        if (res.success && res.data.length > 0) {
+            let options = '<option value="">全部设备</option>';
+            res.data.forEach(d => {
+                options += `<option value="${d.id}">${d.device_name} (${d.device_code})</option>`;
+            });
+            $('#envDeviceFilter').html(options);
+        }
+    });
+
+    // 加载统计和数据
+    refreshEnvironmentData();
+}
+
+function refreshEnvironmentData() {
+    const deviceId = $('#envDeviceFilter').val();
+    const hours = parseInt($('#envHoursFilter').val());
+
+    // 加载统计
+    let statsUrl = `${API_BASE}/environment/statistics?hours=${hours}`;
+    if (deviceId) statsUrl += `&device_id=${deviceId}`;
+    
+    $.getJSON(statsUrl, function(res) {
+        if (res.success) {
+            const stats = res.data;
+            
+            if (stats.temperature) {
+                $('#avgTemp').text(stats.temperature.avg ? stats.temperature.avg.toFixed(1) + '℃' : '--');
+                $('#tempRange').text(
+                    (stats.temperature.min ? stats.temperature.min.toFixed(1) : '-') + ' ~ ' +
+                    (stats.temperature.max ? stats.temperature.max.toFixed(1) : '-') + '℃'
+                );
+            }
+            
+            if (stats.humidity) {
+                $('#avgHumidity').text(stats.humidity.avg ? stats.humidity.avg.toFixed(1) + '%' : '--');
+                $('#humidityRange').text(
+                    (stats.humidity.min ? stats.humidity.min.toFixed(1) : '-') + ' ~ ' +
+                    (stats.humidity.max ? stats.humidity.max.toFixed(1) : '-') + '%'
+                );
+            }
+            
+            if (stats.light_intensity) {
+                $('#avgLight').text(stats.light_intensity.avg ? stats.light_intensity.avg.toFixed(0) + ' Lux' : '--');
+            }
+            
+            if (stats.soil_moisture) {
+                $('#avgSoil').text(stats.soil_moisture.avg ? stats.soil_moisture.avg.toFixed(1) + '%' : '--');
+            }
+            
+            if (stats.co2_concentration) {
+                $('#avgCo2').text(stats.co2_concentration.avg ? stats.co2_concentration.avg.toFixed(0) + ' ppm' : '--');
+            }
+            
+            $('#envDataCount').text(stats.count || 0);
+        }
+    });
+
+    // 加载图表数据
+    if (deviceId) {
+        loadCharts(deviceId, hours);
+    }
+
+    // 加载数据列表
+    loadEnvDataList();
+}
+
+function loadCharts(deviceId, hours) {
+    // 获取温度数据
+    $.getJSON(`${API_BASE}/environment/trend/${deviceId}?field=temperature&hours=${hours}`, function(tempRes) {
+        // 获取湿度数据
+        $.getJSON(`${API_BASE}/environment/trend/${deviceId}?field=humidity&hours=${hours}`, function(humRes) {
+            renderTempHumidityChart(tempRes.data, humRes.data);
+        });
+    });
+
+    // 获取光照数据
+    $.getJSON(`${API_BASE}/environment/trend/${deviceId}?field=light_intensity&hours=${hours}`, function(lightRes) {
+        // 获取土壤水分数据
+        $.getJSON(`${API_BASE}/environment/trend/${deviceId}?field=soil_moisture&hours=${hours}`, function(soilRes) {
+            renderLightSoilChart(lightRes.data, soilRes.data);
+        });
+    });
+}
+
+function renderTempHumidityChart(tempData, humData) {
+    const ctx = document.getElementById('tempHumidityChart');
+    if (!ctx) return;
+
+    const labels = [];
+    const tempValues = [];
+    const humValues = [];
+
+    if (tempData && tempData.data) {
+        tempData.data.forEach(d => {
+            labels.push(new Date(d.time).toLocaleTimeString());
+            tempValues.push(d.value);
+        });
+    }
+
+    if (humData && humData.data) {
+        humData.data.forEach(d => humValues.push(d.value));
+    }
+
+    if (tempHumidityChart) tempHumidityChart.destroy();
+
+    tempHumidityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '温度 (℃)',
+                    data: tempValues,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    yAxisID: 'y'
+                },
+                {
+                    label: '湿度 (%)',
+                    data: humValues,
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: { display: true, text: '温度 (℃)' }
+                },
+                y1: {
+                    type: 'linear',
+                    display: humValues.length > 0,
+                    position: 'right',
+                    title: { display: true, text: '湿度 (%)' },
+                    grid: { drawOnChartArea: false }
+                }
+            },
+            plugins: { legend: { position: 'top' } }
+        }
+    });
+}
+
+function renderLightSoilChart(lightData, soilData) {
+    const ctx = document.getElementById('lightSoilChart');
+    if (!ctx) return;
+
+    const labels = [];
+    const lightValues = [];
+    const soilValues = [];
+
+    if (lightData && lightData.data) {
+        lightData.data.forEach(d => {
+            labels.push(new Date(d.time).toLocaleTimeString());
+            lightValues.push(d.value);
+        });
+    }
+
+    if (soilData && soilData.data) {
+        soilData.data.forEach(d => soilValues.push(d.value));
+    }
+
+    if (lightSoilChart) lightSoilChart.destroy();
+
+    lightSoilChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '光照强度 (Lux)',
+                    data: lightValues,
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: '土壤水分 (%)',
+                    data: soilValues,
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'top' } }
+        }
+    });
+}
+
+function loadEnvDataList() {
+    const deviceId = $('#envDeviceFilter').val();
+    
+    let url = `${API_BASE}/environment?skip=${(currentEnvPage - 1) * envPerPage}&limit=${envPerPage}`;
+    if (deviceId) url += `&device_id=${deviceId}`;
+    
+    $.getJSON(url, function(res) {
+        if (res.success) {
+            renderEnvDataTable(res.data);
+            renderEnvDataPagination(res.total);
+        }
+    });
+}
+
+function renderEnvDataTable(data) {
+    if (!data || data.length === 0) {
+        $('#envDataTableBody').html('<tr><td colspan="9" class="text-center text-muted">暂无数据</td></tr>');
+        return;
+    }
+    
+    let html = '';
+    data.forEach(item => {
+        html += `
+            <tr>
+                <td>${item.id}</td>
+                <td>${item.device_id}</td>
+                <td>${item.temperature ? item.temperature.toFixed(1) : '-'}</td>
+                <td>${item.humidity ? item.humidity.toFixed(1) : '-'}</td>
+                <td>${item.light_intensity ? item.light_intensity.toFixed(0) : '-'}</td>
+                <td>${item.soil_moisture ? item.soil_moisture.toFixed(1) : '-'}</td>
+                <td>${item.co2_concentration ? item.co2_concentration.toFixed(0) : '-'}</td>
+                <td>${new Date(item.recorded_at).toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteEnvData(${item.id})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    $('#envDataTableBody').html(html);
+}
+
+function renderEnvDataPagination(total) {
+    const totalPages = Math.ceil(total / envPerPage);
+    if (totalPages <= 1) {
+        $('#envDataPagination').html('');
+        return;
+    }
+    
+    let html = '';
+    html += `<li class="page-item ${currentEnvPage === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changeEnvPage(${currentEnvPage - 1})">上一页</a>
+    </li>`;
+    
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentEnvPage - 2 && i <= currentEnvPage + 2)) {
+            html += `<li class="page-item ${i === currentEnvPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changeEnvPage(${i})">${i}</a>
+            </li>`;
+        } else if (i === currentEnvPage - 3 || i === currentEnvPage + 3) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    html += `<li class="page-item ${currentEnvPage === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changeEnvPage(${currentEnvPage + 1})">下一页</a>
+    </li>`;
+    
+    $('#envDataPagination').html(html);
+}
+
+function changeEnvPage(page) {
+    if (page < 1) return;
+    currentEnvPage = page;
+    loadEnvDataList();
+}
+
+function deleteEnvData(id) {
+    if (confirm('确定要删除该数据吗？')) {
+        $.ajax({
+            url: `${API_BASE}/environment/${id}`,
+            type: 'DELETE',
+            success: function(res) {
+                if (res.success) {
+                    loadEnvDataList();
+                    refreshEnvironmentData();
+                }
+            }
+        });
+    }
+}
+
+// 事件绑定
+$('#envHoursFilter').change(refreshEnvironmentData);
+
+// 初始化
+loadEnvironmentData();
+</script>

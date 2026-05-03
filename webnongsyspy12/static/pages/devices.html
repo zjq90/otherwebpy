@@ -1,0 +1,369 @@
+<div id="devicesPage">
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h2><i class="fa fa-microchip text-primary mr-2"></i>设备管理</h2>
+        <button class="btn btn-primary" onclick="showAddDeviceModal()">
+            <i class="fa fa-plus mr-1"></i>添加设备
+        </button>
+    </div>
+
+    <!-- 设备统计 -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <div class="text-primary display-4"><i class="fa fa-microchip"></i></div>
+                <div class="h3 mt-2" id="totalDevices">0</div>
+                <div class="text-muted">设备总数</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <div class="text-success display-4"><i class="fa fa-check-circle"></i></div>
+                <div class="h3 mt-2" id="onlineDeviceCount">0</div>
+                <div class="text-muted">在线设备</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <div class="text-danger display-4"><i class="fa fa-times-circle"></i></div>
+                <div class="h3 mt-2" id="offlineDeviceCount">0</div>
+                <div class="text-muted">离线设备</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <div class="text-warning display-4"><i class="fa fa-wrench"></i></div>
+                <div class="h3 mt-2" id="maintenanceDeviceCount">0</div>
+                <div class="text-muted">维护中</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设备列表 -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">设备列表</h5>
+            <div class="form-inline">
+                <select class="form-control form-control-sm mr-2" id="deviceTypeFilter">
+                    <option value="">全部类型</option>
+                    <option value="温湿度传感器">温湿度传感器</option>
+                    <option value="光照传感器">光照传感器</option>
+                    <option value="土壤传感器">土壤传感器</option>
+                    <option value="CO2传感器">CO2传感器</option>
+                    <option value="综合监测站">综合监测站</option>
+                </select>
+                <select class="form-control form-control-sm" id="deviceStatusFilter">
+                    <option value="">全部状态</option>
+                    <option value="online">在线</option>
+                    <option value="offline">离线</option>
+                    <option value="maintenance">维护中</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>设备编号</th>
+                            <th>设备名称</th>
+                            <th>设备类型</th>
+                            <th>安装位置</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="devicesTableBody">
+                        <tr><td colspan="8" class="text-center text-muted">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0" id="devicesPagination">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑设备模态框 -->
+<div class="modal fade" id="deviceModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deviceModalTitle">添加设备</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="deviceForm">
+                <input type="hidden" id="editDeviceId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>设备编号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="deviceCode" required>
+                    </div>
+                    <div class="form-group">
+                        <label>设备名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="deviceName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>设备类型 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="deviceType" required>
+                            <option value="">请选择</option>
+                            <option value="温湿度传感器">温湿度传感器</option>
+                            <option value="光照传感器">光照传感器</option>
+                            <option value="土壤传感器">土壤传感器</option>
+                            <option value="CO2传感器">CO2传感器</option>
+                            <option value="综合监测站">综合监测站</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>安装位置</label>
+                        <input type="text" class="form-control" id="deviceLocation" placeholder="例如：A区1号大棚">
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <select class="form-control" id="deviceStatus">
+                            <option value="online">在线</option>
+                            <option value="offline">离线</option>
+                            <option value="maintenance">维护中</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>描述</label>
+                        <textarea class="form-control" id="deviceDescription" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDevicesPage = 1;
+const devicesPerPage = 10;
+
+function loadDevicesData() {
+    const deviceType = $('#deviceTypeFilter').val();
+    const status = $('#deviceStatusFilter').val();
+    
+    let url = `${API_BASE}/devices?skip=${(currentDevicesPage - 1) * devicesPerPage}&limit=${devicesPerPage}`;
+    if (deviceType) url += `&device_type=${encodeURIComponent(deviceType)}`;
+    if (status) url += `&status=${status}`;
+    
+    $.getJSON(url, function(res) {
+        if (res.success) {
+            renderDevicesTable(res.data);
+            renderDevicesPagination(res.total);
+            
+            // 更新统计
+            $('#totalDevices').text(res.total);
+        }
+    });
+    
+    // 加载统计数据
+    $.getJSON(`${API_BASE}/devices`, function(res) {
+        if (res.success) {
+            let online = 0, offline = 0, maintenance = 0;
+            res.data.forEach(d => {
+                if (d.status === 'online') online++;
+                else if (d.status === 'offline') offline++;
+                else if (d.status === 'maintenance') maintenance++;
+            });
+            $('#onlineDeviceCount').text(online);
+            $('#offlineDeviceCount').text(offline);
+            $('#maintenanceDeviceCount').text(maintenance);
+        }
+    });
+}
+
+function renderDevicesTable(data) {
+    if (!data || data.length === 0) {
+        $('#devicesTableBody').html('<tr><td colspan="8" class="text-center text-muted">暂无数据</td></tr>');
+        return;
+    }
+    
+    let html = '';
+    data.forEach(item => {
+        const statusClass = item.status === 'online' ? 'success' : 
+                           item.status === 'offline' ? 'danger' : 'warning';
+        const statusText = item.status === 'online' ? '在线' : 
+                          item.status === 'offline' ? '离线' : '维护中';
+        
+        html += `
+            <tr>
+                <td>${item.id}</td>
+                <td><code>${item.device_code}</code></td>
+                <td>${item.device_name}</td>
+                <td>${item.device_type}</td>
+                <td>${item.location || '-'}</td>
+                <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                <td>${new Date(item.created_at).toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editDevice(${item.id})">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteDevice(${item.id})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    $('#devicesTableBody').html(html);
+}
+
+function renderDevicesPagination(total) {
+    const totalPages = Math.ceil(total / devicesPerPage);
+    if (totalPages <= 1) {
+        $('#devicesPagination').html('');
+        return;
+    }
+    
+    let html = '';
+    
+    // 上一页
+    html += `<li class="page-item ${currentDevicesPage === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changeDevicesPage(${currentDevicesPage - 1})">上一页</a>
+    </li>`;
+    
+    // 页码
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentDevicesPage - 2 && i <= currentDevicesPage + 2)) {
+            html += `<li class="page-item ${i === currentDevicesPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changeDevicesPage(${i})">${i}</a>
+            </li>`;
+        } else if (i === currentDevicesPage - 3 || i === currentDevicesPage + 3) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+    
+    // 下一页
+    html += `<li class="page-item ${currentDevicesPage === totalPages ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="changeDevicesPage(${currentDevicesPage + 1})">下一页</a>
+    </li>`;
+    
+    $('#devicesPagination').html(html);
+}
+
+function changeDevicesPage(page) {
+    if (page < 1) return;
+    currentDevicesPage = page;
+    loadDevicesData();
+}
+
+function showAddDeviceModal() {
+    $('#deviceModalTitle').text('添加设备');
+    $('#editDeviceId').val('');
+    $('#deviceForm')[0].reset();
+    $('#deviceModal').modal('show');
+}
+
+function editDevice(id) {
+    $.getJSON(`${API_BASE}/devices/${id}`, function(res) {
+        if (res.success) {
+            const device = res.data;
+            $('#deviceModalTitle').text('编辑设备');
+            $('#editDeviceId').val(device.id);
+            $('#deviceCode').val(device.device_code);
+            $('#deviceName').val(device.device_name);
+            $('#deviceType').val(device.device_type);
+            $('#deviceLocation').val(device.location || '');
+            $('#deviceStatus').val(device.status);
+            $('#deviceDescription').val(device.description || '');
+            $('#deviceModal').modal('show');
+        }
+    });
+}
+
+function deleteDevice(id) {
+    if (confirm('确定要删除该设备吗？')) {
+        $.ajax({
+            url: `${API_BASE}/devices/${id}`,
+            type: 'DELETE',
+            success: function(res) {
+                if (res.success) {
+                    alert('删除成功');
+                    loadDevicesData();
+                } else {
+                    alert('删除失败: ' + res.message);
+                }
+            },
+            error: function(xhr) {
+                const err = JSON.parse(xhr.responseText);
+                alert('删除失败: ' + (err.detail || '未知错误'));
+            }
+        });
+    }
+}
+
+// 表单提交
+$('#deviceForm').submit(function(e) {
+    e.preventDefault();
+    
+    const id = $('#editDeviceId').val();
+    const data = {
+        device_code: $('#deviceCode').val(),
+        device_name: $('#deviceName').val(),
+        device_type: $('#deviceType').val(),
+        location: $('#deviceLocation').val() || null,
+        status: $('#deviceStatus').val(),
+        description: $('#deviceDescription').val() || null
+    };
+    
+    if (id) {
+        // 更新
+        $.ajax({
+            url: `${API_BASE}/devices/${id}`,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(res) {
+                if (res.success) {
+                    $('#deviceModal').modal('hide');
+                    loadDevicesData();
+                }
+            },
+            error: function(xhr) {
+                const err = JSON.parse(xhr.responseText);
+                alert('保存失败: ' + (err.detail || '未知错误'));
+            }
+        });
+    } else {
+        // 创建
+        $.ajax({
+            url: `${API_BASE}/devices`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(res) {
+                if (res.success) {
+                    $('#deviceModal').modal('hide');
+                    loadDevicesData();
+                }
+            },
+            error: function(xhr) {
+                const err = JSON.parse(xhr.responseText);
+                alert('保存失败: ' + (err.detail || '未知错误'));
+            }
+        });
+    }
+});
+
+// 筛选器变化
+$('#deviceTypeFilter, #deviceStatusFilter').change(function() {
+    currentDevicesPage = 1;
+    loadDevicesData();
+});
+
+// 初始化加载
+loadDevicesData();
+</script>
