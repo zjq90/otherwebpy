@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务记录 - 农业报表系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0 20px 30px 20px;
+            display: block;
+        }
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-menu li {
+            margin: 5px 10px;
+        }
+        .sidebar-menu li a {
+            color: rgba(255,255,255,0.85);
+            padding: 12px 20px;
+            display: block;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .sidebar-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px 25px;
+        }
+        .card-body {
+            padding: 25px;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            border-top: none;
+            font-weight: 600;
+            color: #333;
+        }
+        .dropdown-menu {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .logout-btn {
+            color: #dc3545;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            color: #c82333;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        .modal-header {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .badge-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+        .badge-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+        .text-income {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .text-expense {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar-brand span,
+            .sidebar-menu li a span {
+                display: none;
+            }
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <a href="/dashboard" class="sidebar-brand">
+            <i class="fas fa-seedling"></i>
+            <span>农业报表</span>
+        </a>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>仪表板</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                数据管理
+            </li>
+            <li>
+                <a href="/crops">
+                    <i class="fas fa-seedling"></i>
+                    <span>作物管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/plots">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>地块管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/production">
+                    <i class="fas fa-chart-line"></i>
+                    <span>生产记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/financial" class="active">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>财务记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/environment">
+                    <i class="fas fa-leaf"></i>
+                    <span>环境资源</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                报表中心
+            </li>
+            <li>
+                <a href="/reports/production">
+                    <i class="fas fa-file-alt"></i>
+                    <span>生产报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/financial">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>财务报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/environment">
+                    <i class="fas fa-file-contract"></i>
+                    <span>环境报表</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <div>
+                <h5 class="mb-0 font-weight-bold">
+                    <i class="fas fa-dollar-sign mr-2" style="color: #667eea;"></i>
+                    财务记录
+                </h5>
+                <small class="text-muted">管理收入和支出记录</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" 
+                       id="userDropdown" data-toggle="dropdown">
+                        <div class="mr-3">
+                            <i class="fas fa-user-circle" style="font-size: 2rem; color: #667eea;"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold" id="userName">用户</div>
+                            <div class="text-muted" style="font-size: 0.8rem;">管理员</div>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-user mr-2"></i>个人信息
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-cog mr-2"></i>系统设置
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 font-weight-bold">
+                    <i class="fas fa-list mr-2" style="color: #667eea;"></i>
+                    财务记录列表
+                </h6>
+                <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+                    <i class="fas fa-plus mr-1"></i>添加记录
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <select class="form-control" id="filterType" onchange="loadRecords()">
+                            <option value="">全部类型</option>
+                            <option value="income">收入</option>
+                            <option value="expense">支出</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-control" id="filterCategory" onchange="loadRecords()">
+                            <option value="">全部分类</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-control" id="filterYear" onchange="loadRecords()">
+                            <option value="">全部年份</option>
+                            <option value="2024">2024年</option>
+                            <option value="2023">2023年</option>
+                            <option value="2022">2022年</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-control" id="filterQuarter" onchange="loadRecords()">
+                            <option value="">全部季度</option>
+                            <option value="1">第一季度</option>
+                            <option value="2">第二季度</option>
+                            <option value="3">第三季度</option>
+                            <option value="4">第四季度</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>日期</th>
+                                <th>类型</th>
+                                <th>分类</th>
+                                <th>金额(元)</th>
+                                <th>年份</th>
+                                <th>季度</th>
+                                <th>描述</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted" id="paginationInfo">共 0 条记录</div>
+                    <nav>
+                        <ul class="pagination" id="pagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-4 text-center text-muted" style="font-size: 0.9rem;">
+            <p>&copy; 2024 农业报表系统. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <div class="modal fade" id="recordModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold" id="modalTitle">添加财务记录</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="recordForm">
+                        <input type="hidden" id="recordId">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>记录日期 <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="recordDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>类型 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="recordType" required onchange="updateCategoryOptions()">
+                                        <option value="">请选择</option>
+                                        <option value="income">收入</option>
+                                        <option value="expense">支出</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>金额(元) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="recordAmount" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>分类 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="recordCategory" required>
+                                        <option value="">请先选择类型</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>付款/收款方</label>
+                                    <input type="text" class="form-control" id="recordParty">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>描述</label>
+                            <textarea class="form-control" id="recordDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveRecord()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">确认删除</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除该财务记录吗？此操作不可恢复。</p>
+                    <input type="hidden" id="deleteRecordId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const API_BASE = '/api';
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
+
+        const incomeCategories = ['销售收入', '政府补贴', '其他收入', '投资收益'];
+        const expenseCategories = ['种子采购', '化肥采购', '农药采购', '人工成本', '机械设备', '水电费', '租金', '运输费', '维修保养', '其他支出'];
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            document.getElementById('userName').textContent = username || '用户';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login';
+        }
+
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                if (response.status === 401) {
+                    logout();
+                    return null;
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API请求错误:', error);
+                return null;
+            }
+        }
+
+        async function loadCategories() {
+            const filterSelect = document.getElementById('filterCategory');
+            filterSelect.innerHTML = '<option value="">全部分类</option>';
+            [...incomeCategories, ...expenseCategories].forEach(cat => {
+                filterSelect.add(new Option(cat, cat));
+            });
+        }
+
+        function updateCategoryOptions() {
+            const type = document.getElementById('recordType').value;
+            const categorySelect = document.getElementById('recordCategory');
+            categorySelect.innerHTML = '<option value="">请选择分类</option>';
+            
+            let categories = [];
+            if (type === 'income') {
+                categories = incomeCategories;
+            } else if (type === 'expense') {
+                categories = expenseCategories;
+            }
+            
+            categories.forEach(cat => {
+                categorySelect.add(new Option(cat, cat));
+            });
+        }
+
+        async function loadRecords() {
+            const recordType = document.getElementById('filterType').value;
+            const category = document.getElementById('filterCategory').value;
+            const year = document.getElementById('filterYear').value;
+            const quarter = document.getElementById('filterQuarter').value;
+            
+            let endpoint = `/financial?page=${currentPage}&page_size=${pageSize}`;
+            if (recordType) endpoint += `&record_type=${recordType}`;
+            if (category) endpoint += `&category=${encodeURIComponent(category)}`;
+            if (year) endpoint += `&year=${year}`;
+            if (quarter) endpoint += `&quarter=${quarter}`;
+            
+            const data = await apiRequest(endpoint);
+            
+            if (data && data.success) {
+                displayRecords(data.data);
+                updatePagination(data.total, data.total_pages);
+            }
+        }
+
+        function displayRecords(records) {
+            const tbody = document.getElementById('recordsTableBody');
+            tbody.innerHTML = '';
+            
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                const isIncome = record.record_type === 'income';
+                const amountClass = isIncome ? 'text-income' : 'text-expense';
+                const amountPrefix = isIncome ? '+' : '-';
+                const badgeClass = isIncome ? 'badge-success' : 'badge-danger';
+                const typeText = isIncome ? '收入' : '支出';
+                
+                row.innerHTML = `
+                    <td>${record.id}</td>
+                    <td>${record.record_date}</td>
+                    <td><span class="badge ${badgeClass}">${typeText}</span></td>
+                    <td>${record.category}</td>
+                    <td class="${amountClass}">${amountPrefix}${record.amount.toLocaleString()}</td>
+                    <td>${record.year}</td>
+                    <td>第${record.quarter}季度</td>
+                    <td>${record.description || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editRecord(${record.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteRecord(${record.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updatePagination(total, totalPg) {
+            totalPages = totalPg;
+            document.getElementById('paginationInfo').textContent = `共 ${total} 条记录`;
+            
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            pagination.innerHTML += `
+                <li class="page-item ${prevDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">上一页</a>
+                </li>
+            `;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    const active = i === currentPage ? 'active' : '';
+                    pagination.innerHTML += `
+                        <li class="page-item ${active}">
+                            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    pagination.innerHTML += `<li class="page-item disabled"><a class="page-link">...</a></li>`;
+                }
+            }
+            
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+            pagination.innerHTML += `
+                <li class="page-item ${nextDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">下一页</a>
+                </li>
+            `;
+        }
+
+        function changePage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            loadRecords();
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '添加财务记录';
+            document.getElementById('recordForm').reset();
+            document.getElementById('recordId').value = '';
+            document.getElementById('recordCategory').innerHTML = '<option value="">请先选择类型</option>';
+            $('#recordModal').modal('show');
+        }
+
+        async function editRecord(id) {
+            const data = await apiRequest(`/financial/${id}`);
+            
+            if (data) {
+                document.getElementById('modalTitle').textContent = '编辑财务记录';
+                document.getElementById('recordId').value = data.id;
+                document.getElementById('recordDate').value = data.record_date;
+                document.getElementById('recordType').value = data.record_type;
+                document.getElementById('recordAmount').value = data.amount;
+                document.getElementById('recordDescription').value = data.description || '';
+                document.getElementById('recordParty').value = data.party || '';
+                
+                updateCategoryOptions();
+                setTimeout(() => {
+                    document.getElementById('recordCategory').value = data.category;
+                }, 100);
+                
+                $('#recordModal').modal('show');
+            }
+        }
+
+        async function saveRecord() {
+            const id = document.getElementById('recordId').value;
+            const recordData = {
+                record_date: document.getElementById('recordDate').value,
+                record_type: document.getElementById('recordType').value,
+                category: document.getElementById('recordCategory').value,
+                amount: parseFloat(document.getElementById('recordAmount').value),
+                description: document.getElementById('recordDescription').value || null,
+                party: document.getElementById('recordParty').value || null
+            };
+            
+            let response;
+            if (id) {
+                response = await apiRequest(`/financial/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(recordData)
+                });
+            } else {
+                response = await apiRequest('/financial', {
+                    method: 'POST',
+                    body: JSON.stringify(recordData)
+                });
+            }
+            
+            if (response && response.success) {
+                $('#recordModal').modal('hide');
+                loadRecords();
+            } else {
+                alert(response?.detail || '保存失败，请稍后重试');
+            }
+        }
+
+        function deleteRecord(id) {
+            document.getElementById('deleteRecordId').value = id;
+            $('#deleteModal').modal('show');
+        }
+
+        async function confirmDelete() {
+            const id = document.getElementById('deleteRecordId').value;
+            const response = await apiRequest(`/financial/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response && response.success) {
+                $('#deleteModal').modal('hide');
+                loadRecords();
+            } else {
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        $(document).ready(function() {
+            checkAuth();
+            loadCategories();
+            loadRecords();
+        });
+    </script>
+</body>
+</html>

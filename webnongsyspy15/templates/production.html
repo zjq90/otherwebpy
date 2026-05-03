@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产记录 - 农业报表系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0 20px 30px 20px;
+            display: block;
+        }
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-menu li {
+            margin: 5px 10px;
+        }
+        .sidebar-menu li a {
+            color: rgba(255,255,255,0.85);
+            padding: 12px 20px;
+            display: block;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .sidebar-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px 25px;
+        }
+        .card-body {
+            padding: 25px;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            border-top: none;
+            font-weight: 600;
+            color: #333;
+        }
+        .dropdown-menu {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .logout-btn {
+            color: #dc3545;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            color: #c82333;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        .modal-header {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .badge-info {
+            background-color: rgba(23, 162, 184, 0.1);
+            color: #17a2b8;
+        }
+        .badge-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+        .badge-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar-brand span,
+            .sidebar-menu li a span {
+                display: none;
+            }
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <a href="/dashboard" class="sidebar-brand">
+            <i class="fas fa-seedling"></i>
+            <span>农业报表</span>
+        </a>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>仪表板</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                数据管理
+            </li>
+            <li>
+                <a href="/crops">
+                    <i class="fas fa-seedling"></i>
+                    <span>作物管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/plots">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>地块管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/production" class="active">
+                    <i class="fas fa-chart-line"></i>
+                    <span>生产记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/financial">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>财务记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/environment">
+                    <i class="fas fa-leaf"></i>
+                    <span>环境资源</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                报表中心
+            </li>
+            <li>
+                <a href="/reports/production">
+                    <i class="fas fa-file-alt"></i>
+                    <span>生产报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/financial">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>财务报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/environment">
+                    <i class="fas fa-file-contract"></i>
+                    <span>环境报表</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <div>
+                <h5 class="mb-0 font-weight-bold">
+                    <i class="fas fa-chart-line mr-2" style="color: #667eea;"></i>
+                    生产记录
+                </h5>
+                <small class="text-muted">管理作物生产记录数据</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" 
+                       id="userDropdown" data-toggle="dropdown">
+                        <div class="mr-3">
+                            <i class="fas fa-user-circle" style="font-size: 2rem; color: #667eea;"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold" id="userName">用户</div>
+                            <div class="text-muted" style="font-size: 0.8rem;">管理员</div>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-user mr-2"></i>个人信息
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-cog mr-2"></i>系统设置
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 font-weight-bold">
+                    <i class="fas fa-list mr-2" style="color: #667eea;"></i>
+                    生产记录列表
+                </h6>
+                <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+                    <i class="fas fa-plus mr-1"></i>添加记录
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <select class="form-control" id="filterCrop" onchange="loadRecords()">
+                            <option value="">全部作物</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-control" id="filterPlot" onchange="loadRecords()">
+                            <option value="">全部地块</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-control" id="filterYear" onchange="loadRecords()">
+                            <option value="">全部年份</option>
+                            <option value="2024">2024年</option>
+                            <option value="2023">2023年</option>
+                            <option value="2022">2022年</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-control" id="filterSeason" onchange="loadRecords()">
+                            <option value="">全部季节</option>
+                            <option value="春季">春季</option>
+                            <option value="夏季">夏季</option>
+                            <option value="秋季">秋季</option>
+                            <option value="冬季">冬季</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>作物</th>
+                                <th>地块</th>
+                                <th>种植日期</th>
+                                <th>收获日期</th>
+                                <th>年份</th>
+                                <th>季节</th>
+                                <th>产量(kg)</th>
+                                <th>投入(元)</th>
+                                <th>收入(元)</th>
+                                <th>利润(元)</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted" id="paginationInfo">共 0 条记录</div>
+                    <nav>
+                        <ul class="pagination" id="pagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-4 text-center text-muted" style="font-size: 0.9rem;">
+            <p>&copy; 2024 农业报表系统. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <div class="modal fade" id="recordModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold" id="modalTitle">添加生产记录</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="recordForm">
+                        <input type="hidden" id="recordId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>作物 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="recordCrop" required>
+                                        <option value="">请选择作物</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>地块 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="recordPlot" required>
+                                        <option value="">请选择地块</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>种植日期 <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="recordPlantingDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>收获日期</label>
+                                    <input type="date" class="form-control" id="recordHarvestDate">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>季节 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="recordSeason" required>
+                                        <option value="">请选择</option>
+                                        <option value="春季">春季</option>
+                                        <option value="夏季">夏季</option>
+                                        <option value="秋季">秋季</option>
+                                        <option value="冬季">冬季</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>产量(公斤) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="recordYield" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>售价(元/公斤)</label>
+                                    <input type="number" class="form-control" id="recordSellingPrice" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>投入成本(元) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="recordInputCost" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>收入(元)</label>
+                                    <input type="number" class="form-control" id="recordRevenue" min="0" step="0.01" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>利润(元)</label>
+                                    <input type="number" class="form-control" id="recordProfit" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>备注</label>
+                                    <input type="text" class="form-control" id="recordNotes">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveRecord()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">确认删除</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除该生产记录吗？此操作不可恢复。</p>
+                    <input type="hidden" id="deleteRecordId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const API_BASE = '/api';
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
+        let cropsList = [];
+        let plotsList = [];
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            document.getElementById('userName').textContent = username || '用户';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login';
+        }
+
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                if (response.status === 401) {
+                    logout();
+                    return null;
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API请求错误:', error);
+                return null;
+            }
+        }
+
+        async function loadCropsAndPlots() {
+            const cropsData = await apiRequest('/crops/all');
+            if (cropsData && cropsData.success) {
+                cropsList = cropsData.data.crops;
+                const select = document.getElementById('recordCrop');
+                const filterSelect = document.getElementById('filterCrop');
+                cropsList.forEach(crop => {
+                    const option = new Option(crop.name, crop.id);
+                    select.add(option);
+                    filterSelect.add(new Option(crop.name, crop.id));
+                });
+            }
+            
+            const plotsData = await apiRequest('/plots/all');
+            if (plotsData && plotsData.success) {
+                plotsList = plotsData.data.plots;
+                const select = document.getElementById('recordPlot');
+                const filterSelect = document.getElementById('filterPlot');
+                plotsList.forEach(plot => {
+                    const option = new Option(plot.name, plot.id);
+                    select.add(option);
+                    filterSelect.add(new Option(plot.name, plot.id));
+                });
+            }
+        }
+
+        async function loadRecords() {
+            const cropId = document.getElementById('filterCrop').value;
+            const plotId = document.getElementById('filterPlot').value;
+            const year = document.getElementById('filterYear').value;
+            const season = document.getElementById('filterSeason').value;
+            
+            let endpoint = `/production?page=${currentPage}&page_size=${pageSize}`;
+            if (cropId) endpoint += `&crop_id=${cropId}`;
+            if (plotId) endpoint += `&plot_id=${plotId}`;
+            if (year) endpoint += `&year=${year}`;
+            if (season) endpoint += `&season=${encodeURIComponent(season)}`;
+            
+            const data = await apiRequest(endpoint);
+            
+            if (data && data.success) {
+                displayRecords(data.data);
+                updatePagination(data.total, data.total_pages);
+            }
+        }
+
+        function displayRecords(records) {
+            const tbody = document.getElementById('recordsTableBody');
+            tbody.innerHTML = '';
+            
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                const profitClass = record.profit >= 0 ? 'text-success' : 'text-danger';
+                row.innerHTML = `
+                    <td>${record.id}</td>
+                    <td><span class="badge badge-info">${record.crop?.name || '-'}</span></td>
+                    <td><span class="badge badge-info">${record.plot?.name || '-'}</span></td>
+                    <td>${record.planting_date}</td>
+                    <td>${record.harvest_date || '-'}</td>
+                    <td>${record.year}</td>
+                    <td><span class="badge badge-info">${record.season}</span></td>
+                    <td>${record.yield_amount.toLocaleString()}</td>
+                    <td>${record.input_cost.toLocaleString()}</td>
+                    <td class="text-success">${record.revenue.toLocaleString()}</td>
+                    <td class="${profitClass}">${record.profit.toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editRecord(${record.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteRecord(${record.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updatePagination(total, totalPg) {
+            totalPages = totalPg;
+            document.getElementById('paginationInfo').textContent = `共 ${total} 条记录`;
+            
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            pagination.innerHTML += `
+                <li class="page-item ${prevDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">上一页</a>
+                </li>
+            `;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    const active = i === currentPage ? 'active' : '';
+                    pagination.innerHTML += `
+                        <li class="page-item ${active}">
+                            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    pagination.innerHTML += `<li class="page-item disabled"><a class="page-link">...</a></li>`;
+                }
+            }
+            
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+            pagination.innerHTML += `
+                <li class="page-item ${nextDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">下一页</a>
+                </li>
+            `;
+        }
+
+        function changePage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            loadRecords();
+        }
+
+        function calculateRevenue() {
+            const yieldAmount = parseFloat(document.getElementById('recordYield').value) || 0;
+            const sellingPrice = parseFloat(document.getElementById('recordSellingPrice').value) || 0;
+            const inputCost = parseFloat(document.getElementById('recordInputCost').value) || 0;
+            
+            const revenue = yieldAmount * sellingPrice;
+            document.getElementById('recordRevenue').value = revenue > 0 ? revenue.toFixed(2) : '';
+            
+            const profit = revenue - inputCost;
+            document.getElementById('recordProfit').value = profit.toFixed(2);
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '添加生产记录';
+            document.getElementById('recordForm').reset();
+            document.getElementById('recordId').value = '';
+            $('#recordModal').modal('show');
+        }
+
+        async function editRecord(id) {
+            const data = await apiRequest(`/production/${id}`);
+            
+            if (data) {
+                document.getElementById('modalTitle').textContent = '编辑生产记录';
+                document.getElementById('recordId').value = data.id;
+                document.getElementById('recordCrop').value = data.crop_id;
+                document.getElementById('recordPlot').value = data.plot_id;
+                document.getElementById('recordPlantingDate').value = data.planting_date;
+                document.getElementById('recordHarvestDate').value = data.harvest_date || '';
+                document.getElementById('recordSeason').value = data.season;
+                document.getElementById('recordYield').value = data.yield_amount;
+                document.getElementById('recordSellingPrice').value = data.selling_price || '';
+                document.getElementById('recordInputCost').value = data.input_cost;
+                document.getElementById('recordRevenue').value = data.revenue || '';
+                document.getElementById('recordProfit').value = data.profit || '';
+                document.getElementById('recordNotes').value = data.notes || '';
+                $('#recordModal').modal('show');
+            }
+        }
+
+        async function saveRecord() {
+            const id = document.getElementById('recordId').value;
+            const recordData = {
+                crop_id: parseInt(document.getElementById('recordCrop').value),
+                plot_id: parseInt(document.getElementById('recordPlot').value),
+                planting_date: document.getElementById('recordPlantingDate').value,
+                harvest_date: document.getElementById('recordHarvestDate').value || null,
+                season: document.getElementById('recordSeason').value,
+                yield_amount: parseFloat(document.getElementById('recordYield').value),
+                selling_price: parseFloat(document.getElementById('recordSellingPrice').value) || 0,
+                input_cost: parseFloat(document.getElementById('recordInputCost').value),
+                revenue: parseFloat(document.getElementById('recordRevenue').value) || 0,
+                profit: parseFloat(document.getElementById('recordProfit').value) || 0,
+                notes: document.getElementById('recordNotes').value || null
+            };
+            
+            let response;
+            if (id) {
+                response = await apiRequest(`/production/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(recordData)
+                });
+            } else {
+                response = await apiRequest('/production', {
+                    method: 'POST',
+                    body: JSON.stringify(recordData)
+                });
+            }
+            
+            if (response && response.success) {
+                $('#recordModal').modal('hide');
+                loadRecords();
+            } else {
+                alert(response?.detail || '保存失败，请稍后重试');
+            }
+        }
+
+        function deleteRecord(id) {
+            document.getElementById('deleteRecordId').value = id;
+            $('#deleteModal').modal('show');
+        }
+
+        async function confirmDelete() {
+            const id = document.getElementById('deleteRecordId').value;
+            const response = await apiRequest(`/production/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response && response.success) {
+                $('#deleteModal').modal('hide');
+                loadRecords();
+            } else {
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        $(document).ready(function() {
+            checkAuth();
+            loadCropsAndPlots();
+            loadRecords();
+            
+            document.getElementById('recordYield').addEventListener('input', calculateRevenue);
+            document.getElementById('recordSellingPrice').addEventListener('input', calculateRevenue);
+            document.getElementById('recordInputCost').addEventListener('input', calculateRevenue);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产报表 - 农业报表系统</title>
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0 20px 30px 20px;
+            display: block;
+        }
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-menu li {
+            margin: 5px 10px;
+        }
+        .sidebar-menu li a {
+            color: rgba(255,255,255,0.85);
+            padding: 12px 20px;
+            display: block;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .sidebar-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px 25px;
+        }
+        .card-body {
+            padding: 25px;
+        }
+        .filter-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-box {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-box.primary {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .stat-box.success {
+            background: rgba(40, 167, 69, 0.1);
+        }
+        .stat-box.info {
+            background: rgba(23, 162, 184, 0.1);
+        }
+        .stat-box.warning {
+            background: rgba(255, 193, 7, 0.1);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            border-top: none;
+            font-weight: 600;
+            color: #333;
+        }
+        .dropdown-menu {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .logout-btn {
+            color: #dc3545;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            color: #c82333;
+        }
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 10px 30px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        .loading-spinner {
+            display: none;
+        }
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .summary-box h5 {
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar-brand span,
+            .sidebar-menu li a span {
+                display: none;
+            }
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <nav class="sidebar">
+        <a href="/dashboard" class="sidebar-brand">
+            <i class="fas fa-seedling"></i>
+            <span>农业报表</span>
+        </a>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>仪表板</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                数据管理
+            </li>
+            <li>
+                <a href="/crops">
+                    <i class="fas fa-seedling"></i>
+                    <span>作物管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/plots">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>地块管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/production">
+                    <i class="fas fa-chart-line"></i>
+                    <span>生产记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/financial">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>财务记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/environment">
+                    <i class="fas fa-leaf"></i>
+                    <span>环境资源</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                报表中心
+            </li>
+            <li>
+                <a href="/reports/production" class="active">
+                    <i class="fas fa-file-alt"></i>
+                    <span>生产报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/financial">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>财务报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/environment">
+                    <i class="fas fa-file-contract"></i>
+                    <span>环境报表</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 顶部导航栏 -->
+        <div class="top-navbar">
+            <div>
+                <h5 class="mb-0 font-weight-bold">
+                    <i class="fas fa-file-alt mr-2" style="color: #667eea;"></i>
+                    生产报表
+                </h5>
+                <small class="text-muted">按作物、地块、时间段分析产量、投入成本、收益</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" 
+                       id="userDropdown" data-toggle="dropdown">
+                        <div class="mr-3">
+                            <i class="fas fa-user-circle" style="font-size: 2rem; color: #667eea;"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold" id="userName">用户</div>
+                            <div class="text-muted" style="font-size: 0.8rem;">管理员</div>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-user mr-2"></i>个人信息
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-cog mr-2"></i>系统设置
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选条件 -->
+        <div class="filter-card">
+            <h6 class="mb-3 font-weight-bold">
+                <i class="fas fa-filter mr-2" style="color: #667eea;"></i>
+                筛选条件
+            </h6>
+            <form id="filterForm">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>作物</label>
+                            <select class="form-control" id="cropId">
+                                <option value="">全部作物</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>地块</label>
+                            <select class="form-control" id="plotId">
+                                <option value="">全部地块</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>年份</label>
+                            <select class="form-control" id="year">
+                                <option value="">全部年份</option>
+                                <option value="2024">2024年</option>
+                                <option value="2023">2023年</option>
+                                <option value="2022">2022年</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>季节</label>
+                            <select class="form-control" id="season">
+                                <option value="">全部季节</option>
+                                <option value="春季">春季</option>
+                                <option value="夏季">夏季</option>
+                                <option value="秋季">秋季</option>
+                                <option value="冬季">冬季</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-generate btn-block">
+                            <i class="fas fa-search mr-2"></i>生成报表
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- 加载提示 -->
+        <div class="text-center py-5 loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">正在生成报表，请稍候...</p>
+        </div>
+
+        <!-- 报表结果区域 -->
+        <div id="reportResult" style="display: none;">
+            <!-- 汇总统计 -->
+            <div class="summary-box">
+                <h5>
+                    <i class="fas fa-chart-bar mr-2"></i>
+                    报表汇总
+                </h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalRecords">0</div>
+                            <div style="opacity: 0.9;">生产记录数</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalYield">0</div>
+                            <div style="opacity: 0.9;">总产量(公斤)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalCost">0</div>
+                            <div style="opacity: 0.9;">总投入(元)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalProfit">0</div>
+                            <div style="opacity: 0.9;">总利润(元)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关键指标 -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-box primary">
+                        <div class="stat-number" style="color: #667eea;" id="avgYield">0</div>
+                        <div class="stat-label">平均产量(公斤/次)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box success">
+                        <div class="stat-number" style="color: #28a745;" id="avgRevenue">0</div>
+                        <div class="stat-label">平均收入(元/次)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box info">
+                        <div class="stat-number" style="color: #17a2b8;" id="avgProfit">0</div>
+                        <div class="stat-label">平均利润(元/次)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box warning">
+                        <div class="stat-number" style="color: #ffc107;" id="profitRate">0%</div>
+                        <div class="stat-label">利润率</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细数据表格 -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 font-weight-bold">
+                        <i class="fas fa-table mr-2" style="color: #667eea;"></i>
+                        生产记录详情
+                    </h6>
+                    <button class="btn btn-outline-primary btn-sm" onclick="exportReport()">
+                        <i class="fas fa-download mr-1"></i>导出数据
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>作物</th>
+                                    <th>地块</th>
+                                    <th>种植日期</th>
+                                    <th>收获日期</th>
+                                    <th>年份</th>
+                                    <th>季节</th>
+                                    <th>产量(公斤)</th>
+                                    <th>投入(元)</th>
+                                    <th>收入(元)</th>
+                                    <th>利润(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recordTableBody">
+                                <!-- 数据将通过JS填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 按作物统计 -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0 font-weight-bold">
+                        <i class="fas fa-seedling mr-2" style="color: #667eea;"></i>
+                        按作物统计
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>作物名称</th>
+                                    <th>记录数</th>
+                                    <th>总产量(公斤)</th>
+                                    <th>总投入(元)</th>
+                                    <th>总收入(元)</th>
+                                    <th>总利润(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="byCropTableBody">
+                                <!-- 数据将通过JS填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 按地块统计 -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0 font-weight-bold">
+                        <i class="fas fa-map-marker-alt mr-2" style="color: #667eea;"></i>
+                        按地块统计
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>地块名称</th>
+                                    <th>记录数</th>
+                                    <th>总产量(公斤)</th>
+                                    <th>总投入(元)</th>
+                                    <th>总收入(元)</th>
+                                    <th>总利润(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="byPlotTableBody">
+                                <!-- 数据将通过JS填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer class="mt-4 text-center text-muted" style="font-size: 0.9rem;">
+            <p>&copy; 2024 农业报表系统. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <!-- jQuery and Bootstrap Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // API基础URL
+        const API_BASE = '/api';
+        let reportData = null;
+        
+        // 检查登录状态
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            document.getElementById('userName').textContent = username || '用户';
+        }
+        
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login';
+        }
+        
+        // API请求封装
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                if (response.status === 401) {
+                    logout();
+                    return null;
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API请求错误:', error);
+                return null;
+            }
+        }
+        
+        // 加载作物列表
+        async function loadCrops() {
+            const data = await apiRequest('/crops/all');
+            if (data && data.success) {
+                const select = document.getElementById('cropId');
+                data.data.crops.forEach(crop => {
+                    const option = document.createElement('option');
+                    option.value = crop.id;
+                    option.textContent = crop.name;
+                    select.appendChild(option);
+                });
+            }
+        }
+        
+        // 加载地块列表
+        async function loadPlots() {
+            const data = await apiRequest('/plots/all');
+            if (data && data.success) {
+                const select = document.getElementById('plotId');
+                data.data.plots.forEach(plot => {
+                    const option = document.createElement('option');
+                    option.value = plot.id;
+                    option.textContent = plot.name;
+                    select.appendChild(option);
+                });
+            }
+        }
+        
+        // 生成报表
+        async function generateReport() {
+            const cropId = document.getElementById('cropId').value;
+            const plotId = document.getElementById('plotId').value;
+            const year = document.getElementById('year').value;
+            const season = document.getElementById('season').value;
+            
+            // 显示加载状态
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('reportResult').style.display = 'none';
+            
+            // 构建请求参数
+            const requestData = {};
+            if (cropId) requestData.crop_id = parseInt(cropId);
+            if (plotId) requestData.plot_id = parseInt(plotId);
+            if (year) requestData.year = parseInt(year);
+            if (season) requestData.season = season;
+            
+            try {
+                const data = await apiRequest('/production/report', {
+                    method: 'POST',
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (data && data.success) {
+                    reportData = data.data;
+                    displayReport(data.data);
+                } else {
+                    alert('生成报表失败，请稍后重试');
+                }
+            } catch (error) {
+                console.error('生成报表失败:', error);
+                alert('生成报表失败，请稍后重试');
+            } finally {
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }
+        }
+        
+        // 显示报表数据
+        function displayReport(data) {
+            const summary = data.summary;
+            
+            // 更新汇总数据
+            document.getElementById('totalRecords').textContent = summary.total_records;
+            document.getElementById('totalYield').textContent = summary.total_yield.toLocaleString();
+            document.getElementById('totalCost').textContent = summary.total_input_cost.toLocaleString();
+            document.getElementById('totalProfit').textContent = summary.total_profit.toLocaleString();
+            
+            // 更新关键指标
+            document.getElementById('avgYield').textContent = summary.avg_yield.toLocaleString();
+            document.getElementById('avgRevenue').textContent = summary.avg_revenue.toLocaleString();
+            document.getElementById('avgProfit').textContent = summary.avg_profit.toLocaleString();
+            document.getElementById('profitRate').textContent = summary.profit_rate + '%';
+            
+            // 更新记录表格
+            const recordTableBody = document.getElementById('recordTableBody');
+            recordTableBody.innerHTML = '';
+            data.records.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.crop_name || '-'}</td>
+                    <td>${record.plot_name || '-'}</td>
+                    <td>${record.planting_date || '-'}</td>
+                    <td>${record.harvest_date || '-'}</td>
+                    <td>${record.year || '-'}</td>
+                    <td>${record.season || '-'}</td>
+                    <td>${record.yield_amount.toLocaleString()}</td>
+                    <td>${record.input_cost.toLocaleString()}</td>
+                    <td>${record.revenue.toLocaleString()}</td>
+                    <td style="color: ${record.profit >= 0 ? '#28a745' : '#dc3545'};">
+                        ${record.profit.toLocaleString()}
+                    </td>
+                `;
+                recordTableBody.appendChild(row);
+            });
+            
+            // 更新按作物统计表格
+            const byCropTableBody = document.getElementById('byCropTableBody');
+            byCropTableBody.innerHTML = '';
+            Object.keys(data.by_crop).forEach(cropName => {
+                const crop = data.by_crop[cropName];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${cropName}</td>
+                    <td>${crop.count}</td>
+                    <td>${crop.total_yield.toLocaleString()}</td>
+                    <td>${crop.total_input_cost.toLocaleString()}</td>
+                    <td>${crop.total_revenue.toLocaleString()}</td>
+                    <td style="color: ${crop.total_profit >= 0 ? '#28a745' : '#dc3545'};">
+                        ${crop.total_profit.toLocaleString()}
+                    </td>
+                `;
+                byCropTableBody.appendChild(row);
+            });
+            
+            // 更新按地块统计表格
+            const byPlotTableBody = document.getElementById('byPlotTableBody');
+            byPlotTableBody.innerHTML = '';
+            Object.keys(data.by_plot).forEach(plotName => {
+                const plot = data.by_plot[plotName];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${plotName}</td>
+                    <td>${plot.count}</td>
+                    <td>${plot.total_yield.toLocaleString()}</td>
+                    <td>${plot.total_input_cost.toLocaleString()}</td>
+                    <td>${plot.total_revenue.toLocaleString()}</td>
+                    <td style="color: ${plot.total_profit >= 0 ? '#28a745' : '#dc3545'};">
+                        ${plot.total_profit.toLocaleString()}
+                    </td>
+                `;
+                byPlotTableBody.appendChild(row);
+            });
+            
+            // 显示报表结果
+            document.getElementById('reportResult').style.display = 'block';
+        }
+        
+        // 导出报表
+        function exportReport() {
+            if (!reportData) {
+                alert('请先生成报表');
+                return;
+            }
+            
+            // 简单的CSV导出提示
+            alert('导出功能：可以将当前报表数据导出为CSV格式。\n\n在实际应用中，这里会生成CSV文件供下载。');
+        }
+        
+        // 页面加载时执行
+        $(document).ready(function() {
+            checkAuth();
+            loadCrops();
+            loadPlots();
+            
+            // 表单提交
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                generateReport();
+            });
+            
+            // 初始生成报表
+            generateReport();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环境报表 - 农业报表系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0 20px 30px 20px;
+            display: block;
+        }
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-menu li {
+            margin: 5px 10px;
+        }
+        .sidebar-menu li a {
+            color: rgba(255,255,255,0.85);
+            padding: 12px 20px;
+            display: block;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .sidebar-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px 25px;
+        }
+        .card-body {
+            padding: 25px;
+        }
+        .filter-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-box {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-box.primary {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .stat-box.success {
+            background: rgba(40, 167, 69, 0.1);
+        }
+        .stat-box.info {
+            background: rgba(23, 162, 184, 0.1);
+        }
+        .stat-box.warning {
+            background: rgba(255, 193, 7, 0.1);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            border-top: none;
+            font-weight: 600;
+            color: #333;
+        }
+        .dropdown-menu {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .logout-btn {
+            color: #dc3545;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            color: #c82333;
+        }
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 10px 30px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        .loading-spinner {
+            display: none;
+        }
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        .summary-box h5 {
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .cost-pie {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .cost-pie-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.1);
+        }
+        .cost-pie-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .cost-pie-label {
+            margin-right: 8px;
+        }
+        .cost-pie-percent {
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar-brand span,
+            .sidebar-menu li a span {
+                display: none;
+            }
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <a href="/dashboard" class="sidebar-brand">
+            <i class="fas fa-seedling"></i>
+            <span>农业报表</span>
+        </a>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>仪表板</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                数据管理
+            </li>
+            <li>
+                <a href="/crops">
+                    <i class="fas fa-seedling"></i>
+                    <span>作物管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/plots">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>地块管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/production">
+                    <i class="fas fa-chart-line"></i>
+                    <span>生产记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/financial">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>财务记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/environment">
+                    <i class="fas fa-leaf"></i>
+                    <span>环境资源</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                报表中心
+            </li>
+            <li>
+                <a href="/reports/production">
+                    <i class="fas fa-file-alt"></i>
+                    <span>生产报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/financial">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>财务报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/environment" class="active">
+                    <i class="fas fa-file-contract"></i>
+                    <span>环境报表</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <div>
+                <h5 class="mb-0 font-weight-bold">
+                    <i class="fas fa-file-contract mr-2" style="color: #667eea;"></i>
+                    环境报表
+                </h5>
+                <small class="text-muted">水资源、能源、农资使用效率分析</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" 
+                       id="userDropdown" data-toggle="dropdown">
+                        <div class="mr-3">
+                            <i class="fas fa-user-circle" style="font-size: 2rem; color: #667eea;"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold" id="userName">用户</div>
+                            <div class="text-muted" style="font-size: 0.8rem;">管理员</div>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-user mr-2"></i>个人信息
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-cog mr-2"></i>系统设置
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-card">
+            <h6 class="mb-3 font-weight-bold">
+                <i class="fas fa-filter mr-2" style="color: #667eea;"></i>
+                筛选条件
+            </h6>
+            <form id="filterForm">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>地块</label>
+                            <select class="form-control" id="plotId">
+                                <option value="">全部地块</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>年份</label>
+                            <select class="form-control" id="year">
+                                <option value="">全部年份</option>
+                                <option value="2024">2024年</option>
+                                <option value="2023">2023年</option>
+                                <option value="2022">2022年</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>月份</label>
+                            <select class="form-control" id="month">
+                                <option value="">全部月份</option>
+                                <option value="1">1月</option>
+                                <option value="2">2月</option>
+                                <option value="3">3月</option>
+                                <option value="4">4月</option>
+                                <option value="5">5月</option>
+                                <option value="6">6月</option>
+                                <option value="7">7月</option>
+                                <option value="8">8月</option>
+                                <option value="9">9月</option>
+                                <option value="10">10月</option>
+                                <option value="11">11月</option>
+                                <option value="12">12月</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-generate btn-block">
+                            <i class="fas fa-search mr-2"></i>生成报表
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="text-center py-5 loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">正在生成报表，请稍候...</p>
+        </div>
+
+        <div id="reportResult" style="display: none;">
+            <div class="summary-box">
+                <h5>
+                    <i class="fas fa-chart-bar mr-2"></i>
+                    报表汇总
+                </h5>
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalRecords">0</div>
+                            <div style="opacity: 0.9;">记录数</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalWaterUsage">0</div>
+                            <div style="opacity: 0.9;">总用水量(吨)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalElectricityUsage">0</div>
+                            <div style="opacity: 0.9;">总用电量(度)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalFuelUsage">0</div>
+                            <div style="opacity: 0.9;">总燃油量(升)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalFertilizer">0</div>
+                            <div style="opacity: 0.9;">总化肥量(公斤)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            <div style="font-size: 2rem; font-weight: 700;" id="totalEnvironmentCost">0</div>
+                            <div style="opacity: 0.9;">总费用(元)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-box primary">
+                        <div class="stat-number" style="color: #667eea;" id="avgWaterUsage">0</div>
+                        <div class="stat-label">平均用水量(吨/次)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box success">
+                        <div class="stat-number text-success" id="avgElectricityUsage">0</div>
+                        <div class="stat-label">平均用电量(度/次)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box info">
+                        <div class="stat-number text-info" id="avgFuelUsage">0</div>
+                        <div class="stat-label">平均燃油量(升/次)</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-box warning">
+                        <div class="stat-number text-warning" id="waterCostPercent">0%</div>
+                        <div class="stat-label">水费占比</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0 font-weight-bold">
+                        <i class="fas fa-pie-chart mr-2" style="color: #667eea;"></i>
+                        成本结构分析
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>成本类型</th>
+                                            <th>金额(元)</th>
+                                            <th>占比</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="costStructureTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="cost-pie" id="costPie">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 font-weight-bold">
+                        <i class="fas fa-table mr-2" style="color: #667eea;"></i>
+                        环境资源记录详情
+                    </h6>
+                    <button class="btn btn-outline-primary btn-sm" onclick="exportReport()">
+                        <i class="fas fa-download mr-1"></i>导出数据
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>地块</th>
+                                    <th>用水量(吨)</th>
+                                    <th>电费(元)</th>
+                                    <th>燃油费(元)</th>
+                                    <th>化肥费(元)</th>
+                                    <th>农药费(元)</th>
+                                    <th>种子费(元)</th>
+                                    <th>总费用(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recordTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0 font-weight-bold">
+                        <i class="fas fa-map-marker-alt mr-2" style="color: #667eea;"></i>
+                        按地块统计
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>地块</th>
+                                    <th>记录数</th>
+                                    <th>用水(吨)</th>
+                                    <th>用电(度)</th>
+                                    <th>燃油(升)</th>
+                                    <th>化肥(公斤)</th>
+                                    <th>总费用(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="byPlotTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0 font-weight-bold">
+                        <i class="fas fa-calendar-alt mr-2" style="color: #667eea;"></i>
+                        按年份统计
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>年份</th>
+                                    <th>记录数</th>
+                                    <th>用水(吨)</th>
+                                    <th>用电(度)</th>
+                                    <th>燃油(升)</th>
+                                    <th>化肥(公斤)</th>
+                                    <th>总费用(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="byYearTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-4 text-center text-muted" style="font-size: 0.9rem;">
+            <p>&copy; 2024 农业报表系统. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const API_BASE = '/api';
+        let reportData = null;
+
+        const costColors = {
+            water_cost: '#667eea',
+            electricity_cost: '#28a745',
+            fuel_cost: '#dc3545',
+            fertilizer_cost: '#ffc107',
+            pesticide_cost: '#17a2b8',
+            seed_cost: '#6c757d'
+        };
+
+        const costLabels = {
+            water_cost: '水费',
+            electricity_cost: '电费',
+            fuel_cost: '燃油费',
+            fertilizer_cost: '化肥费',
+            pesticide_cost: '农药费',
+            seed_cost: '种子费'
+        };
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            document.getElementById('userName').textContent = username || '用户';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login';
+        }
+
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                if (response.status === 401) {
+                    logout();
+                    return null;
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API请求错误:', error);
+                return null;
+            }
+        }
+
+        async function loadPlots() {
+            const data = await apiRequest('/plots/all');
+            if (data && data.success) {
+                const select = document.getElementById('plotId');
+                data.data.plots.forEach(plot => {
+                    const option = document.createElement('option');
+                    option.value = plot.id;
+                    option.textContent = plot.name;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        async function generateReport() {
+            const plotId = document.getElementById('plotId').value;
+            const year = document.getElementById('year').value;
+            const month = document.getElementById('month').value;
+            
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('reportResult').style.display = 'none';
+            
+            const requestData = {};
+            if (plotId) requestData.plot_id = parseInt(plotId);
+            if (year) requestData.year = parseInt(year);
+            if (month) requestData.month = parseInt(month);
+            
+            try {
+                const data = await apiRequest('/environment/report', {
+                    method: 'POST',
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (data && data.success) {
+                    reportData = data.data;
+                    displayReport(data.data);
+                } else {
+                    alert('生成报表失败，请稍后重试');
+                }
+            } catch (error) {
+                console.error('生成报表失败:', error);
+                alert('生成报表失败，请稍后重试');
+            } finally {
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }
+        }
+
+        function displayReport(data) {
+            const summary = data.summary;
+            
+            document.getElementById('totalRecords').textContent = summary.total_records;
+            document.getElementById('totalWaterUsage').textContent = summary.total_water_usage.toLocaleString();
+            document.getElementById('totalElectricityUsage').textContent = summary.total_electricity_usage.toLocaleString();
+            document.getElementById('totalFuelUsage').textContent = summary.total_fuel_usage.toLocaleString();
+            document.getElementById('totalFertilizer').textContent = summary.total_fertilizer_usage.toLocaleString();
+            document.getElementById('totalEnvironmentCost').textContent = summary.total_environment_cost.toLocaleString();
+            
+            document.getElementById('avgWaterUsage').textContent = summary.avg_water_usage.toLocaleString();
+            document.getElementById('avgElectricityUsage').textContent = summary.avg_electricity_usage.toLocaleString();
+            document.getElementById('avgFuelUsage').textContent = summary.avg_fuel_usage.toLocaleString();
+            document.getElementById('waterCostPercent').textContent = data.cost_percentage?.water_cost + '%' || '0%';
+            
+            const costStructureTableBody = document.getElementById('costStructureTableBody');
+            costStructureTableBody.innerHTML = '';
+            Object.keys(data.cost_structure).forEach(key => {
+                const amount = data.cost_structure[key];
+                const percent = data.cost_percentage[key] || 0;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span style="color: ${costColors[key]};">${costLabels[key]}</span></td>
+                    <td>${amount.toLocaleString()}</td>
+                    <td>${percent}%</td>
+                `;
+                costStructureTableBody.appendChild(row);
+            });
+            
+            const costPie = document.getElementById('costPie');
+            costPie.innerHTML = '';
+            Object.keys(data.cost_percentage).forEach(key => {
+                const percent = data.cost_percentage[key];
+                const item = document.createElement('div');
+                item.className = 'cost-pie-item';
+                item.innerHTML = `
+                    <div class="cost-pie-color" style="background: ${costColors[key]};"></div>
+                    <span class="cost-pie-label">${costLabels[key]}</span>
+                    <span class="cost-pie-percent">${percent}%</span>
+                `;
+                costPie.appendChild(item);
+            });
+            
+            const recordTableBody = document.getElementById('recordTableBody');
+            recordTableBody.innerHTML = '';
+            data.records.forEach(record => {
+                const totalCost = record.water_cost + record.electricity_cost + record.fuel_cost +
+                                  record.fertilizer_cost + record.pesticide_cost + record.seed_cost;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.record_date}</td>
+                    <td>${record.plot_name || '-'}</td>
+                    <td>${record.water_usage}</td>
+                    <td>${record.electricity_cost}</td>
+                    <td>${record.fuel_cost}</td>
+                    <td>${record.fertilizer_cost}</td>
+                    <td>${record.pesticide_cost}</td>
+                    <td>${record.seed_cost}</td>
+                    <td class="font-weight-bold">${totalCost.toLocaleString()}</td>
+                `;
+                recordTableBody.appendChild(row);
+            });
+            
+            const byPlotTableBody = document.getElementById('byPlotTableBody');
+            byPlotTableBody.innerHTML = '';
+            Object.keys(data.by_plot).forEach(plotName => {
+                const item = data.by_plot[plotName];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${plotName}</td>
+                    <td>${item.count}</td>
+                    <td>${item.water_usage.toLocaleString()}</td>
+                    <td>${item.electricity_usage.toLocaleString()}</td>
+                    <td>${item.fuel_usage.toLocaleString()}</td>
+                    <td>${item.fertilizer_usage.toLocaleString()}</td>
+                    <td class="font-weight-bold">${item.total_cost.toLocaleString()}</td>
+                `;
+                byPlotTableBody.appendChild(row);
+            });
+            
+            const byYearTableBody = document.getElementById('byYearTableBody');
+            byYearTableBody.innerHTML = '';
+            Object.keys(data.by_year).sort().forEach(year => {
+                const item = data.by_year[year];
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${year}年</td>
+                    <td>${item.count}</td>
+                    <td>${item.water_usage.toLocaleString()}</td>
+                    <td>${item.electricity_usage.toLocaleString()}</td>
+                    <td>${item.fuel_usage.toLocaleString()}</td>
+                    <td>${item.fertilizer_usage.toLocaleString()}</td>
+                    <td class="font-weight-bold">${item.total_cost.toLocaleString()}</td>
+                `;
+                byYearTableBody.appendChild(row);
+            });
+            
+            document.getElementById('reportResult').style.display = 'block';
+        }
+
+        function exportReport() {
+            if (!reportData) {
+                alert('请先生成报表');
+                return;
+            }
+            alert('导出功能：可以将当前报表数据导出为CSV格式。\n\n在实际应用中，这里会生成CSV文件供下载。');
+        }
+
+        $(document).ready(function() {
+            checkAuth();
+            loadPlots();
+            
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                generateReport();
+            });
+            
+            generateReport();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地块管理 - 农业报表系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0 20px 30px 20px;
+            display: block;
+        }
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-menu li {
+            margin: 5px 10px;
+        }
+        .sidebar-menu li a {
+            color: rgba(255,255,255,0.85);
+            padding: 12px 20px;
+            display: block;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .sidebar-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px 25px;
+        }
+        .card-body {
+            padding: 25px;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            border-top: none;
+            font-weight: 600;
+            color: #333;
+        }
+        .dropdown-menu {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .logout-btn {
+            color: #dc3545;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            color: #c82333;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        .modal-header {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .badge-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+        .badge-secondary {
+            background-color: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar-brand span,
+            .sidebar-menu li a span {
+                display: none;
+            }
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <a href="/dashboard" class="sidebar-brand">
+            <i class="fas fa-seedling"></i>
+            <span>农业报表</span>
+        </a>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>仪表板</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                数据管理
+            </li>
+            <li>
+                <a href="/crops">
+                    <i class="fas fa-seedling"></i>
+                    <span>作物管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/plots" class="active">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>地块管理</span>
+                </a>
+            </li>
+            <li>
+                <a href="/production">
+                    <i class="fas fa-chart-line"></i>
+                    <span>生产记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/financial">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>财务记录</span>
+                </a>
+            </li>
+            <li>
+                <a href="/environment">
+                    <i class="fas fa-leaf"></i>
+                    <span>环境资源</span>
+                </a>
+            </li>
+            <li class="mt-4 mb-2" style="color: rgba(255,255,255,0.5); padding: 0 20px; font-size: 0.85rem;">
+                报表中心
+            </li>
+            <li>
+                <a href="/reports/production">
+                    <i class="fas fa-file-alt"></i>
+                    <span>生产报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/financial">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>财务报表</span>
+                </a>
+            </li>
+            <li>
+                <a href="/reports/environment">
+                    <i class="fas fa-file-contract"></i>
+                    <span>环境报表</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <div>
+                <h5 class="mb-0 font-weight-bold">
+                    <i class="fas fa-map-marker-alt mr-2" style="color: #667eea;"></i>
+                    地块管理
+                </h5>
+                <small class="text-muted">管理种植的地块信息</small>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" 
+                       id="userDropdown" data-toggle="dropdown">
+                        <div class="mr-3">
+                            <i class="fas fa-user-circle" style="font-size: 2rem; color: #667eea;"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold" id="userName">用户</div>
+                            <div class="text-muted" style="font-size: 0.8rem;">管理员</div>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-user mr-2"></i>个人信息
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-cog mr-2"></i>系统设置
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 font-weight-bold">
+                    <i class="fas fa-list mr-2" style="color: #667eea;"></i>
+                    地块列表
+                </h6>
+                <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+                    <i class="fas fa-plus mr-1"></i>添加地块
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" id="searchKeyword" 
+                               placeholder="搜索地块名称、编号、位置..." onkeyup="searchPlots()">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-control" id="filterSoilType" onchange="loadPlots()">
+                            <option value="">全部土壤类型</option>
+                            <option value="壤土">壤土</option>
+                            <option value="黏土">黏土</option>
+                            <option value="砂土">砂土</option>
+                            <option value="壤土">壤土</option>
+                            <option value="黑土">黑土</option>
+                            <option value="红壤">红壤</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-control" id="filterStatus" onchange="loadPlots()">
+                            <option value="">全部状态</option>
+                            <option value="true">启用</option>
+                            <option value="false">禁用</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>地块编号</th>
+                                <th>地块名称</th>
+                                <th>面积(亩)</th>
+                                <th>土壤类型</th>
+                                <th>灌溉方式</th>
+                                <th>位置</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plotsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="text-muted" id="paginationInfo">共 0 条记录</div>
+                    <nav>
+                        <ul class="pagination" id="pagination">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-4 text-center text-muted" style="font-size: 0.9rem;">
+            <p>&copy; 2024 农业报表系统. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <div class="modal fade" id="plotModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold" id="modalTitle">添加地块</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="plotForm">
+                        <input type="hidden" id="plotId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>地块编号 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="plotCode" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>地块名称 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="plotName" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>面积(亩) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="plotArea" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>土壤类型</label>
+                                    <select class="form-control" id="plotSoilType">
+                                        <option value="">请选择</option>
+                                        <option value="壤土">壤土</option>
+                                        <option value="黏土">黏土</option>
+                                        <option value="砂土">砂土</option>
+                                        <option value="黑土">黑土</option>
+                                        <option value="红壤">红壤</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>灌溉方式</label>
+                                    <select class="form-control" id="plotIrrigationType">
+                                        <option value="">请选择</option>
+                                        <option value="滴灌">滴灌</option>
+                                        <option value="喷灌">喷灌</option>
+                                        <option value="漫灌">漫灌</option>
+                                        <option value="渗灌">渗灌</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>位置</label>
+                                    <input type="text" class="form-control" id="plotLocation">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>描述</label>
+                            <textarea class="form-control" id="plotDescription" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="plotIsActive" checked>
+                                <label class="custom-control-label" for="plotIsActive">启用</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="savePlot()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-weight-bold">确认删除</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除该地块吗？此操作可以恢复。</p>
+                    <input type="hidden" id="deletePlotId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const API_BASE = '/api';
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            document.getElementById('userName').textContent = username || '用户';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login';
+        }
+
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...options,
+                    headers
+                });
+                
+                if (response.status === 401) {
+                    logout();
+                    return null;
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API请求错误:', error);
+                return null;
+            }
+        }
+
+        async function loadPlots() {
+            const keyword = document.getElementById('searchKeyword').value;
+            const soilType = document.getElementById('filterSoilType').value;
+            const isActive = document.getElementById('filterStatus').value;
+            
+            let endpoint = `/plots?page=${currentPage}&page_size=${pageSize}`;
+            if (keyword) endpoint += `&keyword=${encodeURIComponent(keyword)}`;
+            if (soilType) endpoint += `&soil_type=${encodeURIComponent(soilType)}`;
+            if (isActive !== '') endpoint += `&is_active=${isActive}`;
+            
+            const data = await apiRequest(endpoint);
+            
+            if (data && data.success) {
+                displayPlots(data.data);
+                updatePagination(data.total, data.total_pages);
+            }
+        }
+
+        function displayPlots(plots) {
+            const tbody = document.getElementById('plotsTableBody');
+            tbody.innerHTML = '';
+            
+            plots.forEach(plot => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${plot.id}</td>
+                    <td><code>${plot.code}</code></td>
+                    <td>${plot.name}</td>
+                    <td>${plot.area}</td>
+                    <td>${plot.soil_type || '-'}</td>
+                    <td>${plot.irrigation_type || '-'}</td>
+                    <td>${plot.location || '-'}</td>
+                    <td>
+                        <span class="badge ${plot.is_active ? 'badge-success' : 'badge-secondary'}">
+                            ${plot.is_active ? '启用' : '禁用'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editPlot(${plot.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deletePlot(${plot.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ${!plot.is_active ? `
+                        <button class="btn btn-sm btn-outline-success" onclick="restorePlot(${plot.id})">
+                            <i class="fas fa-undo"></i>
+                        </button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updatePagination(total, totalPg) {
+            totalPages = totalPg;
+            document.getElementById('paginationInfo').textContent = `共 ${total} 条记录`;
+            
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            pagination.innerHTML += `
+                <li class="page-item ${prevDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">上一页</a>
+                </li>
+            `;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    const active = i === currentPage ? 'active' : '';
+                    pagination.innerHTML += `
+                        <li class="page-item ${active}">
+                            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    pagination.innerHTML += `<li class="page-item disabled"><a class="page-link">...</a></li>`;
+                }
+            }
+            
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+            pagination.innerHTML += `
+                <li class="page-item ${nextDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">下一页</a>
+                </li>
+            `;
+        }
+
+        function changePage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            loadPlots();
+        }
+
+        function searchPlots() {
+            currentPage = 1;
+            loadPlots();
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '添加地块';
+            document.getElementById('plotForm').reset();
+            document.getElementById('plotId').value = '';
+            document.getElementById('plotIsActive').checked = true;
+            $('#plotModal').modal('show');
+        }
+
+        async function editPlot(id) {
+            const data = await apiRequest(`/plots/${id}`);
+            
+            if (data) {
+                document.getElementById('modalTitle').textContent = '编辑地块';
+                document.getElementById('plotId').value = data.id;
+                document.getElementById('plotCode').value = data.code;
+                document.getElementById('plotName').value = data.name;
+                document.getElementById('plotArea').value = data.area;
+                document.getElementById('plotSoilType').value = data.soil_type || '';
+                document.getElementById('plotIrrigationType').value = data.irrigation_type || '';
+                document.getElementById('plotLocation').value = data.location || '';
+                document.getElementById('plotDescription').value = data.description || '';
+                document.getElementById('plotIsActive').checked = data.is_active;
+                $('#plotModal').modal('show');
+            }
+        }
+
+        async function savePlot() {
+            const id = document.getElementById('plotId').value;
+            const plotData = {
+                code: document.getElementById('plotCode').value,
+                name: document.getElementById('plotName').value,
+                area: parseFloat(document.getElementById('plotArea').value),
+                soil_type: document.getElementById('plotSoilType').value || null,
+                irrigation_type: document.getElementById('plotIrrigationType').value || null,
+                location: document.getElementById('plotLocation').value || null,
+                description: document.getElementById('plotDescription').value || null,
+                is_active: document.getElementById('plotIsActive').checked
+            };
+            
+            let response;
+            if (id) {
+                response = await apiRequest(`/plots/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(plotData)
+                });
+            } else {
+                response = await apiRequest('/plots', {
+                    method: 'POST',
+                    body: JSON.stringify(plotData)
+                });
+            }
+            
+            if (response && response.success) {
+                $('#plotModal').modal('hide');
+                loadPlots();
+            } else {
+                alert(response?.detail || '保存失败，请稍后重试');
+            }
+        }
+
+        function deletePlot(id) {
+            document.getElementById('deletePlotId').value = id;
+            $('#deleteModal').modal('show');
+        }
+
+        async function confirmDelete() {
+            const id = document.getElementById('deletePlotId').value;
+            const response = await apiRequest(`/plots/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response && response.success) {
+                $('#deleteModal').modal('hide');
+                loadPlots();
+            } else {
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        async function restorePlot(id) {
+            const response = await apiRequest(`/plots/${id}/restore`, {
+                method: 'POST'
+            });
+            
+            if (response && response.success) {
+                loadPlots();
+            } else {
+                alert('恢复失败，请稍后重试');
+            }
+        }
+
+        $(document).ready(function() {
+            checkAuth();
+            loadPlots();
+        });
+    </script>
+</body>
+</html>
