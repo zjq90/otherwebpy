@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+
+{% block title %}工作人员管理 - 门禁考勤管理系统{% endblock %}
+{% block page_title %}工作人员管理{% endblock %}
+
+{% block content %}
+<!-- 搜索和添加区域 -->
+<div class="search-card">
+    <form id="searchForm">
+        <div class="row align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">关键字搜索</label>
+                <input type="text" class="form-control" id="keyword" placeholder="工号/姓名/电话">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">部门</label>
+                <select class="form-select" id="department">
+                    <option value="">全部</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">状态</label>
+                <select class="form-select" id="status">
+                    <option value="">全部</option>
+                    <option value="1">在职</option>
+                    <option value="0">离职</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>搜索
+                </button>
+            </div>
+            <div class="col-md-3 text-end">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">
+                    <i class="bi bi-plus-lg me-1"></i>添加工作人员
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 数据列表 -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people me-2"></i>工作人员列表</span>
+        <span class="text-muted">共 <span id="totalCount">0</span> 条记录</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>工号</th>
+                        <th>姓名</th>
+                        <th>性别</th>
+                        <th>部门</th>
+                        <th>职位</th>
+                        <th>电话</th>
+                        <th>人脸照片</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="staffTable">
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        <div class="d-flex justify-content-center mt-4" id="pagination">
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑模态框 -->
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">添加工作人员</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="staffForm" enctype="multipart/form-data">
+                <input type="hidden" id="editId">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">工号 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="staff_no" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">姓名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">性别</label>
+                            <select class="form-select" id="gender">
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">部门</label>
+                            <input type="text" class="form-control" id="department">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">职位</label>
+                            <input type="text" class="form-control" id="position">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">电话</label>
+                            <input type="text" class="form-control" id="phone">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="email">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">身份证号</label>
+                            <input type="text" class="form-control" id="id_card">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">状态</label>
+                            <select class="form-select" id="statusSelect">
+                                <option value="1">在职</option>
+                                <option value="0">离职</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">人脸照片</label>
+                            <input type="file" class="form-control" id="face_photo" accept="image/*">
+                            <div class="mt-2" id="photoPreview" style="display: none;">
+                                <img id="previewImg" class="img-thumbnail-preview" alt="预览">
+                            </div>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">备注</label>
+                            <textarea class="form-control" id="remark" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+    let pageSize = 10;
+    
+    // 加载部门列表
+    async function loadDepartments() {
+        try {
+            const response = await apiRequest('/api/staff/departments/all');
+            if (response.code === 200 && response.data) {
+                const select = document.getElementById('department');
+                response.data.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept;
+                    option.textContent = dept;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('加载部门列表失败:', error);
+        }
+    }
+    
+    // 加载工作人员列表
+    async function loadStaffList() {
+        showLoading();
+        try {
+            const keyword = document.getElementById('keyword').value;
+            const department = document.getElementById('department').value;
+            const status = document.getElementById('status').value;
+            
+            let url = `/api/staff/list?page=${currentPage}&page_size=${pageSize}`;
+            if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+            if (department) url += `&department=${encodeURIComponent(department)}`;
+            if (status) url += `&status=${status}`;
+            
+            const response = await apiRequest(url);
+            if (response.code === 200) {
+                renderStaffTable(response.data.list);
+                document.getElementById('totalCount').textContent = response.data.total;
+                
+                const totalPages = Math.ceil(response.data.total / pageSize);
+                renderPagination(totalPages);
+            }
+        } catch (error) {
+            console.error('加载列表失败:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 渲染表格
+    function renderStaffTable(list) {
+        const tbody = document.getElementById('staffTable');
+        
+        if (!list || list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">暂无数据</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        list.forEach(staff => {
+            const statusClass = staff.status === 1 ? 'bg-success' : 'bg-secondary';
+            const statusText = staff.status === 1 ? '在职' : '离职';
+            const photoHtml = staff.face_photo_path 
+                ? `<img src="/uploads/face_photos/${staff.face_photo_path}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">`
+                : '<span class="text-muted">-</span>';
+            
+            html += `
+                <tr>
+                    <td>${staff.staff_no}</td>
+                    <td>${staff.name}</td>
+                    <td>${staff.gender || '-'}</td>
+                    <td>${staff.department || '-'}</td>
+                    <td>${staff.position || '-'}</td>
+                    <td>${staff.phone || '-'}</td>
+                    <td>${photoHtml}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary btn-action" onclick="editStaff(${staff.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger btn-action" onclick="deleteStaff(${staff.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+    
+    // 渲染分页
+    function renderPagination(totalPages) {
+        const container = document.getElementById('pagination');
+        container.innerHTML = renderPaginationHtml(currentPage, totalPages);
+        
+        // 绑定分页点击事件
+        container.querySelectorAll('.page-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = parseInt(this.dataset.page);
+                if (page && page !== currentPage) {
+                    currentPage = page;
+                    loadStaffList();
+                }
+            });
+        });
+    }
+    
+    // 编辑工作人员
+    async function editStaff(id) {
+        showLoading();
+        try {
+            const response = await apiRequest(`/api/staff/${id}`);
+            if (response.code === 200) {
+                const staff = response.data;
+                document.getElementById('editId').value = id;
+                document.getElementById('modalTitle').textContent = '编辑工作人员';
+                document.getElementById('staff_no').value = staff.staff_no;
+                document.getElementById('name').value = staff.name || '';
+                document.getElementById('gender').value = staff.gender || '';
+                document.getElementById('department').value = staff.department || '';
+                document.getElementById('position').value = staff.position || '';
+                document.getElementById('phone').value = staff.phone || '';
+                document.getElementById('email').value = staff.email || '';
+                document.getElementById('id_card').value = staff.id_card || '';
+                document.getElementById('statusSelect').value = staff.status;
+                document.getElementById('remark').value = staff.remark || '';
+                
+                // 显示照片预览
+                const previewDiv = document.getElementById('photoPreview');
+                const previewImg = document.getElementById('previewImg');
+                if (staff.face_photo_path) {
+                    previewImg.src = `/uploads/face_photos/${staff.face_photo_path}`;
+                    previewDiv.style.display = 'block';
+                } else {
+                    previewDiv.style.display = 'none';
+                }
+                
+                new bootstrap.Modal(document.getElementById('addModal')).show();
+            }
+        } catch (error) {
+            console.error('获取详情失败:', error);
+            showToast('获取详情失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 删除工作人员
+    async function deleteStaff(id) {
+        if (!confirm('确定要删除该工作人员吗？')) return;
+        
+        showLoading();
+        try {
+            const response = await apiRequest(`/api/staff/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.code === 200) {
+                showToast('删除成功');
+                loadStaffList();
+            } else {
+                showToast(response.message || '删除失败', 'error');
+            }
+        } catch (error) {
+            console.error('删除失败:', error);
+            showToast('删除失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 字段校验函数
+    function validateStaffForm() {
+        const staff_no = document.getElementById('staff_no').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const id_card = document.getElementById('id_card').value.trim();
+        
+        // 工号校验
+        if (!staff_no) {
+            showToast('请输入工号', 'error');
+            return false;
+        }
+        if (staff_no.length > 50) {
+            showToast('工号不能超过50个字符', 'error');
+            return false;
+        }
+        
+        // 姓名校验
+        if (!name) {
+            showToast('请输入姓名', 'error');
+            return false;
+        }
+        if (name.length > 100) {
+            showToast('姓名不能超过100个字符', 'error');
+            return false;
+        }
+        
+        // 手机号校验（非必填，但如果填了必须符合格式）
+        if (phone) {
+            const phoneRegex = /^1[3-9]\d{9}$/;
+            if (!phoneRegex.test(phone)) {
+                showToast('请输入正确的11位手机号', 'error');
+                return false;
+            }
+        }
+        
+        // 邮箱校验（非必填，但如果填了必须符合格式）
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showToast('请输入正确的邮箱格式', 'error');
+                return false;
+            }
+            if (email.length > 100) {
+                showToast('邮箱不能超过100个字符', 'error');
+                return false;
+            }
+        }
+        
+        // 身份证号校验（非必填，但如果填了必须符合格式）
+        if (id_card) {
+            const idCardRegex = /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/;
+            if (!idCardRegex.test(id_card)) {
+                showToast('请输入正确的15位或18位身份证号', 'error');
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // 提交表单
+    async function submitStaffForm(event) {
+        event.preventDefault();
+        
+        // 表单校验
+        if (!validateStaffForm()) {
+            return;
+        }
+        
+        const editId = document.getElementById('editId').value;
+        const formData = new FormData();
+        
+        // 收集表单数据
+        const fields = ['staff_no', 'name', 'gender', 'department', 'position', 'phone', 'email', 'id_card', 'remark'];
+        fields.forEach(field => {
+            const value = document.getElementById(field).value;
+            if (value) formData.append(field, value);
+        });
+        formData.append('status', document.getElementById('statusSelect').value);
+        
+        // 添加照片文件
+        const photoFile = document.getElementById('face_photo').files[0];
+        if (photoFile) {
+            formData.append('face_photo', photoFile);
+        }
+        
+        showLoading();
+        try {
+            let url = '/api/staff/create';
+            let method = 'POST';
+            
+            if (editId) {
+                url = `/api/staff/${editId}`;
+                method = 'PUT';
+            }
+            
+            const response = await fetch(API_BASE + url, {
+                method: method,
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.code === 200) {
+                showToast(editId ? '更新成功' : '添加成功');
+                bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
+                resetForm();
+                loadStaffList();
+            } else {
+                showToast(result.detail || result.message || '操作失败', 'error');
+            }
+        } catch (error) {
+            console.error('提交失败:', error);
+            showToast('提交失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 重置表单
+    function resetForm() {
+        document.getElementById('staffForm').reset();
+        document.getElementById('editId').value = '';
+        document.getElementById('modalTitle').textContent = '添加工作人员';
+        document.getElementById('photoPreview').style.display = 'none';
+    }
+    
+    // 照片预览
+    document.getElementById('face_photo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('photoPreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // 模态框隐藏时重置表单
+    document.getElementById('addModal').addEventListener('hidden.bs.modal', resetForm);
+    
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDepartments();
+        loadStaffList();
+        
+        // 搜索表单提交
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            loadStaffList();
+        });
+        
+        // 工作人员表单提交
+        document.getElementById('staffForm').addEventListener('submit', submitStaffForm);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,732 @@
+{% extends "base.html" %}
+
+{% block title %}考勤管理 - 门禁考勤管理系统{% endblock %}
+{% block page_title %}考勤管理{% endblock %}
+
+{% block content %}
+<!-- 考勤设置 -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-gear me-2"></i>考勤设置</span>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#settingModal">
+            <i class="bi bi-pencil me-1"></i>修改设置
+        </button>
+    </div>
+    <div class="card-body" id="settingDisplay">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label text-muted">上午上班时间</label>
+                <div class="fw-bold" id="morning_start_time">-</div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted">上午下班时间</label>
+                <div class="fw-bold" id="morning_end_time">-</div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted">下午上班时间</label>
+                <div class="fw-bold" id="afternoon_start_time">-</div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted">下午下班时间</label>
+                <div class="fw-bold" id="afternoon_end_time">-</div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-3">
+                <label class="form-label text-muted">考勤宽容时间</label>
+                <div class="fw-bold"><span id="grace_minutes">-</span> 分钟</div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted">启用下午考勤</label>
+                <div class="fw-bold" id="enable_afternoon">-</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label text-muted">工作日设置</label>
+                <div class="fw-bold" id="work_days">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 生成考勤记录和搜索区域 -->
+<div class="search-card">
+    <div class="row align-items-end mb-3">
+        <div class="col-md-12">
+            <div class="card bg-light p-3">
+                <h6 class="mb-2"><i class="bi bi-lightning me-1"></i>生成考勤记录</h6>
+                <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">开始日期</label>
+                        <input type="date" class="form-control" id="generate_start_date">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">结束日期</label>
+                        <input type="date" class="form-control" id="generate_end_date">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-warning w-100" onclick="generateAttendance()">
+                            <i class="bi bi-play-circle me-1"></i>生成考勤
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="searchForm">
+        <div class="row align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">人员姓名</label>
+                <input type="text" class="form-control" id="staff_name" placeholder="输入姓名">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">工号</label>
+                <input type="text" class="form-control" id="staff_no" placeholder="输入工号">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">部门</label>
+                <select class="form-select" id="department">
+                    <option value="">全部</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">考勤状态</label>
+                <select class="form-select" id="day_status">
+                    <option value="">全部</option>
+                    <option value="1">正常</option>
+                    <option value="2">迟到</option>
+                    <option value="3">早退</option>
+                    <option value="4">迟到+早退</option>
+                    <option value="0">缺勤</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label class="form-label">开始日期</label>
+                        <input type="date" class="form-control" id="start_date">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">结束日期</label>
+                        <input type="date" class="form-control" id="end_date">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="row mt-3">
+        <div class="col-md-12 text-end">
+            <div class="btn-group">
+                <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-file-earmark-excel me-1"></i>导出报表
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="exportReport('month')">月报</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportReport('year')">年报</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportReport('custom')">自定义时间段</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 统计卡片 -->
+<div class="row mb-4">
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card stat-card stat-card-primary h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">总记录数</div>
+                <div class="h5 mb-0 font-weight-bold" id="stat_total">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card stat-card stat-card-success h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">正常</div>
+                <div class="h5 mb-0 font-weight-bold" id="stat_normal">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card stat-card stat-card-warning h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">迟到</div>
+                <div class="h5 mb-0 font-weight-bold" id="stat_late">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card stat-card stat-card-danger h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">早退</div>
+                <div class="h5 mb-0 font-weight-bold" id="stat_early">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card stat-card stat-card-info h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">缺勤</div>
+                <div class="h5 mb-0 font-weight-bold" id="stat_absent">0</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 mb-3">
+        <div class="card stat-card stat-card-primary h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">总工作时长</div>
+                <div class="h5 mb-0 font-weight-bold" id="stat_duration">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 数据列表 -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-calendar-check me-2"></i>考勤记录列表</span>
+        <span class="text-muted">共 <span id="totalCount">0</span> 条记录</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>考勤日期</th>
+                        <th>姓名</th>
+                        <th>工号</th>
+                        <th>部门</th>
+                        <th>上午签到</th>
+                        <th>上午状态</th>
+                        <th>下午签退</th>
+                        <th>下午状态</th>
+                        <th>当日状态</th>
+                        <th>工作时长</th>
+                    </tr>
+                </thead>
+                <tbody id="recordTable">
+                    <tr>
+                        <td colspan="10" class="text-center text-muted">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        <div class="d-flex justify-content-center mt-4" id="pagination">
+        </div>
+    </div>
+</div>
+
+<!-- 设置模态框 -->
+<div class="modal fade" id="settingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">修改考勤设置</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="settingForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">上午上班时间</label>
+                            <input type="time" class="form-control" id="setting_morning_start_time" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">上午下班时间</label>
+                            <input type="time" class="form-control" id="setting_morning_end_time" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">下午上班时间</label>
+                            <input type="time" class="form-control" id="setting_afternoon_start_time" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">下午下班时间</label>
+                            <input type="time" class="form-control" id="setting_afternoon_end_time" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">考勤宽容时间（分钟）</label>
+                            <input type="number" class="form-control" id="setting_grace_minutes" min="0" max="120" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">启用下午考勤</label>
+                            <select class="form-select" id="setting_enable_afternoon">
+                                <option value="1">是</option>
+                                <option value="0">否</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">工作日设置（多选：周一到周日分别为1-7）</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_day" value="1" id="wd1">
+                                <label class="form-check-label" for="wd1">周一</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_day" value="2" id="wd2">
+                                <label class="form-check-label" for="wd2">周二</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_day" value="3" id="wd3">
+                                <label class="form-check-label" for="wd3">周三</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_day" value="4" id="wd4">
+                                <label class="form-check-label" for="wd4">周四</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_day" value="5" id="wd5">
+                                <label class="form-check-label" for="wd5">周五</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_day" value="6" id="wd6">
+                                <label class="form-check-label" for="wd6">周六</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_day" value="7" id="wd7">
+                                <label class="form-check-label" for="wd7">周日</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 导出报表模态框 -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalTitle">导出报表</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="exportForm">
+                <input type="hidden" id="export_type">
+                <div class="modal-body" id="exportFormContent">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">导出</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+    let pageSize = 10;
+    let currentSetting = null;
+    
+    // 加载考勤设置
+    async function loadAttendanceSetting() {
+        try {
+            const response = await apiRequest('/api/attendance/setting');
+            if (response.code === 200) {
+                currentSetting = response.data;
+                displaySetting(currentSetting);
+            }
+        } catch (error) {
+            console.error('加载考勤设置失败:', error);
+        }
+    }
+    
+    // 显示设置
+    function displaySetting(setting) {
+        document.getElementById('morning_start_time').textContent = setting.morning_start_time;
+        document.getElementById('morning_end_time').textContent = setting.morning_end_time;
+        document.getElementById('afternoon_start_time').textContent = setting.afternoon_start_time;
+        document.getElementById('afternoon_end_time').textContent = setting.afternoon_end_time;
+        document.getElementById('grace_minutes').textContent = setting.grace_minutes;
+        document.getElementById('enable_afternoon').textContent = setting.enable_afternoon === 1 ? '是' : '否';
+        
+        const workDayMap = {1:'周一',2:'周二',3:'周三',4:'周四',5:'周五',6:'周六',7:'周日'};
+        const workDays = setting.work_days.split(',').map(d => workDayMap[parseInt(d)]).join('、');
+        document.getElementById('work_days').textContent = workDays;
+    }
+    
+    // 加载部门列表
+    async function loadDepartments() {
+        try {
+            const response = await apiRequest('/api/staff/departments/all');
+            if (response.code === 200 && response.data) {
+                const select = document.getElementById('department');
+                response.data.forEach(dept => {
+                    const option = document.createElement('option');
+                    option.value = dept;
+                    option.textContent = dept;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('加载部门列表失败:', error);
+        }
+    }
+    
+    // 加载考勤记录列表
+    async function loadRecordList() {
+        showLoading();
+        try {
+            const staff_name = document.getElementById('staff_name').value;
+            const staff_no = document.getElementById('staff_no').value;
+            const department = document.getElementById('department').value;
+            const day_status = document.getElementById('day_status').value;
+            const start_date = document.getElementById('start_date').value;
+            const end_date = document.getElementById('end_date').value;
+            
+            let url = `/api/attendance/list?page=${currentPage}&page_size=${pageSize}`;
+            if (staff_name) url += `&staff_name=${encodeURIComponent(staff_name)}`;
+            if (staff_no) url += `&staff_no=${encodeURIComponent(staff_no)}`;
+            if (department) url += `&department=${encodeURIComponent(department)}`;
+            if (day_status) url += `&day_status=${day_status}`;
+            if (start_date) url += `&start_date=${start_date}`;
+            if (end_date) url += `&end_date=${end_date}`;
+            
+            const response = await apiRequest(url);
+            if (response.code === 200) {
+                renderRecordTable(response.data.list);
+                document.getElementById('totalCount').textContent = response.data.total;
+                
+                const totalPages = Math.ceil(response.data.total / pageSize);
+                renderPagination(totalPages);
+            }
+            
+            // 加载统计
+            loadStatistics();
+        } catch (error) {
+            console.error('加载列表失败:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 加载统计数据
+    async function loadStatistics() {
+        try {
+            const start_date = document.getElementById('start_date').value;
+            const end_date = document.getElementById('end_date').value;
+            const department = document.getElementById('department').value;
+            
+            let url = '/api/attendance/statistics?';
+            const params = [];
+            if (start_date) params.push(`start_date=${start_date}`);
+            if (end_date) params.push(`end_date=${end_date}`);
+            if (department) params.push(`department=${encodeURIComponent(department)}`);
+            
+            url += params.join('&');
+            const response = await apiRequest(url);
+            
+            if (response.code === 200) {
+                document.getElementById('stat_total').textContent = response.data.total;
+                document.getElementById('stat_normal').textContent = response.data.normal_count;
+                document.getElementById('stat_late').textContent = response.data.late_count;
+                document.getElementById('stat_early').textContent = response.data.early_count;
+                document.getElementById('stat_absent').textContent = response.data.absent_count;
+                document.getElementById('stat_duration').textContent = response.data.total_duration_hours + '小时';
+            }
+        } catch (error) {
+            console.error('加载统计失败:', error);
+        }
+    }
+    
+    // 渲染表格
+    function renderRecordTable(list) {
+        const tbody = document.getElementById('recordTable');
+        
+        if (!list || list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">暂无数据</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        list.forEach(record => {
+            function getStatusClass(status) {
+                if (status === 1) return 'bg-success';
+                if (status === 2) return 'bg-warning';
+                if (status === 3) return 'bg-danger';
+                if (status === 4) return 'bg-dark';
+                return 'bg-secondary';
+            }
+            
+            html += `
+                <tr>
+                    <td>${record.attendance_date || '-'}</td>
+                    <td>${record.staff_name || '-'}</td>
+                    <td>${record.staff_no || '-'}</td>
+                    <td>${record.department || '-'}</td>
+                    <td>${record.morning_check_in || '-'}</td>
+                    <td><span class="badge ${getStatusClass(record.morning_status)}">${record.morning_status_text}</span></td>
+                    <td>${record.afternoon_check_out || '-'}</td>
+                    <td><span class="badge ${getStatusClass(record.afternoon_status)}">${record.afternoon_status_text}</span></td>
+                    <td><span class="badge ${getStatusClass(record.day_status)}">${record.day_status_text}</span></td>
+                    <td>${record.work_duration_text || '-'}</td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+    
+    // 渲染分页
+    function renderPagination(totalPages) {
+        const container = document.getElementById('pagination');
+        container.innerHTML = renderPaginationHtml(currentPage, totalPages);
+        
+        container.querySelectorAll('.page-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = parseInt(this.dataset.page);
+                if (page && page !== currentPage) {
+                    currentPage = page;
+                    loadRecordList();
+                }
+            });
+        });
+    }
+    
+    // 生成考勤记录
+    async function generateAttendance() {
+        const start_date = document.getElementById('generate_start_date').value;
+        const end_date = document.getElementById('generate_end_date').value;
+        
+        if (!start_date || !end_date) {
+            showToast('请选择开始日期和结束日期', 'error');
+            return;
+        }
+        
+        if (!confirm(`确定要生成 ${start_date} 到 ${end_date} 的考勤记录吗？`)) {
+            return;
+        }
+        
+        showLoading();
+        try {
+            const response = await apiRequest(`/api/attendance/generate?start_date=${start_date}&end_date=${end_date}`, {
+                method: 'POST'
+            });
+            
+            if (response.code === 200) {
+                showToast(`成功生成 ${response.data.generated_count} 条考勤记录`);
+                loadRecordList();
+            } else {
+                showToast(response.message || '生成失败', 'error');
+            }
+        } catch (error) {
+            console.error('生成考勤记录失败:', error);
+            showToast('生成失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 渲染分页HTML
+    function renderPaginationHtml(currentPage, totalPages) {
+        if (totalPages <= 1) return '';
+        
+        let html = '<ul class="pagination justify-content-center">';
+        html += `<li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage - 1}">上一页</a>
+        </li>`;
+        
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+        
+        if (startPage > 1) {
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>`;
+            if (startPage > 2) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>`;
+        }
+        
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a></li>`;
+        }
+        
+        html += `<li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage + 1}">下一页</a>
+        </li>`;
+        html += '</ul>';
+        return html;
+    }
+    
+    // 导出报表函数
+    function exportReport(type) {
+        document.getElementById('export_type').value = type;
+        
+        let title = '';
+        let content = '';
+        const department = document.getElementById('department').value;
+        
+        if (type === 'month') {
+            title = '导出月报';
+            const now = new Date();
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">年份</label>
+                    <input type="number" class="form-control" id="export_year" value="${now.getFullYear()}" min="2000" max="2099" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">月份</label>
+                    <select class="form-select" id="export_month" required>
+                        ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}" ${i === now.getMonth() ? 'selected' : ''}>${i + 1}月</option>`).join('')}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">部门（可选）</label>
+                    <select class="form-select" id="export_department">
+                        <option value="">全部部门</option>
+                    </select>
+                </div>
+            `;
+        } else if (type === 'year') {
+            title = '导出年报';
+            const now = new Date();
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">年份</label>
+                    <input type="number" class="form-control" id="export_year" value="${now.getFullYear()}" min="2000" max="2099" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">部门（可选）</label>
+                    <select class="form-select" id="export_department">
+                        <option value="">全部部门</option>
+                    </select>
+                </div>
+            `;
+        } else if (type === 'custom') {
+            title = '导出自定义时间段报表';
+            content = `
+                <div class="mb-3">
+                    <label class="form-label">开始日期</label>
+                    <input type="date" class="form-control" id="export_start_date" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">结束日期</label>
+                    <input type="date" class="form-control" id="export_end_date" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">部门（可选）</label>
+                    <select class="form-select" id="export_department">
+                        <option value="">全部部门</option>
+                    </select>
+                </div>
+            `;
+        }
+        
+        document.getElementById('exportModalTitle').textContent = title;
+        document.getElementById('exportFormContent').innerHTML = content;
+        
+        // 复制部门选项
+        const sourceDept = document.getElementById('department');
+        const targetDept = document.getElementById('export_department');
+        if (sourceDept && targetDept) {
+            for (let i = 1; i < sourceDept.options.length; i++) {
+                const option = document.createElement('option');
+                option.value = sourceDept.options[i].value;
+                option.textContent = sourceDept.options[i].textContent;
+                targetDept.appendChild(option);
+            }
+        }
+        
+        new bootstrap.Modal(document.getElementById('exportModal')).show();
+    }
+    
+    // 提交导出表单
+    function submitExportForm(event) {
+        event.preventDefault();
+        
+        const type = document.getElementById('export_type').value;
+        let url = '/api/attendance/export/report?';
+        const params = [];
+        
+        params.push(`report_type=${type}`);
+        
+        if (type === 'month') {
+            const year = document.getElementById('export_year').value;
+            const month = document.getElementById('export_month').value;
+            if (!year || !month) {
+                showToast('请选择年份和月份', 'error');
+                return;
+            }
+            params.push(`year=${year}`);
+            params.push(`month=${month}`);
+        } else if (type === 'year') {
+            const year = document.getElementById('export_year').value;
+            if (!year) {
+                showToast('请选择年份', 'error');
+                return;
+            }
+            params.push(`year=${year}`);
+        } else if (type === 'custom') {
+            const startDate = document.getElementById('export_start_date').value;
+            const endDate = document.getElementById('export_end_date').value;
+            if (!startDate || !endDate) {
+                showToast('请选择开始日期和结束日期', 'error');
+                return;
+            }
+            if (startDate > endDate) {
+                showToast('开始日期不能晚于结束日期', 'error');
+                return;
+            }
+            params.push(`start_date=${startDate}`);
+            params.push(`end_date=${endDate}`);
+        }
+        
+        // 添加部门筛选
+        const deptEl = document.getElementById('export_department');
+        if (deptEl && deptEl.value) {
+            params.push(`department=${encodeURIComponent(deptEl.value)}`);
+        }
+        
+        url += params.join('&');
+        
+        // 隐藏模态框
+        bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
+        
+        // 下载文件
+        window.location.href = url;
+        
+        showToast('正在导出报表，请稍候...');
+    }
+    
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAttendanceSetting();
+        loadDepartments();
+        loadRecordList();
+        
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            loadRecordList();
+        });
+        
+        // 导出表单提交
+        const exportForm = document.getElementById('exportForm');
+        if (exportForm) {
+            exportForm.addEventListener('submit', submitExportForm);
+        }
+    });
+</script>
+{% endblock %}

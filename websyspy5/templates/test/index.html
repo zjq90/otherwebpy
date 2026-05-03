@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+
+{% block title %}系统测试 - 门禁考勤管理系统{% endblock %}
+{% block page_title %}系统功能测试{% endblock %}
+
+{% block content %}
+<!-- 测试功能区域 -->
+<div class="row">
+    <!-- 工作人员管理测试 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-people me-2"></i>工作人员管理测试
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/staff" class="btn btn-outline-primary">
+                        <i class="bi bi-person-plus me-2"></i>添加/编辑工作人员
+                    </a>
+                    <button type="button" class="btn btn-outline-info" onclick="generateTestStaff()">
+                        <i class="bi bi-magic me-2"></i>生成测试工作人员数据
+                    </button>
+                </div>
+                <div class="mt-3" id="staffTestResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 门禁设备管理测试 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-camera-video me-2"></i>门禁设备管理测试
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/device" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle me-2"></i>添加/编辑门禁设备
+                    </a>
+                    <button type="button" class="btn btn-outline-info" onclick="generateTestDevices()">
+                        <i class="bi bi-magic me-2"></i>生成测试设备数据
+                    </button>
+                </div>
+                <div class="mt-3" id="deviceTestResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 人脸识别测试 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-person-badge me-2"></i>人脸识别验证测试
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">选择设备</label>
+                    <select class="form-select" id="testDeviceId">
+                        <option value="">请先生成设备数据</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">选择人员</label>
+                    <select class="form-select" id="testStaffId">
+                        <option value="">请先生成人员数据</option>
+                    </select>
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-success" onclick="testFaceVerify()">
+                        <i class="bi bi-play-circle me-2"></i>执行人脸识别验证
+                    </button>
+                </div>
+                <div class="mt-3" id="faceTestResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 出入记录测试 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-journal-text me-2"></i>出入记录测试
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">生成测试出入记录</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="date" class="form-control" id="testRecordStartDate" placeholder="开始日期">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="date" class="form-control" id="testRecordEndDate" placeholder="结束日期">
+                        </div>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="/access" class="btn btn-outline-primary">
+                        <i class="bi bi-eye me-2"></i>查看出入记录
+                    </a>
+                    <button type="button" class="btn btn-outline-info" onclick="generateTestAccessRecords()">
+                        <i class="bi bi-magic me-2"></i>批量生成测试出入记录
+                    </button>
+                </div>
+                <div class="mt-3" id="accessTestResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 考勤管理测试 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-calendar-check me-2"></i>考勤管理测试
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">生成考勤记录日期范围</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="date" class="form-control" id="testAttendanceStartDate" placeholder="开始日期">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="date" class="form-control" id="testAttendanceEndDate" placeholder="结束日期">
+                        </div>
+                    </div>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="/attendance" class="btn btn-outline-primary">
+                        <i class="bi bi-eye me-2"></i>查看考勤管理
+                    </a>
+                    <button type="button" class="btn btn-outline-warning" onclick="generateTestAttendance()">
+                        <i class="bi bi-play-circle me-2"></i>生成考勤记录
+                    </button>
+                </div>
+                <div class="mt-3" id="attendanceTestResult"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 一键生成所有测试数据 -->
+    <div class="col-md-6 mb-4">
+        <div class="card bg-light">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-lightning-charge me-2"></i>一键生成所有测试数据
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">点击下方按钮，系统将自动生成完整的测试数据，包括：</p>
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>工作人员数据（10人）</li>
+                    <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>门禁设备数据（3个）</li>
+                    <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>出入记录（最近7天）</li>
+                    <li class="list-group-item"><i class="bi bi-check-circle text-success me-2"></i>考勤记录（根据出入记录生成）</li>
+                </ul>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-lg btn-primary" onclick="generateAllTestData()">
+                        <i class="bi bi-rocket-takeoff me-2"></i>一键生成测试数据
+                    </button>
+                </div>
+                <div class="mt-3" id="allTestResult"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 测试结果区域 -->
+<div class="card mt-4">
+    <div class="card-header">
+        <i class="bi bi-terminal me-2"></i>测试日志
+    </div>
+    <div class="card-body">
+        <div id="testLog" style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; font-family: 'Consolas', monospace; font-size: 13px; max-height: 400px; overflow-y: auto;">
+            <div class="text-muted">等待测试操作...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 添加日志
+    function addLog(message, type = 'info') {
+        const logDiv = document.getElementById('testLog');
+        const now = new Date().toLocaleTimeString('zh-CN');
+        let color = '#d4d4d4';
+        let prefix = '[INFO]';
+        
+        if (type === 'success') {
+            color = '#4ec9b0';
+            prefix = '[SUCCESS]';
+        } else if (type === 'error') {
+            color = '#f14c4c';
+            prefix = '[ERROR]';
+        } else if (type === 'warning') {
+            color = '#dcdcaa';
+            prefix = '[WARNING]';
+        }
+        
+        const logLine = `<div><span class="text-muted">[${now}]</span> <span style="color:${color}">${prefix}</span> ${message}</div>`;
+        logDiv.innerHTML += logLine;
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+    
+    // 生成测试工作人员
+    async function generateTestStaff() {
+        addLog('开始生成测试工作人员数据...');
+        showLoading();
+        
+        try {
+            const response = await apiRequest('/api/test/generate-staff', {
+                method: 'POST'
+            });
+            
+            if (response.code === 200) {
+                addLog(`成功生成 ${response.data.count} 个测试工作人员`, 'success');
+                showToast(`成功生成 ${response.data.count} 个测试工作人员`);
+                await loadTestOptions();
+            } else {
+                addLog(response.message || '生成失败', 'error');
+                showToast(response.message || '生成失败', 'error');
+            }
+        } catch (error) {
+            addLog('生成测试工作人员数据失败: ' + error.message, 'error');
+            showToast('生成失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 生成测试设备
+    async function generateTestDevices() {
+        addLog('开始生成测试设备数据...');
+        showLoading();
+        
+        try {
+            const response = await apiRequest('/api/test/generate-devices', {
+                method: 'POST'
+            });
+            
+            if (response.code === 200) {
+                addLog(`成功生成 ${response.data.count} 个测试设备`, 'success');
+                showToast(`成功生成 ${response.data.count} 个测试设备`);
+                await loadTestOptions();
+            } else {
+                addLog(response.message || '生成失败', 'error');
+                showToast(response.message || '生成失败', 'error');
+            }
+        } catch (error) {
+            addLog('生成测试设备数据失败: ' + error.message, 'error');
+            showToast('生成失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 测试人脸识别
+    async function testFaceVerify() {
+        const deviceId = document.getElementById('testDeviceId').value;
+        const staffId = document.getElementById('testStaffId').value;
+        
+        if (!deviceId || !staffId) {
+            addLog('请先选择设备和人员', 'warning');
+            showToast('请先选择设备和人员', 'error');
+            return;
+        }
+        
+        addLog('开始人脸识别验证测试...');
+        showLoading();
+        
+        try {
+            const formData = new FormData();
+            formData.append('device_id', deviceId);
+            formData.append('staff_id', staffId);
+            
+            const response = await fetch(API_BASE + '/api/access/verify', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.code === 200) {
+                addLog(`人脸识别验证成功: 人员 ${result.data.staff_name}, 相似度 ${(result.data.similarity * 100).toFixed(1)}%`, 'success');
+                showToast('人脸识别验证成功');
+            } else {
+                addLog('人脸识别验证失败: ' + (result.message || '未知错误'), 'error');
+                showToast(result.message || '验证失败', 'error');
+            }
+        } catch (error) {
+            addLog('人脸识别验证失败: ' + error.message, 'error');
+            showToast('验证失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 生成测试出入记录
+    async function generateTestAccessRecords() {
+        const startDate = document.getElementById('testRecordStartDate').value;
+        const endDate = document.getElementById('testRecordEndDate').value;
+        
+        if (!startDate || !endDate) {
+            addLog('请选择开始日期和结束日期', 'warning');
+            showToast('请选择开始日期和结束日期', 'error');
+            return;
+        }
+        
+        addLog(`开始生成 ${startDate} 到 ${endDate} 的测试出入记录...`);
+        showLoading();
+        
+        try {
+            const response = await apiRequest(`/api/test/generate-access-records?start_date=${startDate}&end_date=${endDate}`, {
+                method: 'POST'
+            });
+            
+            if (response.code === 200) {
+                addLog(`成功生成 ${response.data.count} 条测试出入记录`, 'success');
+                showToast(`成功生成 ${response.data.count} 条测试出入记录`);
+            } else {
+                addLog(response.message || '生成失败', 'error');
+                showToast(response.message || '生成失败', 'error');
+            }
+        } catch (error) {
+            addLog('生成测试出入记录失败: ' + error.message, 'error');
+            showToast('生成失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 生成考勤记录
+    async function generateTestAttendance() {
+        const startDate = document.getElementById('testAttendanceStartDate').value;
+        const endDate = document.getElementById('testAttendanceEndDate').value;
+        
+        if (!startDate || !endDate) {
+            addLog('请选择开始日期和结束日期', 'warning');
+            showToast('请选择开始日期和结束日期', 'error');
+            return;
+        }
+        
+        addLog(`开始生成 ${startDate} 到 ${endDate} 的考勤记录...`);
+        showLoading();
+        
+        try {
+            const response = await apiRequest(`/api/attendance/generate?start_date=${startDate}&end_date=${endDate}`, {
+                method: 'POST'
+            });
+            
+            if (response.code === 200) {
+                addLog(`成功生成 ${response.data.generated_count} 条考勤记录`, 'success');
+                showToast(`成功生成 ${response.data.generated_count} 条考勤记录`);
+            } else {
+                addLog(response.message || '生成失败', 'error');
+                showToast(response.message || '生成失败', 'error');
+            }
+        } catch (error) {
+            addLog('生成考勤记录失败: ' + error.message, 'error');
+            showToast('生成失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 一键生成所有测试数据
+    async function generateAllTestData() {
+        addLog('========== 开始一键生成所有测试数据 ==========', 'warning');
+        showLoading();
+        
+        try {
+            // 1. 生成工作人员
+            addLog('步骤 1/4: 生成测试工作人员...');
+            let response = await apiRequest('/api/test/generate-staff', { method: 'POST' });
+            if (response.code !== 200) throw new Error('生成工作人员失败');
+            addLog(`✓ 成功生成 ${response.data.count} 个测试工作人员`, 'success');
+            
+            // 2. 生成设备
+            addLog('步骤 2/4: 生成测试设备...');
+            response = await apiRequest('/api/test/generate-devices', { method: 'POST' });
+            if (response.code !== 200) throw new Error('生成设备失败');
+            addLog(`✓ 成功生成 ${response.data.count} 个测试设备`, 'success');
+            
+            // 3. 生成出入记录（最近7天）
+            const today = new Date();
+            const endDate = today.toISOString().split('T')[0];
+            const startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            
+            addLog(`步骤 3/4: 生成 ${startDate} 到 ${endDate} 的测试出入记录...`);
+            response = await apiRequest(`/api/test/generate-access-records?start_date=${startDate}&end_date=${endDate}`, { method: 'POST' });
+            if (response.code !== 200) throw new Error('生成出入记录失败');
+            addLog(`✓ 成功生成 ${response.data.count} 条测试出入记录`, 'success');
+            
+            // 4. 生成考勤记录
+            addLog(`步骤 4/4: 生成 ${startDate} 到 ${endDate} 的考勤记录...`);
+            response = await apiRequest(`/api/attendance/generate?start_date=${startDate}&end_date=${endDate}`, { method: 'POST' });
+            if (response.code !== 200) throw new Error('生成考勤记录失败');
+            addLog(`✓ 成功生成 ${response.data.generated_count} 条考勤记录`, 'success');
+            
+            addLog('========== 所有测试数据生成完成！==========', 'success');
+            showToast('所有测试数据生成完成！');
+            
+            // 刷新下拉选项
+            await loadTestOptions();
+            
+        } catch (error) {
+            addLog('生成测试数据失败: ' + error.message, 'error');
+            showToast('生成测试数据失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 加载测试选项
+    async function loadTestOptions() {
+        try {
+            // 加载人员
+            const staffResponse = await apiRequest('/api/staff/list?page=1&page_size=100');
+            if (staffResponse.code === 200 && staffResponse.data.list.length > 0) {
+                const staffSelect = document.getElementById('testStaffId');
+                staffSelect.innerHTML = '<option value="">请选择人员</option>';
+                staffResponse.data.list.forEach(staff => {
+                    const option = document.createElement('option');
+                    option.value = staff.id;
+                    option.textContent = `${staff.name} (${staff.staff_no})`;
+                    staffSelect.appendChild(option);
+                });
+            }
+            
+            // 加载设备
+            const deviceResponse = await apiRequest('/api/device/all');
+            if (deviceResponse.code === 200 && deviceResponse.data.length > 0) {
+                const deviceSelect = document.getElementById('testDeviceId');
+                deviceSelect.innerHTML = '<option value="">请选择设备</option>';
+                deviceResponse.data.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.id;
+                    option.textContent = `${device.device_name} (${device.location || '未知位置'})`;
+                    deviceSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('加载测试选项失败:', error);
+        }
+    }
+    
+    // 设置默认日期
+    function setDefaultDates() {
+        const today = new Date();
+        const endDate = today.toISOString().split('T')[0];
+        const startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        // 出入记录日期
+        document.getElementById('testRecordStartDate').value = startDate;
+        document.getElementById('testRecordEndDate').value = endDate;
+        
+        // 考勤记录日期
+        document.getElementById('testAttendanceStartDate').value = startDate;
+        document.getElementById('testAttendanceEndDate').value = endDate;
+    }
+    
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTestOptions();
+        setDefaultDates();
+    });
+</script>
+{% endblock %}

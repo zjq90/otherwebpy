@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}出入记录 - 门禁考勤管理系统{% endblock %}
+{% block page_title %}出入记录{% endblock %}
+
+{% block content %}
+<!-- 搜索和导出区域 -->
+<div class="search-card">
+    <form id="searchForm">
+        <div class="row align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">人员姓名</label>
+                <input type="text" class="form-control" id="staff_name" placeholder="输入姓名">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">工号</label>
+                <input type="text" class="form-control" id="staff_no" placeholder="输入工号">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">设备</label>
+                <select class="form-select" id="device_id">
+                    <option value="">全部设备</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">出入类型</label>
+                <select class="form-select" id="access_type">
+                    <option value="">全部</option>
+                    <option value="1">进入</option>
+                    <option value="0">离开</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">验证结果</label>
+                <select class="form-select" id="verify_result">
+                    <option value="">全部</option>
+                    <option value="1">成功</option>
+                    <option value="0">失败</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label class="form-label">开始时间</label>
+                        <input type="date" class="form-control" id="start_time">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">结束时间</label>
+                        <input type="date" class="form-control" id="end_time">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="row mt-3">
+        <div class="col-md-12 text-end">
+            <button type="button" class="btn btn-success" onclick="exportRecords()">
+                <i class="bi bi-file-earmark-excel me-1"></i>导出Excel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 数据列表 -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-journal-text me-2"></i>出入记录列表</span>
+        <span class="text-muted">共 <span id="totalCount">0</span> 条记录</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>出入时间</th>
+                        <th>姓名</th>
+                        <th>工号</th>
+                        <th>设备名称</th>
+                        <th>设备位置</th>
+                        <th>出入类型</th>
+                        <th>相似度</th>
+                        <th>验证结果</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="recordTable">
+                    <tr>
+                        <td colspan="10" class="text-center text-muted">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        <div class="d-flex justify-content-center mt-4" id="pagination">
+        </div>
+    </div>
+</div>
+
+<!-- 详情模态框 -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">出入记录详情</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailContent">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+    let pageSize = 10;
+    
+    // 加载设备列表
+    async function loadDevices() {
+        try {
+            const response = await apiRequest('/api/device/all');
+            if (response.code === 200 && response.data) {
+                const select = document.getElementById('device_id');
+                response.data.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.id;
+                    option.textContent = `${device.device_name} (${device.location || '未知位置'})`;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('加载设备列表失败:', error);
+        }
+    }
+    
+    // 加载记录列表
+    async function loadRecordList() {
+        showLoading();
+        try {
+            const staff_name = document.getElementById('staff_name').value;
+            const staff_no = document.getElementById('staff_no').value;
+            const device_id = document.getElementById('device_id').value;
+            const access_type = document.getElementById('access_type').value;
+            const verify_result = document.getElementById('verify_result').value;
+            const start_time = document.getElementById('start_time').value;
+            const end_time = document.getElementById('end_time').value;
+            
+            let url = `/api/access/list?page=${currentPage}&page_size=${pageSize}`;
+            if (staff_name) url += `&staff_name=${encodeURIComponent(staff_name)}`;
+            if (staff_no) url += `&staff_no=${encodeURIComponent(staff_no)}`;
+            if (device_id) url += `&device_id=${device_id}`;
+            if (access_type) url += `&access_type=${access_type}`;
+            if (verify_result) url += `&verify_result=${verify_result}`;
+            if (start_time) url += `&start_time=${start_time}`;
+            if (end_time) url += `&end_time=${end_time}`;
+            
+            const response = await apiRequest(url);
+            if (response.code === 200) {
+                renderRecordTable(response.data.list);
+                document.getElementById('totalCount').textContent = response.data.total;
+                
+                const totalPages = Math.ceil(response.data.total / pageSize);
+                renderPagination(totalPages);
+            }
+        } catch (error) {
+            console.error('加载列表失败:', error);
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 渲染表格
+    function renderRecordTable(list) {
+        const tbody = document.getElementById('recordTable');
+        
+        if (!list || list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">暂无数据</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        list.forEach(record => {
+            const verifyClass = record.verify_result === 1 ? 'bg-success' : 'bg-danger';
+            const typeClass = record.access_type === 1 ? 'bg-primary' : 'bg-warning';
+            
+            html += `
+                <tr>
+                    <td>${formatDateTime(record.access_time)}</td>
+                    <td>${record.staff_name || '-'}</td>
+                    <td>${record.staff_no || '-'}</td>
+                    <td>${record.device_name || '-'}</td>
+                    <td>${record.location || '-'}</td>
+                    <td><span class="badge ${typeClass}">${record.access_type_text}</span></td>
+                    <td>${(record.similarity * 100).toFixed(1)}%</td>
+                    <td><span class="badge ${verifyClass}">${record.verify_result_text}</span></td>
+                    <td>${record.remark || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info btn-action" onclick="viewDetail(${record.id})">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+    
+    // 渲染分页
+    function renderPagination(totalPages) {
+        const container = document.getElementById('pagination');
+        container.innerHTML = renderPaginationHtml(currentPage, totalPages);
+        
+        container.querySelectorAll('.page-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = parseInt(this.dataset.page);
+                if (page && page !== currentPage) {
+                    currentPage = page;
+                    loadRecordList();
+                }
+            });
+        });
+    }
+    
+    // 查看详情
+    async function viewDetail(id) {
+        showLoading();
+        try {
+            const response = await apiRequest(`/api/access/${id}`);
+            if (response.code === 200) {
+                const record = response.data;
+                const content = `
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">人员姓名</label>
+                            <div class="fw-bold">${record.staff_name || '-'}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">工号</label>
+                            <div class="fw-bold">${record.staff_no || '-'}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">设备名称</label>
+                            <div class="fw-bold">${record.device_name || '-'}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">设备位置</label>
+                            <div class="fw-bold">${record.location || '-'}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">出入时间</label>
+                            <div class="fw-bold">${formatDateTime(record.access_time)}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">出入类型</label>
+                            <div>
+                                <span class="badge ${record.access_type === 1 ? 'bg-primary' : 'bg-warning'}">
+                                    ${record.access_type_text}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">人脸识别相似度</label>
+                            <div class="fw-bold">${(record.similarity * 100).toFixed(1)}%</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">验证结果</label>
+                            <div>
+                                <span class="badge ${record.verify_result === 1 ? 'bg-success' : 'bg-danger'}">
+                                    ${record.verify_result_text}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label text-muted">备注</label>
+                            <div class="fw-bold">${record.remark || '-'}</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('detailContent').innerHTML = content;
+                new bootstrap.Modal(document.getElementById('detailModal')).show();
+            }
+        } catch (error) {
+            console.error('获取详情失败:', error);
+            showToast('获取详情失败', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    // 导出记录
+    function exportRecords() {
+        const staff_name = document.getElementById('staff_name').value;
+        const staff_no = document.getElementById('staff_no').value;
+        const device_id = document.getElementById('device_id').value;
+        const access_type = document.getElementById('access_type').value;
+        const verify_result = document.getElementById('verify_result').value;
+        const start_time = document.getElementById('start_time').value;
+        const end_time = document.getElementById('end_time').value;
+        
+        let url = '/api/access/export/excel?';
+        const params = [];
+        if (staff_name) params.push(`staff_name=${encodeURIComponent(staff_name)}`);
+        if (staff_no) params.push(`staff_no=${encodeURIComponent(staff_no)}`);
+        if (device_id) params.push(`device_id=${device_id}`);
+        if (access_type) params.push(`access_type=${access_type}`);
+        if (verify_result) params.push(`verify_result=${verify_result}`);
+        if (start_time) params.push(`start_time=${start_time}`);
+        if (end_time) params.push(`end_time=${end_time}`);
+        
+        url += params.join('&');
+        window.location.href = url;
+    }
+    
+    // 渲染分页HTML
+    function renderPaginationHtml(currentPage, totalPages) {
+        if (totalPages <= 1) return '';
+        
+        let html = '<ul class="pagination justify-content-center">';
+        html += `<li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage - 1}">上一页</a>
+        </li>`;
+        
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+        
+        if (startPage > 1) {
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>`;
+            if (startPage > 2) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>`;
+        }
+        
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a></li>`;
+        }
+        
+        html += `<li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${currentPage + 1}">下一页</a>
+        </li>`;
+        html += '</ul>';
+        return html;
+    }
+    
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        loadDevices();
+        loadRecordList();
+        
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            loadRecordList();
+        });
+    });
+</script>
+{% endblock %}
