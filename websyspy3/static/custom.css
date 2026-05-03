@@ -1,0 +1,94 @@
+/* CD管理系统自定义样式 */
+
+/* 卡片悬停效果 */
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+/* 统计卡片样式 */
+.stat-card {
+    border-left: 4px solid #0d6efd;
+}
+
+.stat-card-warning {
+    border-left: 4px solid #ffc107;
+}
+
+.stat-card-success {
+    border-left: 4px solid #198754;
+}
+
+.stat-card-info {
+    border-left: 4px solid #0dcaf0;
+}
+
+/* 表格样式优化 */
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* 按钮间距 */
+.btn + .btn {
+    margin-left: 0.5rem;
+}
+
+/* 表单间距 */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* 徽章样式 */
+.badge {
+    font-size: 0.85em;
+}
+
+/* 状态标签样式 */
+.status-borrowed {
+    background-color: #dc3545;
+}
+
+.status-returned {
+    background-color: #198754;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+    min-height: calc(100vh - 56px);
+}
+
+/* 面包屑导航 */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+/* 分页样式 */
+.pagination {
+    margin-bottom: 0;
+}
+
+/* 搜索框样式 */
+.search-input {
+    max-width: 300px;
+}
+
+/* 图标间距 */
+.bi {
+    margin-right: 0.25rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .search-input {
+        max-width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}

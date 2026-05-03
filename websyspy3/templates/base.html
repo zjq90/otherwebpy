@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CD管理系统{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 4px 8px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            padding: 24px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            border-bottom: 2px solid #eee;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .badge-borrowed {
+            background-color: #dc3545;
+        }
+        
+        .badge-returned {
+            background-color: #28a745;
+        }
+        
+        .badge-available {
+            background-color: #17a2b8;
+        }
+        
+        .page-link {
+            color: #667eea;
+        }
+        
+        .page-item.active .page-link {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+        
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    {% if current_user %}
+    <!-- 主布局（已登录） -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <nav class="col-md-2 d-none d-md-block sidebar p-0">
+                <div class="p-3 text-center border-bottom border-white/20">
+                    <h4 class="text-white mb-0">
+                        <i class="bi bi-disc"></i> CD管理系统
+                    </h4>
+                </div>
+                
+                <div class="nav flex-column mt-3">
+                    <a class="nav-link {% if request.url.path == '/' %}active{% endif %}" href="/">
+                        <i class="bi bi-house-door"></i> 首页
+                    </a>
+                    
+                    <a class="nav-link {% if '/cds' in request.url.path and '/categories' not in request.url.path %}active{% endif %}" href="/cds">
+                        <i class="bi bi-disc"></i> CD管理
+                    </a>
+                    
+                    <a class="nav-link {% if '/categories' in request.url.path %}active{% endif %}" href="/categories">
+                        <i class="bi bi-folder"></i> 分类管理
+                    </a>
+                    
+                    <a class="nav-link {% if '/borrow' in request.url.path %}active{% endif %}" href="/borrow">
+                        <i class="bi bi-journal-text"></i> 借还记录
+                    </a>
+                    
+                    <a class="nav-link {% if '/stats' in request.url.path %}active{% endif %}" href="/stats">
+                        <i class="bi bi-bar-chart"></i> 统计图表
+                    </a>
+                    
+                    {% if current_user.role == 'admin' %}
+                    <div class="border-top border-white/20 mt-3 pt-3 mx-3">
+                        <small class="text-white/50 ps-4">管理员功能</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </nav>
+            
+            <!-- 主内容区域 -->
+            <main class="col-md-10 ml-sm-auto col-lg-10 px-md-4 main-content">
+                <!-- 顶部导航栏 -->
+                <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
+                    <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    
+                    <div class="collapse navbar-collapse" id="navbarToggler">
+                        <span class="navbar-brand d-md-none text-primary">
+                            <i class="bi bi-disc"></i> CD管理系统
+                        </span>
+                        
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-md-none">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/"><i class="bi bi-house-door"></i> 首页</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/cds"><i class="bi bi-disc"></i> CD管理</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/categories"><i class="bi bi-folder"></i> 分类管理</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/borrow"><i class="bi bi-journal-text"></i> 借还记录</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/stats"><i class="bi bi-bar-chart"></i> 统计图表</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i>
+                                <span class="ms-2">{{ current_user.username }}</span>
+                                {% if current_user.role == 'admin' %}
+                                <span class="badge bg-danger ms-2">管理员</span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/auth/profile">
+                                    <i class="bi bi-person"></i> 个人资料
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="/auth/logout">
+                                    <i class="bi bi-box-arrow-right"></i> 退出登录
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+                
+                <!-- 消息提示区域 -->
+                {% with messages = request.query_params.get('error', '') %}
+                    {% if messages %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ messages }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- 页面内容 -->
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    {% else %}
+    <!-- 登录/注册页面布局 -->
+    {% block auth_content %}{% endblock %}
+    {% endif %}
+    
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js (用于图表页面) -->
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        // 自动关闭警告消息
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+        
+        // 确认删除对话框
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteForms = document.querySelectorAll('.delete-form');
+            deleteForms.forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    if (!confirm('确定要删除吗？此操作不可恢复。')) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

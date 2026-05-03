@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}统计图表 - CD管理系统{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-bar-chart"></i> 统计图表</h2>
+</div>
+
+<!-- 概览统计卡片 -->
+<div class="row mb-4" id="stats-cards">
+    <div class="col-md-3 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <p class="text-white-50 mb-1">总CD数</p>
+                        <h3 class="mb-0" id="total-cds">...</h3>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-disc display-4 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <p class="text-white-50 mb-1">总分类数</p>
+                        <h3 class="mb-0" id="total-categories">...</h3>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-folder display-4 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <p class="text-white-50 mb-1">总用户数</p>
+                        <h3 class="mb-0" id="total-users">...</h3>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people display-4 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <p class="text-white-50 mb-1">借出中</p>
+                        <h3 class="mb-0" id="borrowed-cds">...</h3>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-journal-bookmark display-4 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 图表行 -->
+<div class="row">
+    <!-- 分类分布饼图 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-pie-chart"></i> 分类分布
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 热门CD柱状图 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-graph-up"></i> 热门CD (借阅次数)
+            </div>
+            <div class="card-body">
+                <canvas id="popularChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 借还趋势折线图 -->
+    <div class="col-lg-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-graph-up-arrow"></i> 借还趋势 (近30天)</span>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary active" data-days="7">近7天</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-days="30">近30天</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-days="90">近90天</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="trendChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 加载概览统计数据
+async function loadOverviewStats() {
+    try {
+        const response = await fetch('/api/stats/overview');
+        const data = await response.json();
+        
+        document.getElementById('total-cds').textContent = data.total_cds;
+        document.getElementById('total-categories').textContent = data.total_categories;
+        document.getElementById('total-users').textContent = data.total_users;
+        document.getElementById('borrowed-cds').textContent = data.borrowed_cds;
+    } catch (error) {
+        console.error('加载概览统计失败:', error);
+    }
+}
+
+// 加载分类分布饼图
+async function loadCategoryChart() {
+    try {
+        const response = await fetch('/api/stats/category-distribution');
+        const data = await response.json();
+        
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('加载分类分布图表失败:', error);
+    }
+}
+
+// 加载热门CD柱状图
+async function loadPopularChart() {
+    try {
+        const response = await fetch('/api/stats/popular-cds?limit=10');
+        const data = await response.json();
+        
+        const ctx = document.getElementById('popularChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('加载热门CD图表失败:', error);
+    }
+}
+
+let trendChart = null;
+
+// 加载借还趋势折线图
+async function loadTrendChart(days = 30) {
+    try {
+        const response = await fetch(`/api/stats/borrow-trend?days=${days}`);
+        const data = await response.json();
+        
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        
+        if (trendChart) {
+            trendChart.destroy();
+        }
+        
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('加载借还趋势图表失败:', error);
+    }
+}
+
+// 初始化图表
+document.addEventListener('DOMContentLoaded', function() {
+    loadOverviewStats();
+    loadCategoryChart();
+    loadPopularChart();
+    loadTrendChart(30);
+    
+    // 趋势图时间范围切换
+    document.querySelectorAll('[data-days]').forEach(button => {
+        button.addEventListener('click', function() {
+            // 移除所有active类
+            document.querySelectorAll('[data-days]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // 添加当前按钮的active类
+            this.classList.add('active');
+            
+            // 加载对应天数的数据
+            const days = parseInt(this.getAttribute('data-days'));
+            loadTrendChart(days);
+        });
+    });
+});
+</script>
+{% endblock %}

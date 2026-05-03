@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - CD管理系统{% endblock %}
+
+{% block content %}
+<!-- 统计卡片 -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <p class="text-white-50 mb-1">总CD数</p>
+                        <h3 class="mb-0">{{ stats.total_cds }}</h3>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-disc display-4 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-top border-white/20">
+                <a href="/cds" class="text-white text-decoration-none">
+                    <small>查看全部 <i class="bi bi-arrow-right"></i></small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <p class="text-white-50 mb-1">总分类数</p>
+                        <h3 class="mb-0">{{ stats.total_categories }}</h3>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-folder display-4 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-top border-white/20">
+                <a href="/categories" class="text-white text-decoration-none">
+                    <small>查看全部 <i class="bi bi-arrow-right"></i></small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <p class="text-white-50 mb-1">借出中</p>
+                        <h3 class="mb-0">{{ stats.borrowed_cds }}</h3>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-journal-bookmark display-4 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-top border-white/20">
+                <a href="/borrow?status=borrowed" class="text-white text-decoration-none">
+                    <small>查看记录 <i class="bi bi-arrow-right"></i></small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <p class="text-white-50 mb-1">可用库存</p>
+                        <h3 class="mb-0">{{ stats.available_stock }}</h3>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-box display-4 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-top border-white/20">
+                <a href="/cds" class="text-white text-decoration-none">
+                    <small>浏览CD <i class="bi bi-arrow-right"></i></small>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最近借还记录和快捷操作 -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history"></i> 最近借还记录</span>
+                <a href="/borrow" class="btn btn-sm btn-outline-primary">
+                    查看全部 <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_records %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>CD名称</th>
+                                <th>借阅人</th>
+                                <th>借阅日期</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in recent_records %}
+                            <tr>
+                                <td>{{ record.cd_title }}</td>
+                                <td>{{ record.user_name }}</td>
+                                <td>{{ record.borrow_date }}</td>
+                                <td>
+                                    {% if record.status == 'borrowed' %}
+                                    <span class="badge badge-borrowed">借阅中</span>
+                                    {% else %}
+                                    <span class="badge badge-returned">已归还</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-4 text-muted"></i>
+                    <p class="text-muted mt-3">暂无借还记录</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-lightning"></i> 快捷操作
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/cds" class="btn btn-outline-primary">
+                        <i class="bi bi-search"></i> 浏览CD
+                    </a>
+                    <a href="/borrow" class="btn btn-outline-success">
+                        <i class="bi bi-journal-text"></i> 我的借还记录
+                    </a>
+                    <a href="/stats" class="btn btn-outline-info">
+                        <i class="bi bi-bar-chart"></i> 查看统计
+                    </a>
+                    {% if current_user.role == 'admin' %}
+                    <hr>
+                    <a href="/categories/create" class="btn btn-outline-secondary">
+                        <i class="bi bi-folder-plus"></i> 添加分类
+                    </a>
+                    <a href="/cds/create" class="btn btn-outline-secondary">
+                        <i class="bi bi-plus-circle"></i> 添加CD
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i> 系统信息
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <strong>当前用户：</strong>
+                        <span class="text-muted">{{ current_user.username }}</span>
+                    </li>
+                    <li class="mb-2">
+                        <strong>用户角色：</strong>
+                        {% if current_user.role == 'admin' %}
+                        <span class="badge bg-danger">管理员</span>
+                        {% else %}
+                        <span class="badge bg-secondary">普通用户</span>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <strong>注册时间：</strong>
+                        <span class="text-muted">{{ current_user.created_at }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

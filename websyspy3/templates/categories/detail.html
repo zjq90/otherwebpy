@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - 分类详情{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>
+            <i class="bi bi-folder text-primary"></i>
+            {{ category.name }}
+        </h2>
+        {% if category.description %}
+        <p class="text-muted mb-0">{{ category.description }}</p>
+        {% endif %}
+    </div>
+    <div>
+        {% if current_user.role == 'admin' %}
+        <a href="/categories/{{ category.id }}/edit" class="btn btn-sm btn-warning">
+            <i class="bi bi-pencil"></i> 编辑分类
+        </a>
+        {% endif %}
+        <a href="/categories" class="btn btn-sm btn-secondary">
+            <i class="bi bi-arrow-left"></i> 返回分类列表
+        </a>
+    </div>
+</div>
+
+<!-- 分类统计 -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <p class="text-white-50 mb-1">该分类CD数</p>
+                        <h3 class="mb-0">{{ pagination.total }}</h3>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-disc display-4 text-white-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 该分类下的CD列表 -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-list"></i> 该分类下的CD
+    </div>
+    <div class="card-body">
+        {% if cds %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>CD名称</th>
+                        <th>艺术家</th>
+                        <th>库存</th>
+                        <th>可用</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cd in cds %}
+                    <tr>
+                        <td>
+                            <strong>{{ cd.title }}</strong>
+                            {% if cd.description %}
+                            <br><small class="text-muted">{{ cd.description[:50] }}...</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ cd.artist }}</td>
+                        <td>{{ cd.total_quantity }}</td>
+                        <td>{{ cd.available_quantity }}</td>
+                        <td>
+                            {% if cd.available_quantity > 0 %}
+                            <span class="badge badge-available">可借阅</span>
+                            {% else %}
+                            <span class="badge badge-borrowed">已借完</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/cds/{{ cd.id }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> 详情
+                                </a>
+                                {% if cd.available_quantity > 0 %}
+                                <form method="POST" action="/borrow/borrow/{{ cd.id }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-journal-plus"></i> 借阅
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% if current_user.role == 'admin' %}
+                                <a href="/cds/{{ cd.id }}/edit" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if pagination.total_pages > 1 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" 
+                       href="?page={{ pagination.prev_page }}">
+                        <i class="bi bi-chevron-left"></i> 上一页
+                    </a>
+                </li>
+                
+                {% for i in range(1, pagination.total_pages + 1) %}
+                <li class="page-item {% if i == pagination.page %}active{% endif %}">
+                    <a class="page-link" 
+                       href="?page={{ i }}">
+                        {{ i }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" 
+                       href="?page={{ pagination.next_page }}">
+                        下一页 <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-4 text-muted"></i>
+            <p class="text-muted mt-3">该分类下暂无CD</p>
+            {% if current_user.role == 'admin' %}
+            <a href="/cds/create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> 添加CD
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

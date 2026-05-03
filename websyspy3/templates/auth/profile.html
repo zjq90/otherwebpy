@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}个人资料 - CD管理系统{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-person-circle display-1 text-primary"></i>
+                </div>
+                <h4>{{ current_user.username }}</h4>
+                <p class="text-muted mb-0">{{ current_user.email }}</p>
+                {% if current_user.role == 'admin' %}
+                <span class="badge bg-danger mt-2">管理员</span>
+                {% else %}
+                <span class="badge bg-secondary mt-2">普通用户</span>
+                {% endif %}
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <i class="bi bi-calendar text-primary"></i>
+                    <span class="ms-2">注册时间：</span>
+                    <span class="text-muted">{{ current_user.created_at }}</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="bi bi-gear"></i> 快捷操作
+            </div>
+            <div class="card-body">
+                <a href="/borrow/my-borrows" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-journal-text"></i> 我的借还记录
+                </a>
+                <a href="/cds" class="btn btn-outline-success w-100">
+                    <i class="bi bi-disc"></i> 浏览CD
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clock-history"></i> 最近借还记录
+            </div>
+            <div class="card-body">
+                {% if borrow_records %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>CD名称</th>
+                                <th>艺术家</th>
+                                <th>借阅日期</th>
+                                <th>归还日期</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in borrow_records %}
+                            <tr>
+                                <td>{{ record.cd_title }}</td>
+                                <td>{{ record.cd_artist }}</td>
+                                <td>{{ record.borrow_date }}</td>
+                                <td>
+                                    {% if record.return_date %}
+                                    {{ record.return_date }}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.status == 'borrowed' %}
+                                    <span class="badge badge-borrowed">借阅中</span>
+                                    {% else %}
+                                    <span class="badge badge-returned">已归还</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-4 text-muted"></i>
+                    <p class="text-muted mt-3">暂无借还记录</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
