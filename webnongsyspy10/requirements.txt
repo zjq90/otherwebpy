@@ -1,0 +1,29 @@
+# FastAPI Web框架
+fastapi>=0.100.0
+
+# ASGI服务器
+uvicorn>=0.23.2
+
+# 数据库ORM
+sqlalchemy>=2.0.20
+
+# 数据库驱动（SQLite内置）
+pysqlite3>=0.5.2
+
+# 数据验证
+pydantic>=2.0.0
+
+# 数据验证扩展
+pydantic-settings>=2.0.0
+
+# 模板引擎（用于HTML页面渲染）
+jinja2>=3.1.0
+
+# 测试框架
+pytest>=7.4.0
+
+# HTTP客户端测试
+httpx>=0.24.1
+
+# 数据库迁移（可选）
+alembic>=1.12.0

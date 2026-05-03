@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }} - 农事作业记录</title>
+    
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #28a745;
+            --secondary-color: #17a2b8;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        /* 导航栏样式 */
+        .navbar {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .navbar-dark .navbar-nav .nav-link {
+            color: rgba(255,255,255,0.9);
+            padding: 0.8rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-dark .navbar-nav .nav-link:hover,
+        .navbar-dark .navbar-nav .nav-link.active {
+            color: #fff;
+            background-color: rgba(255,255,255,0.15);
+            border-radius: 5px;
+        }
+        
+        .navbar-dark .navbar-nav .nav-link i {
+            margin-right: 5px;
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            padding: 2rem 0;
+        }
+        
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: none;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: bold;
+        }
+        
+        /* 统计卡片 */
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        /* 按钮样式 */
+        .btn-primary {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            border: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            border: none;
+        }
+        
+        /* 表格样式 */
+        .table thead th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* 模态框样式 */
+        .modal-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+        
+        .modal-header .close {
+            color: white;
+            opacity: 0.8;
+        }
+        
+        .modal-header .close:hover {
+            color: white;
+            opacity: 1;
+        }
+        
+        /* 表单样式 */
+        .form-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        
+        /* 徽章样式 */
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.6rem;
+        }
+        
+        .badge-success {
+            background-color: var(--success-color);
+        }
+        
+        .badge-warning {
+            background-color: var(--warning-color);
+            color: #212529;
+        }
+        
+        .badge-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .badge-info {
+            background-color: var(--secondary-color);
+        }
+        
+        /* 页脚样式 */
+        footer {
+            background-color: #343a40;
+            color: rgba(255,255,255,0.7);
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        
+        /* 警告提示框 */
+        .alert-warning {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert-danger {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-success {
+            border-left: 4px solid #28a745;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        /* 空数据提示 */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* 搜索筛选区域 */
+        .filter-section {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-section .form-group {
+            margin-bottom: 0;
+        }
+        
+        /* 操作按钮组 */
+        .action-btns .btn {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        
+        /* 快捷录入卡片 */
+        .quick-entry-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .quick-entry-card h5 {
+            margin-bottom: 1rem;
+        }
+        
+        .quick-entry-card .btn-outline-light {
+            color: white;
+            border-color: white;
+        }
+        
+        .quick-entry-card .btn-outline-light:hover {
+            color: #667eea;
+            background-color: white;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .stat-number {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-seedling"></i> {{ app_name }}
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home"></i> 首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/planting-plans">
+                        <i class="fas fa-calendar-alt"></i> 种植计划管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/farm-operations">
+                        <i class="fas fa-tasks"></i> 农事作业记录
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/fertilization-irrigations">
+                        <i class="fas fa-tint"></i> 精准施肥与灌溉
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/pest-disease-controls">
+                        <i class="fas fa-bug"></i> 病虫害防治管理
+                    </a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
+                        <i class="fas fa-cog"></i> 系统
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" href="/docs" target="_blank">
+                            <i class="fas fa-book"></i> API文档
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-info-circle"></i> 版本: {{ app_version }}
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <div class="container main-content">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h2 class="page-title">
+                <i class="fas fa-tasks text-success"></i> 农事作业记录
+            </h2>
+        </div>
+
+        <!-- 快捷录入区域 -->
+        <div class="quick-entry-card">
+            <h5><i class="fas fa-bolt"></i> 快捷录入</h5>
+            <p class="mb-3">支持扫码或APP端快速录入，确保数据真实可追溯</p>
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <button class="btn btn-outline-light btn-block" onclick="quickEntry('sowing')">
+                        <i class="fas fa-seedling"></i> 播种记录
+                    </button>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <button class="btn btn-outline-light btn-block" onclick="quickEntry('fertilizing')">
+                        <i class="fas fa-leaf"></i> 施肥记录
+                    </button>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <button class="btn btn-outline-light btn-block" onclick="quickEntry('irrigating')">
+                        <i class="fas fa-tint"></i> 灌溉记录
+                    </button>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <button class="btn btn-outline-light btn-block" onclick="quickEntry('weeding')">
+                        <i class="fas fa-cut"></i> 除草记录
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon text-success">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-number" id="stat-total">0</div>
+                    <div class="stat-label">总作业数</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon text-info">
+                        <i class="fas fa-spinner"></i>
+                    </div>
+                    <div class="stat-number" id="stat-in_progress">0</div>
+                    <div class="stat-label">进行中</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon text-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-number" id="stat-completed">0</div>
+                    <div class="stat-label">已完成</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon text-warning">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number" id="stat-operators">0</div>
+                    <div class="stat-label">作业人员</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索筛选区域 -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="filter-operation-type">作业类型</label>
+                        <select class="form-control" id="filter-operation-type">
+                            <option value="">全部</option>
+                            <option value="sowing">播种</option>
+                            <option value="fertilizing">施肥</option>
+                            <option value="irrigating">灌溉</option>
+                            <option value="weeding">除草</option>
+                            <option value="pest_control">病虫害防治</option>
+                            <option value="harvesting">收获</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="filter-status">状态</label>
+                        <select class="form-control" id="filter-status">
+                            <option value="">全部</option>
+                            <option value="scheduled">已安排</option>
+                            <option value="in_progress">进行中</option>
+                            <option value="completed">已完成</option>
+                            <option value="cancelled">已取消</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="filter-operator">作业人员</label>
+                        <input type="text" class="form-control" id="filter-operator" placeholder="作业人员姓名">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div class="d-flex">
+                            <button class="btn btn-primary mr-2" id="btn-search">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                            <button class="btn btn-secondary" id="btn-reset">
+                                <i class="fas fa-redo"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <button class="btn btn-primary" id="btn-add">
+                    <i class="fas fa-plus"></i> 新增作业记录
+                </button>
+                <button class="btn btn-secondary ml-2" id="btn-refresh">
+                    <i class="fas fa-sync"></i> 刷新数据
+                </button>
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i> 农事作业列表
+            </div>
+            <div class="card-body">
+                <!-- 加载动画 -->
+                <div class="loading" id="loading-spinner">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-2">加载中...</p>
+                </div>
+                
+                <!-- 空数据提示 -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <h4>暂无数据</h4>
+                    <p>点击"新增作业记录"按钮添加第一条记录</p>
+                </div>
+                
+                <!-- 数据表格 -->
+                <div class="table-responsive" id="table-container">
+                    <table class="table table-hover" id="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>作业类型</th>
+                                <th>地块名称</th>
+                                <th>作业人员</th>
+                                <th>作业时间</th>
+                                <th>用量</th>
+                                <th>状态</th>
+                                <th>数据来源</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="row mt-3" id="pagination-container">
+                    <div class="col-md-6">
+                        <span class="text-muted" id="pagination-info">共 0 条记录</span>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-end" id="pagination">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑模态框 -->
+    <div class="modal fade" id="form-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-title">新增作业记录</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="data-form">
+                        <input type="hidden" id="form-id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-operation-type">作业类型 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="form-operation-type" required>
+                                        <option value="">请选择</option>
+                                        <option value="sowing">播种</option>
+                                        <option value="fertilizing">施肥</option>
+                                        <option value="irrigating">灌溉</option>
+                                        <option value="weeding">除草</option>
+                                        <option value="pest_control">病虫害防治</option>
+                                        <option value="harvesting">收获</option>
+                                        <option value="other">其他</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-plot-name">地块名称</label>
+                                    <input type="text" class="form-control" id="form-plot-name" placeholder="例如：一号田">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-operator">作业人员 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="form-operator" required placeholder="作业人员姓名">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-operation-date">作业时间 <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="form-operation-date" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="form-quantity">用量</label>
+                                    <input type="number" class="form-control" id="form-quantity" min="0" step="0.01" placeholder="用量数值">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="form-unit">单位</label>
+                                    <input type="text" class="form-control" id="form-unit" placeholder="例如：kg、升、亩">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="form-status">状态</label>
+                                    <select class="form-control" id="form-status">
+                                        <option value="scheduled">已安排</option>
+                                        <option value="in_progress">进行中</option>
+                                        <option value="completed">已完成</option>
+                                        <option value="cancelled">已取消</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-operation-method">作业方法</label>
+                                    <input type="text" class="form-control" id="form-operation-method" placeholder="作业方法描述">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-data-source">数据来源</label>
+                                    <select class="form-control" id="form-data-source">
+                                        <option value="manual">手动录入</option>
+                                        <option value="scan">扫码录入</option>
+                                        <option value="app">APP录入</option>
+                                        <option value="device">设备自动采集</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-equipment">使用设备</label>
+                                    <input type="text" class="form-control" id="form-equipment" placeholder="使用的设备名称">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-qr-code">关联二维码</label>
+                                    <input type="text" class="form-control" id="form-qr-code" placeholder="扫码录入的二维码内容">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="form-remarks">备注说明</label>
+                            <textarea class="form-control" id="form-remarks" rows="3" placeholder="请输入备注信息"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btn-save">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div class="modal fade" id="detail-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">农事作业详情</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="detail-content">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> 关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认删除模态框 -->
+    <div class="modal fade" id="delete-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">确认删除</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除这条农事作业记录吗？</p>
+                    <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> 此操作不可恢复！</p>
+                    <input type="hidden" id="delete-id">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-delete">
+                        <i class="fas fa-trash"></i> 确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container text-center">
+            <p>
+                <i class="fas fa-seedling"></i> {{ app_name }} v{{ app_version }}
+            </p>
+            <p class="mb-0">
+                智慧农业管理系统 - 让农业生产更智能、更高效
+            </p>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <!-- Bootstrap 4 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 全局变量
+        var currentPage = 1;
+        var pageSize = 10;
+        var totalCount = 0;
+        var currentEditId = null;
+        
+        // API基础路径
+        var API_BASE = '/api/v1';
+        
+        // 作业类型映射
+        var operationTypeMap = {
+            'sowing': { text: '播种', icon: 'fa-seedling', color: 'text-success' },
+            'fertilizing': { text: '施肥', icon: 'fa-leaf', color: 'text-info' },
+            'irrigating': { text: '灌溉', icon: 'fa-tint', color: 'text-primary' },
+            'weeding': { text: '除草', icon: 'fa-cut', color: 'text-warning' },
+            'pest_control': { text: '病虫害防治', icon: 'fa-bug', color: 'text-danger' },
+            'harvesting': { text: '收获', icon: 'fa-harvest', color: 'text-success' },
+            'other': { text: '其他', icon: 'fa-ellipsis-h', color: 'text-secondary' }
+        };
+        
+        // 状态映射
+        var statusMap = {
+            'scheduled': { text: '已安排', class: 'badge-secondary' },
+            'in_progress': { text: '进行中', class: 'badge-info' },
+            'completed': { text: '已完成', class: 'badge-success' },
+            'cancelled': { text: '已取消', class: 'badge-danger' }
+        };
+        
+        // 数据来源映射
+        var dataSourceMap = {
+            'manual': { text: '手动录入', icon: 'fa-keyboard' },
+            'scan': { text: '扫码录入', icon: 'fa-qrcode' },
+            'app': { text: 'APP录入', icon: 'fa-mobile-alt' },
+            'device': { text: '设备自动采集', icon: 'fa-microchip' }
+        };
+        
+        // 页面加载完成后执行
+        $(document).ready(function() {
+            // 设置当前导航项为激活状态
+            var currentPath = window.location.pathname;
+            $('.navbar-nav .nav-link').each(function() {
+                var href = $(this).attr('href');
+                if (href === currentPath) {
+                    $(this).addClass('active');
+                }
+            });
+            
+            // 初始化数据
+            loadData();
+            loadStats();
+            
+            // 绑定事件
+            bindEvents();
+        });
+        
+        // 绑定事件
+        function bindEvents() {
+            // 搜索按钮
+            $('#btn-search').click(function() {
+                currentPage = 1;
+                loadData();
+            });
+            
+            // 重置按钮
+            $('#btn-reset').click(function() {
+                $('#filter-operation-type').val('');
+                $('#filter-status').val('');
+                $('#filter-operator').val('');
+                currentPage = 1;
+                loadData();
+                loadStats();
+            });
+            
+            // 新增按钮
+            $('#btn-add').click(function() {
+                openAddModal();
+            });
+            
+            // 刷新按钮
+            $('#btn-refresh').click(function() {
+                currentPage = 1;
+                loadData();
+                loadStats();
+            });
+            
+            // 保存按钮
+            $('#btn-save').click(function() {
+                saveData();
+            });
+            
+            // 确认删除按钮
+            $('#btn-confirm-delete').click(function() {
+                deleteData();
+            });
+            
+            // 回车键搜索
+            $('#filter-operator').keypress(function(e) {
+                if (e.which === 13) {
+                    currentPage = 1;
+                    loadData();
+                }
+            });
+        }
+        
+        // 显示提示消息
+        function showMessage(message, type) {
+            var alertClass = 'alert-' + type;
+            var iconClass = type === 'success' ? 'fa-check-circle' : 
+                             type === 'danger' ? 'fa-exclamation-circle' : 
+                             type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+            
+            var alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas ${iconClass}"></i> ${message}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            `;
+            
+            $('.main-content').prepend(alertHtml);
+            
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 3000);
+        }
+        
+        // API请求封装
+        async function apiRequest(url, method, data) {
+            var options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (data && method !== 'GET') {
+                options.body = JSON.stringify(data);
+            }
+            
+            try {
+                var response = await fetch(url, options);
+                if (!response.ok) {
+                    var errorData = await response.json();
+                    throw new Error(errorData.detail || '请求失败');
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('API请求错误:', error);
+                showMessage(error.message, 'danger');
+                throw error;
+            }
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            var date = new Date(dateString);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        // 格式化日期时间为input格式
+        function formatDateTimeInput(dateString) {
+            if (!dateString) return '';
+            var date = new Date(dateString);
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            var hours = String(date.getHours()).padStart(2, '0');
+            var minutes = String(date.getMinutes()).padStart(2, '0');
+            return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+        }
+        
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                var data = await apiRequest(API_BASE + '/farm-operations/stats', 'GET');
+                $('#stat-total').text(data.total || 0);
+                $('#stat-in_progress').text(data.by_status?.in_progress || 0);
+                $('#stat-completed').text(data.by_status?.completed || 0);
+                $('#stat-operators').text(data.unique_operators || 0);
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+        
+        // 加载数据列表
+        async function loadData() {
+            try {
+                // 显示加载动画
+                $('#loading-spinner').show();
+                $('#table-container').hide();
+                $('#empty-state').hide();
+                $('#pagination-container').hide();
+                
+                // 构建查询参数
+                var params = new URLSearchParams();
+                params.append('skip', (currentPage - 1) * pageSize);
+                params.append('limit', pageSize);
+                
+                var operationType = $('#filter-operation-type').val();
+                var status = $('#filter-status').val();
+                var operator = $('#filter-operator').val();
+                
+                if (operationType) params.append('operation_type', operationType);
+                if (status) params.append('status', status);
+                if (operator) params.append('operator', operator);
+                
+                // 发起请求
+                var data = await apiRequest(API_BASE + '/farm-operations/?' + params.toString(), 'GET');
+                
+                totalCount = data.total || 0;
+                var items = data.items || [];
+                
+                // 隐藏加载动画
+                $('#loading-spinner').hide();
+                
+                if (items.length === 0) {
+                    // 显示空数据提示
+                    $('#empty-state').show();
+                } else {
+                    // 渲染表格
+                    renderTable(items);
+                    $('#table-container').show();
+                    
+                    // 渲染分页
+                    renderPagination();
+                    $('#pagination-container').show();
+                }
+                
+            } catch (error) {
+                $('#loading-spinner').hide();
+                console.error('加载数据失败:', error);
+            }
+        }
+        
+        // 渲染表格
+        function renderTable(items) {
+            var tbody = $('#table-body');
+            tbody.empty();
+            
+            items.forEach(function(item) {
+                var opType = operationTypeMap[item.operation_type] || { text: item.operation_type, icon: 'fa-question', color: 'text-secondary' };
+                var statusInfo = statusMap[item.status] || { text: item.status, class: 'badge-secondary' };
+                var dataSource = dataSourceMap[item.data_source] || { text: item.data_source, icon: 'fa-question' };
+                
+                var quantityText = item.quantity ? (item.quantity + (item.unit ? ' ' + item.unit : '')) : '-';
+                
+                var tr = $('<tr>');
+                tr.append($('<td>').text(item.id));
+                tr.append($('<td>').html(`<i class="fas ${opType.icon} ${opType.color} mr-1"></i>${opType.text}`));
+                tr.append($('<td>').text(item.plot_name || '-'));
+                tr.append($('<td>').text(item.operator || '-'));
+                tr.append($('<td>').text(formatDateTime(item.operation_date)));
+                tr.append($('<td>').text(quantityText));
+                tr.append($('<td>').html(`<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`));
+                tr.append($('<td>').html(`<i class="fas ${dataSource.icon} mr-1"></i>${dataSource.text}`));
+                tr.append($('<td>').html(`
+                    <div class="action-btns">
+                        <button class="btn btn-sm btn-info" onclick="viewDetail(${item.id})" title="查看详情">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="openEditModal(${item.id})" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${item.id})" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `));
+                
+                tbody.append(tr);
+            });
+        }
+        
+        // 渲染分页
+        function renderPagination() {
+            var totalPages = Math.ceil(totalCount / pageSize);
+            var pagination = $('#pagination');
+            pagination.empty();
+            
+            // 更新分页信息
+            $('#pagination-info').text('共 ' + totalCount + ' 条记录，第 ' + currentPage + '/' + totalPages + ' 页');
+            
+            // 上一页
+            var prevDisabled = currentPage <= 1 ? 'disabled' : '';
+            pagination.append($('<li class="page-item ' + prevDisabled + '">').append(
+                $('<a class="page-link" href="#">').html('<i class="fas fa-chevron-left"></i>').click(function(e) {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        currentPage--;
+                        loadData();
+                    }
+                })
+            ));
+            
+            // 页码
+            var startPage = Math.max(1, currentPage - 2);
+            var endPage = Math.min(totalPages, startPage + 4);
+            
+            for (var i = startPage; i <= endPage; i++) {
+                var active = i === currentPage ? 'active' : '';
+                pagination.append($('<li class="page-item ' + active + '">').append(
+                    $('<a class="page-link" href="#">').text(i).click(function(e) {
+                        e.preventDefault();
+                        var page = parseInt($(this).text());
+                        if (page !== currentPage) {
+                            currentPage = page;
+                            loadData();
+                        }
+                    })
+                ));
+            }
+            
+            // 下一页
+            var nextDisabled = currentPage >= totalPages ? 'disabled' : '';
+            pagination.append($('<li class="page-item ' + nextDisabled + '">').append(
+                $('<a class="page-link" href="#">').html('<i class="fas fa-chevron-right"></i>').click(function(e) {
+                    e.preventDefault();
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        loadData();
+                    }
+                })
+            ));
+        }
+        
+        // 快捷录入
+        function quickEntry(operationType) {
+            openAddModal();
+            $('#form-operation-type').val(operationType);
+            
+            // 设置默认时间为当前时间
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day = String(now.getDate()).padStart(2, '0');
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            $('#form-operation-date').val(year + '-' + month + '-' + day + 'T' + hours + ':' + minutes);
+            
+            // 设置数据来源为扫码录入
+            $('#form-data-source').val('scan');
+        }
+        
+        // 打开新增模态框
+        function openAddModal() {
+            currentEditId = null;
+            $('#modal-title').text('新增作业记录');
+            $('#data-form')[0].reset();
+            $('#form-id').val('');
+            $('#form-operation-type').val('');
+            $('#form-status').val('scheduled');
+            $('#form-data-source').val('manual');
+            
+            // 设置默认时间为当前时间
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day = String(now.getDate()).padStart(2, '0');
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            $('#form-operation-date').val(year + '-' + month + '-' + day + 'T' + hours + ':' + minutes);
+            
+            $('#form-modal').modal('show');
+        }
+        
+        // 打开编辑模态框
+        async function openEditModal(id) {
+            try {
+                var data = await apiRequest(API_BASE + '/farm-operations/' + id, 'GET');
+                currentEditId = id;
+                
+                $('#modal-title').text('编辑作业记录');
+                $('#form-id').val(data.id);
+                $('#form-operation-type').val(data.operation_type || '');
+                $('#form-plot-name').val(data.plot_name || '');
+                $('#form-operator').val(data.operator || '');
+                $('#form-operation-date').val(formatDateTimeInput(data.operation_date));
+                $('#form-quantity').val(data.quantity || '');
+                $('#form-unit').val(data.unit || '');
+                $('#form-status').val(data.status || 'scheduled');
+                $('#form-operation-method').val(data.operation_method || '');
+                $('#form-data-source').val(data.data_source || 'manual');
+                $('#form-equipment').val(data.equipment || '');
+                $('#form-qr-code').val(data.qr_code || '');
+                $('#form-remarks').val(data.remarks || '');
+                
+                $('#form-modal').modal('show');
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+        
+        // 查看详情
+        async function viewDetail(id) {
+            try {
+                var data = await apiRequest(API_BASE + '/farm-operations/' + id, 'GET');
+                var opType = operationTypeMap[data.operation_type] || { text: data.operation_type, icon: 'fa-question' };
+                var statusInfo = statusMap[data.status] || { text: data.status, class: 'badge-secondary' };
+                var dataSource = dataSourceMap[data.data_source] || { text: data.data_source, icon: 'fa-question' };
+                
+                var quantityText = data.quantity ? (data.quantity + (data.unit ? ' ' + data.unit : '')) : '-';
+                
+                var content = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="120">作业类型:</th>
+                                    <td><i class="fas ${opType.icon} mr-1"></i>${opType.text}</td>
+                                </tr>
+                                <tr>
+                                    <th>地块名称:</th>
+                                    <td>${data.plot_name || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>作业人员:</th>
+                                    <td>${data.operator || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>作业时间:</th>
+                                    <td>${formatDateTime(data.operation_date)}</td>
+                                </tr>
+                                <tr>
+                                    <th>用量:</th>
+                                    <td>${quantityText}</td>
+                                </tr>
+                                <tr>
+                                    <th>状态:</th>
+                                    <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="120">作业方法:</th>
+                                    <td>${data.operation_method || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>数据来源:</th>
+                                    <td><i class="fas ${dataSource.icon} mr-1"></i>${dataSource.text}</td>
+                                </tr>
+                                <tr>
+                                    <th>使用设备:</th>
+                                    <td>${data.equipment || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>关联二维码:</th>
+                                    <td>${data.qr_code || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>创建时间:</th>
+                                    <td>${formatDateTime(data.created_at)}</td>
+                                </tr>
+                                <tr>
+                                    <th>更新时间:</th>
+                                    <td>${formatDateTime(data.updated_at)}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    ${data.remarks ? `
+                        <div class="form-group">
+                            <label>备注说明:</label>
+                            <p class="text-muted">${data.remarks}</p>
+                        </div>
+                    ` : ''}
+                `;
+                
+                $('#detail-content').html(content);
+                $('#detail-modal').modal('show');
+            } catch (error) {
+                console.error('加载详情失败:', error);
+            }
+        }
+        
+        // 保存数据
+        async function saveData() {
+            try {
+                var formData = {
+                    operation_type: $('#form-operation-type').val(),
+                    plot_name: $('#form-plot-name').val().trim(),
+                    operator: $('#form-operator').val().trim(),
+                    operation_date: $('#form-operation-date').val(),
+                    quantity: parseFloat($('#form-quantity').val()) || null,
+                    unit: $('#form-unit').val().trim(),
+                    status: $('#form-status').val(),
+                    operation_method: $('#form-operation-method').val().trim(),
+                    data_source: $('#form-data-source').val(),
+                    equipment: $('#form-equipment').val().trim(),
+                    qr_code: $('#form-qr-code').val().trim(),
+                    remarks: $('#form-remarks').val().trim()
+                };
+                
+                // 验证必填项
+                if (!formData.operation_type) {
+                    showMessage('请选择作业类型', 'warning');
+                    return;
+                }
+                if (!formData.operator) {
+                    showMessage('请输入作业人员', 'warning');
+                    return;
+                }
+                if (!formData.operation_date) {
+                    showMessage('请选择作业时间', 'warning');
+                    return;
+                }
+                
+                var url, method;
+                if (currentEditId) {
+                    url = API_BASE + '/farm-operations/' + currentEditId;
+                    method = 'PUT';
+                } else {
+                    url = API_BASE + '/farm-operations/';
+                    method = 'POST';
+                }
+                
+                await apiRequest(url, method, formData);
+                
+                $('#form-modal').modal('hide');
+                showMessage(currentEditId ? '更新成功！' : '添加成功！', 'success');
+                loadData();
+                loadStats();
+                
+            } catch (error) {
+                console.error('保存数据失败:', error);
+            }
+        }
+        
+        // 打开删除确认模态框
+        function openDeleteModal(id) {
+            $('#delete-id').val(id);
+            $('#delete-modal').modal('show');
+        }
+        
+        // 删除数据
+        async function deleteData() {
+            try {
+                var id = $('#delete-id').val();
+                await apiRequest(API_BASE + '/farm-operations/' + id, 'DELETE');
+                
+                $('#delete-modal').modal('hide');
+                showMessage('删除成功！', 'success');
+                loadData();
+                loadStats();
+                
+            } catch (error) {
+                console.error('删除数据失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>

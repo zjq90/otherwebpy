@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }} - 精准施肥与灌溉</title>
+    
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #17a2b8;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        /* 导航栏样式 */
+        .navbar {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .navbar-dark .navbar-nav .nav-link {
+            color: rgba(255,255,255,0.9);
+            padding: 0.8rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-dark .navbar-nav .nav-link:hover,
+        .navbar-dark .navbar-nav .nav-link.active {
+            color: #fff;
+            background-color: rgba(255,255,255,0.15);
+            border-radius: 5px;
+        }
+        
+        .navbar-dark .navbar-nav .nav-link i {
+            margin-right: 5px;
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            padding: 2rem 0;
+        }
+        
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: none;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: bold;
+        }
+        
+        /* 统计卡片 */
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        /* 按钮样式 */
+        .btn-primary {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            border: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            border: none;
+        }
+        
+        /* 表格样式 */
+        .table thead th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* 模态框样式 */
+        .modal-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+        
+        .modal-header .close {
+            color: white;
+            opacity: 0.8;
+        }
+        
+        .modal-header .close:hover {
+            color: white;
+            opacity: 1;
+        }
+        
+        /* 表单样式 */
+        .form-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+        }
+        
+        /* 徽章样式 */
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.6rem;
+        }
+        
+        .badge-success {
+            background-color: var(--success-color);
+        }
+        
+        .badge-warning {
+            background-color: var(--warning-color);
+            color: #212529;
+        }
+        
+        .badge-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .badge-info {
+            background-color: var(--primary-color);
+        }
+        
+        /* 页脚样式 */
+        footer {
+            background-color: #343a40;
+            color: rgba(255,255,255,0.7);
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        
+        /* 警告提示框 */
+        .alert-warning {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert-danger {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-success {
+            border-left: 4px solid #28a745;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        /* 空数据提示 */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        /* 搜索筛选区域 */
+        .filter-section {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+        
+        .filter-section .form-group {
+            margin-bottom: 0;
+        }
+        
+        /* 操作按钮组 */
+        .action-btns .btn {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        
+        /* 对比分析卡片 */
+        .comparison-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .comparison-card h5 {
+            margin-bottom: 1rem;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .stat-number {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-seedling"></i> {{ app_name }}
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home"></i> 首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/planting-plans">
+                        <i class="fas fa-calendar-alt"></i> 种植计划管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/farm-operations">
+                        <i class="fas fa-tasks"></i> 农事作业记录
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/fertilization-irrigations">
+                        <i class="fas fa-tint"></i> 精准施肥与灌溉
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/pest-disease-controls">
+                        <i class="fas fa-bug"></i> 病虫害防治管理
+                    </a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
+                        <i class="fas fa-cog"></i> 系统
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" href="/docs" target="_blank">
+                            <i class="fas fa-book"></i> API文档
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-info-circle"></i> 版本: {{ app_version }}
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <div class="container main-content">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h2 class="page-title">
+                <i class="fas fa-tint text-info"></i> 精准施肥与灌溉
+            </h2>
+        </div>
+
+        <!-- 对比分析说明 -->
+        <div class="comparison-card">
+            <h5><i class="fas fa-chart-bar"></i> 水肥一体化管理</h5>
+            <p class="mb-3">根据土壤检测数据和作物需求，制定水肥一体化方案，记录实际施肥量、水源使用量，支持与计划对比分析</p>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="bg-white bg-opacity-20 rounded p-2 text-center">
+                        <i class="fas fa-leaf fa-2x"></i>
+                        <div class="mt-2">肥料管理</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-white bg-opacity-20 rounded p-2 text-center">
+                        <i class="fas fa-tint fa-2x"></i>
+                        <div class="mt-2">灌溉管理</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-white bg-opacity-20 rounded p-2 text-center">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                        <div class="mt-2">用量统计</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-white bg-opacity-20 rounded p-2 text-center">
+                        <i class="fas fa-balance-scale fa-2x"></i>
+                        <div class="mt-2">计划对比</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon text-info">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-number" id="stat-total">0</div>
+                    <div class="stat-label">总记录数</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon text-success">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="stat-number" id="stat-fertilizer">0</div>
+                    <div class="stat-label">施肥记录</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon text-primary">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div class="stat-number" id="stat-irrigation">0</div>
+                    <div class="stat-label">灌溉记录</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="stat-icon text-warning">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="stat-number" id="stat-completed">0</div>
+                    <div class="stat-label">已完成</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索筛选区域 -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="filter-operation-type">操作类型</label>
+                        <select class="form-control" id="filter-operation-type">
+                            <option value="">全部</option>
+                            <option value="fertilizer">施肥</option>
+                            <option value="irrigation">灌溉</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="filter-status">状态</label>
+                        <select class="form-control" id="filter-status">
+                            <option value="">全部</option>
+                            <option value="planned">已计划</option>
+                            <option value="in_progress">进行中</option>
+                            <option value="completed">已完成</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="search-keyword">关键词搜索</label>
+                        <input type="text" class="form-control" id="search-keyword" placeholder="地块名称/肥料名称">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div class="d-flex">
+                            <button class="btn btn-primary mr-2" id="btn-search">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                            <button class="btn btn-secondary" id="btn-reset">
+                                <i class="fas fa-redo"></i> 重置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <button class="btn btn-primary" id="btn-add">
+                    <i class="fas fa-plus"></i> 新增记录
+                </button>
+                <button class="btn btn-secondary ml-2" id="btn-refresh">
+                    <i class="fas fa-sync"></i> 刷新数据
+                </button>
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i> 水肥管理记录列表
+            </div>
+            <div class="card-body">
+                <!-- 加载动画 -->
+                <div class="loading" id="loading-spinner">
+                    <div class="spinner-border text-info" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-2">加载中...</p>
+                </div>
+                
+                <!-- 空数据提示 -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <h4>暂无数据</h4>
+                    <p>点击"新增记录"按钮添加第一条记录</p>
+                </div>
+                
+                <!-- 数据表格 -->
+                <div class="table-responsive" id="table-container">
+                    <table class="table table-hover" id="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>操作类型</th>
+                                <th>地块名称</th>
+                                <th>执行时间</th>
+                                <th>实际用量</th>
+                                <th>计划用量</th>
+                                <th>偏差</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="row mt-3" id="pagination-container">
+                    <div class="col-md-6">
+                        <span class="text-muted" id="pagination-info">共 0 条记录</span>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-end" id="pagination">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑模态框 -->
+    <div class="modal fade" id="form-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-title">新增水肥管理记录</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="data-form">
+                        <input type="hidden" id="form-id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-operation-type">操作类型 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="form-operation-type" required>
+                                        <option value="">请选择</option>
+                                        <option value="fertilizer">施肥</option>
+                                        <option value="irrigation">灌溉</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-plot-name">地块名称</label>
+                                    <input type="text" class="form-control" id="form-plot-name" placeholder="例如：一号田">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-execution-date">执行时间 <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="form-execution-date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="form-status">状态</label>
+                                    <select class="form-control" id="form-status">
+                                        <option value="planned">已计划</option>
+                                        <option value="in_progress">进行中</option>
+                                        <option value="completed">已完成</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 施肥相关字段 -->
+                        <div id="fertilizer-fields">
+                            <h6 class="text-info mb-3"><i class="fas fa-leaf"></i> 施肥信息</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="form-fertilizer-type">肥料类型</label>
+                                        <select class="form-control" id="form-fertilizer-type">
+                                            <option value="">请选择</option>
+                                            <option value="nitrogen">氮肥</option>
+                                            <option value="phosphate">磷肥</option>
+                                            <option value="potassium">钾肥</option>
+                                            <option value="compound">复合肥</option>
+                                            <option value="organic">有机肥</option>
+                                            <option value="other">其他</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="form-fertilizer-name">肥料名称</label>
+                                        <input type="text" class="form-control" id="form-fertilizer-name" placeholder="肥料具体名称">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="form-planned-fertilizer">计划施肥量 (kg/亩)</label>
+                                        <input type="number" class="form-control" id="form-planned-fertilizer" min="0" step="0.01" placeholder="计划用量">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="form-actual-fertilizer">实际施肥量 (kg/亩)</label>
+                                        <input type="number" class="form-control" id="form-actual-fertilizer" min="0" step="0.01" placeholder="实际用量">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="form-fertilizer-method">施肥方法</label>
+                                        <input type="text" class="form-control" id="form-fertilizer-method" placeholder="施肥方法描述">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 灌溉相关字段 -->
+                        <div id="irrigation-fields" style="display: none;">
+                            <h6 class="text-primary mb-3"><i class="fas fa-tint"></i> 灌溉信息</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="form-irrigation-type">灌溉类型</label>
+                                        <select class="form-control" id="form-irrigation-type">
+                                            <option value="">请选择</option>
+                                            <option value="drip">滴灌</option>
+                                            <option value="sprinkler">喷灌</option>
+                                            <option value="flood">漫灌</option>
+                                            <option value="seepage">渗灌</option>
+                                            <option value="other">其他</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="form-water-source">水源</label>
+                                        <select class="form-control" id="form-water-source">
+                                            <option value="">请选择</option>
+                                            <option value="groundwater">地下水</option>
+                                            <option value="surface">地表水</option>
+                                            <option value="rainwater">雨水</option>
+                                            <option value="reclaimed">再生水</option>
+                                            <option value="other">其他</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="form-planned-water">计划用水量 (m³/亩)</label>
+                                        <input type="number" class="form-control" id="form-planned-water" min="0" step="0.01" placeholder="计划用量">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="form-actual-water">实际用水量 (m³/亩)</label>
+                                        <input type="number" class="form-control" id="form-actual-water" min="0" step="0.01" placeholder="实际用量">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="form-irrigation-duration">灌溉时长 (小时)</label>
+                                        <input type="number" class="form-control" id="form-irrigation-duration" min="0" step="0.5" placeholder="灌溉时长">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 土壤检测数据 -->
+                        <div class="border-top pt-3 mt-3">
+                            <h6 class="text-secondary mb-3"><i class="fas fa-flask"></i> 土壤检测数据</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="form-soil-ph">土壤pH值</label>
+                                        <input type="number" class="form-control" id="form-soil-ph" min="0" max="14" step="0.1" placeholder="pH值">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="form-soil-nitrogen">氮含量 (mg/kg)</label>
+                                        <input type="number" class="form-control" id="form-soil-nitrogen" min="0" step="0.1" placeholder="氮含量">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="form-soil-phosphorus">磷含量 (mg/kg)</label>
+                                        <input type="number" class="form-control" id="form-soil-phosphorus" min="0" step="0.1" placeholder="磷含量">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="form-soil-potassium">钾含量 (mg/kg)</label>
+                                        <input type="number" class="form-control" id="form-soil-potassium" min="0" step="0.1" placeholder="钾含量">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="form-soil-moisture">土壤湿度 (%)</label>
+                                        <input type="number" class="form-control" id="form-soil-moisture" min="0" max="100" step="0.1" placeholder="土壤湿度">
+                                    </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="form-group">
+                                        <label for="form-soil-test-date">土壤检测日期</label>
+                                        <input type="date" class="form-control" id="form-soil-test-date" placeholder="检测日期">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="form-remarks">备注说明</label>
+                            <textarea class="form-control" id="form-remarks" rows="3" placeholder="请输入备注信息"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btn-save">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div class="modal fade" id="detail-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">水肥管理记录详情</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="detail-content">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> 关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认删除模态框 -->
+    <div class="modal fade" id="delete-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">确认删除</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除这条水肥管理记录吗？</p>
+                    <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> 此操作不可恢复！</p>
+                    <input type="hidden" id="delete-id">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-delete">
+                        <i class="fas fa-trash"></i> 确认删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container text-center">
+            <p>
+                <i class="fas fa-seedling"></i> {{ app_name }} v{{ app_version }}
+            </p>
+            <p class="mb-0">
+                智慧农业管理系统 - 让农业生产更智能、更高效
+            </p>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <!-- Bootstrap 4 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 全局变量
+        var currentPage = 1;
+        var pageSize = 10;
+        var totalCount = 0;
+        var currentEditId = null;
+        
+        // API基础路径
+        var API_BASE = '/api/v1';
+        
+        // 操作类型映射
+        var operationTypeMap = {
+            'fertilizer': { text: '施肥', icon: 'fa-leaf', color: 'text-success' },
+            'irrigation': { text: '灌溉', icon: 'fa-tint', color: 'text-primary' }
+        };
+        
+        // 肥料类型映射
+        var fertilizerTypeMap = {
+            'nitrogen': '氮肥',
+            'phosphate': '磷肥',
+            'potassium': '钾肥',
+            'compound': '复合肥',
+            'organic': '有机肥',
+            'other': '其他'
+        };
+        
+        // 灌溉类型映射
+        var irrigationTypeMap = {
+            'drip': '滴灌',
+            'sprinkler': '喷灌',
+            'flood': '漫灌',
+            'seepage': '渗灌',
+            'other': '其他'
+        };
+        
+        // 水源映射
+        var waterSourceMap = {
+            'groundwater': '地下水',
+            'surface': '地表水',
+            'rainwater': '雨水',
+            'reclaimed': '再生水',
+            'other': '其他'
+        };
+        
+        // 状态映射
+        var statusMap = {
+            'planned': { text: '已计划', class: 'badge-secondary' },
+            'in_progress': { text: '进行中', class: 'badge-info' },
+            'completed': { text: '已完成', class: 'badge-success' }
+        };
+        
+        // 页面加载完成后执行
+        $(document).ready(function() {
+            // 设置当前导航项为激活状态
+            var currentPath = window.location.pathname;
+            $('.navbar-nav .nav-link').each(function() {
+                var href = $(this).attr('href');
+                if (href === currentPath) {
+                    $(this).addClass('active');
+                }
+            });
+            
+            // 绑定操作类型切换事件
+            $('#form-operation-type').change(function() {
+                var type = $(this).val();
+                if (type === 'fertilizer') {
+                    $('#fertilizer-fields').show();
+                    $('#irrigation-fields').hide();
+                } else if (type === 'irrigation') {
+                    $('#fertilizer-fields').hide();
+                    $('#irrigation-fields').show();
+                } else {
+                    $('#fertilizer-fields').hide();
+                    $('#irrigation-fields').hide();
+                }
+            });
+            
+            // 初始化数据
+            loadData();
+            loadStats();
+            
+            // 绑定事件
+            bindEvents();
+        });
+        
+        // 绑定事件
+        function bindEvents() {
+            // 搜索按钮
+            $('#btn-search').click(function() {
+                currentPage = 1;
+                loadData();
+            });
+            
+            // 重置按钮
+            $('#btn-reset').click(function() {
+                $('#filter-operation-type').val('');
+                $('#filter-status').val('');
+                $('#search-keyword').val('');
+                currentPage = 1;
+                loadData();
+                loadStats();
+            });
+            
+            // 新增按钮
+            $('#btn-add').click(function() {
+                openAddModal();
+            });
+            
+            // 刷新按钮
+            $('#btn-refresh').click(function() {
+                currentPage = 1;
+                loadData();
+                loadStats();
+            });
+            
+            // 保存按钮
+            $('#btn-save').click(function() {
+                saveData();
+            });
+            
+            // 确认删除按钮
+            $('#btn-confirm-delete').click(function() {
+                deleteData();
+            });
+            
+            // 回车键搜索
+            $('#search-keyword').keypress(function(e) {
+                if (e.which === 13) {
+                    currentPage = 1;
+                    loadData();
+                }
+            });
+        }
+        
+        // 显示提示消息
+        function showMessage(message, type) {
+            var alertClass = 'alert-' + type;
+            var iconClass = type === 'success' ? 'fa-check-circle' : 
+                             type === 'danger' ? 'fa-exclamation-circle' : 
+                             type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+            
+            var alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas ${iconClass}"></i> ${message}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            `;
+            
+            $('.main-content').prepend(alertHtml);
+            
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 3000);
+        }
+        
+        // API请求封装
+        async function apiRequest(url, method, data) {
+            var options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (data && method !== 'GET') {
+                options.body = JSON.stringify(data);
+            }
+            
+            try {
+                var response = await fetch(url, options);
+                if (!response.ok) {
+                    var errorData = await response.json();
+                    throw new Error(errorData.detail || '请求失败');
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('API请求错误:', error);
+                showMessage(error.message, 'danger');
+                throw error;
+            }
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            var date = new Date(dateString);
+            return date.toLocaleString('zh-CN');
+        }
+        
+        // 格式化日期时间为input格式
+        function formatDateTimeInput(dateString) {
+            if (!dateString) return '';
+            var date = new Date(dateString);
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            var hours = String(date.getHours()).padStart(2, '0');
+            var minutes = String(date.getMinutes()).padStart(2, '0');
+            return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+        }
+        
+        // 格式化日期为input[type=date]格式
+        function formatDateInput(dateString) {
+            if (!dateString) return '';
+            var date = new Date(dateString);
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+        
+        // 计算偏差
+        function calculateDeviation(planned, actual) {
+            if (!planned || planned === 0) return { text: '-', class: '' };
+            var deviation = ((actual - planned) / planned * 100).toFixed(1);
+            var text = deviation + '%';
+            var cssClass = '';
+            
+            if (deviation > 10) {
+                cssClass = 'text-danger';
+                text = '+' + text + ' (超量)';
+            } else if (deviation < -10) {
+                cssClass = 'text-warning';
+                text = text + ' (不足)';
+            } else {
+                cssClass = 'text-success';
+                text = text + ' (正常)';
+            }
+            
+            return { text: text, class: cssClass };
+        }
+        
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                var data = await apiRequest(API_BASE + '/fertilization-irrigations/stats', 'GET');
+                $('#stat-total').text(data.total || 0);
+                $('#stat-fertilizer').text(data.by_type?.fertilizer || 0);
+                $('#stat-irrigation').text(data.by_type?.irrigation || 0);
+                $('#stat-completed').text(data.by_status?.completed || 0);
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+        
+        // 加载数据列表
+        async function loadData() {
+            try {
+                // 显示加载动画
+                $('#loading-spinner').show();
+                $('#table-container').hide();
+                $('#empty-state').hide();
+                $('#pagination-container').hide();
+                
+                // 构建查询参数
+                var params = new URLSearchParams();
+                params.append('skip', (currentPage - 1) * pageSize);
+                params.append('limit', pageSize);
+                
+                var operationType = $('#filter-operation-type').val();
+                var status = $('#filter-status').val();
+                var keyword = $('#search-keyword').val();
+                
+                if (operationType) params.append('operation_type', operationType);
+                if (status) params.append('status', status);
+                if (keyword) params.append('keyword', keyword);
+                
+                // 发起请求
+                var data = await apiRequest(API_BASE + '/fertilization-irrigations/?' + params.toString(), 'GET');
+                
+                totalCount = data.total || 0;
+                var items = data.items || [];
+                
+                // 隐藏加载动画
+                $('#loading-spinner').hide();
+                
+                if (items.length === 0) {
+                    // 显示空数据提示
+                    $('#empty-state').show();
+                } else {
+                    // 渲染表格
+                    renderTable(items);
+                    $('#table-container').show();
+                    
+                    // 渲染分页
+                    renderPagination();
+                    $('#pagination-container').show();
+                }
+                
+            } catch (error) {
+                $('#loading-spinner').hide();
+                console.error('加载数据失败:', error);
+            }
+        }
+        
+        // 渲染表格
+        function renderTable(items) {
+            var tbody = $('#table-body');
+            tbody.empty();
+            
+            items.forEach(function(item) {
+                var opType = operationTypeMap[item.operation_type] || { text: item.operation_type, icon: 'fa-question', color: 'text-secondary' };
+                var statusInfo = statusMap[item.status] || { text: item.status, class: 'badge-secondary' };
+                
+                // 计算用量显示和偏差
+                var plannedAmount = '-';
+                var actualAmount = '-';
+                var deviation = { text: '-', class: '' };
+                
+                if (item.operation_type === 'fertilizer') {
+                    if (item.planned_fertilizer_amount) plannedAmount = item.planned_fertilizer_amount + ' kg/亩';
+                    if (item.actual_fertilizer_amount) actualAmount = item.actual_fertilizer_amount + ' kg/亩';
+                    if (item.planned_fertilizer_amount && item.actual_fertilizer_amount) {
+                        deviation = calculateDeviation(item.planned_fertilizer_amount, item.actual_fertilizer_amount);
+                    }
+                } else if (item.operation_type === 'irrigation') {
+                    if (item.planned_water_amount) plannedAmount = item.planned_water_amount + ' m³/亩';
+                    if (item.actual_water_amount) actualAmount = item.actual_water_amount + ' m³/亩';
+                    if (item.planned_water_amount && item.actual_water_amount) {
+                        deviation = calculateDeviation(item.planned_water_amount, item.actual_water_amount);
+                    }
+                }
+                
+                var tr = $('<tr>');
+                tr.append($('<td>').text(item.id));
+                tr.append($('<td>').html(`<i class="fas ${opType.icon} ${opType.color} mr-1"></i>${opType.text}`));
+                tr.append($('<td>').text(item.plot_name || '-'));
+                tr.append($('<td>').text(formatDateTime(item.execution_date)));
+                tr.append($('<td>').text(actualAmount));
+                tr.append($('<td>').text(plannedAmount));
+                tr.append($('<td>').html(`<span class="${deviation.class}">${deviation.text}</span>`));
+                tr.append($('<td>').html(`<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`));
+                tr.append($('<td>').html(`
+                    <div class="action-btns">
+                        <button class="btn btn-sm btn-info" onclick="viewDetail(${item.id})" title="查看详情">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="openEditModal(${item.id})" title="编辑">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="openDeleteModal(${item.id})" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `));
+                
+                tbody.append(tr);
+            });
+        }
+        
+        // 渲染分页
+        function renderPagination() {
+            var totalPages = Math.ceil(totalCount / pageSize);
+            var pagination = $('#pagination');
+            pagination.empty();
+            
+            // 更新分页信息
+            $('#pagination-info').text('共 ' + totalCount + ' 条记录，第 ' + currentPage + '/' + totalPages + ' 页');
+            
+            // 上一页
+            var prevDisabled = currentPage <= 1 ? 'disabled' : '';
+            pagination.append($('<li class="page-item ' + prevDisabled + '">').append(
+                $('<a class="page-link" href="#">').html('<i class="fas fa-chevron-left"></i>').click(function(e) {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        currentPage--;
+                        loadData();
+                    }
+                })
+            ));
+            
+            // 页码
+            var startPage = Math.max(1, currentPage - 2);
+            var endPage = Math.min(totalPages, startPage + 4);
+            
+            for (var i = startPage; i <= endPage; i++) {
+                var active = i === currentPage ? 'active' : '';
+                pagination.append($('<li class="page-item ' + active + '">').append(
+                    $('<a class="page-link" href="#">').text(i).click(function(e) {
+                        e.preventDefault();
+                        var page = parseInt($(this).text());
+                        if (page !== currentPage) {
+                            currentPage = page;
+                            loadData();
+                        }
+                    })
+                ));
+            }
+            
+            // 下一页
+            var nextDisabled = currentPage >= totalPages ? 'disabled' : '';
+            pagination.append($('<li class="page-item ' + nextDisabled + '">').append(
+                $('<a class="page-link" href="#">').html('<i class="fas fa-chevron-right"></i>').click(function(e) {
+                    e.preventDefault();
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        loadData();
+                    }
+                })
+            ));
+        }
+        
+        // 打开新增模态框
+        function openAddModal() {
+            currentEditId = null;
+            $('#modal-title').text('新增水肥管理记录');
+            $('#data-form')[0].reset();
+            $('#form-id').val('');
+            $('#form-operation-type').val('');
+            $('#form-status').val('planned');
+            
+            // 默认隐藏施肥和灌溉字段
+            $('#fertilizer-fields').hide();
+            $('#irrigation-fields').hide();
+            
+            // 设置默认时间为当前时间
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day = String(now.getDate()).padStart(2, '0');
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            $('#form-execution-date').val(year + '-' + month + '-' + day + 'T' + hours + ':' + minutes);
+            
+            $('#form-modal').modal('show');
+        }
+        
+        // 打开编辑模态框
+        async function openEditModal(id) {
+            try {
+                var data = await apiRequest(API_BASE + '/fertilization-irrigations/' + id, 'GET');
+                currentEditId = id;
+                
+                $('#modal-title').text('编辑水肥管理记录');
+                $('#form-id').val(data.id);
+                $('#form-operation-type').val(data.operation_type || '');
+                $('#form-plot-name').val(data.plot_name || '');
+                $('#form-execution-date').val(formatDateTimeInput(data.execution_date));
+                $('#form-status').val(data.status || 'planned');
+                
+                // 施肥相关字段
+                $('#form-fertilizer-type').val(data.fertilizer_type || '');
+                $('#form-fertilizer-name').val(data.fertilizer_name || '');
+                $('#form-planned-fertilizer').val(data.planned_fertilizer_amount || '');
+                $('#form-actual-fertilizer').val(data.actual_fertilizer_amount || '');
+                $('#form-fertilizer-method').val(data.fertilizer_method || '');
+                
+                // 灌溉相关字段
+                $('#form-irrigation-type').val(data.irrigation_type || '');
+                $('#form-water-source').val(data.water_source || '');
+                $('#form-planned-water').val(data.planned_water_amount || '');
+                $('#form-actual-water').val(data.actual_water_amount || '');
+                $('#form-irrigation-duration').val(data.irrigation_duration || '');
+                
+                // 土壤检测数据
+                $('#form-soil-ph').val(data.soil_ph || '');
+                $('#form-soil-nitrogen').val(data.soil_nitrogen || '');
+                $('#form-soil-phosphorus').val(data.soil_phosphorus || '');
+                $('#form-soil-potassium').val(data.soil_potassium || '');
+                $('#form-soil-moisture').val(data.soil_moisture || '');
+                $('#form-soil-test-date').val(formatDateInput(data.soil_test_date));
+                
+                $('#form-remarks').val(data.remarks || '');
+                
+                // 显示对应的字段
+                if (data.operation_type === 'fertilizer') {
+                    $('#fertilizer-fields').show();
+                    $('#irrigation-fields').hide();
+                } else if (data.operation_type === 'irrigation') {
+                    $('#fertilizer-fields').hide();
+                    $('#irrigation-fields').show();
+                } else {
+                    $('#fertilizer-fields').hide();
+                    $('#irrigation-fields').hide();
+                }
+                
+                $('#form-modal').modal('show');
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+        
+        // 查看详情
+        async function viewDetail(id) {
+            try {
+                var data = await apiRequest(API_BASE + '/fertilization-irrigations/' + id, 'GET');
+                var opType = operationTypeMap[data.operation_type] || { text: data.operation_type, icon: 'fa-question' };
+                var statusInfo = statusMap[data.status] || { text: data.status, class: 'badge-secondary' };
+                
+                var plannedAmount = '-';
+                var actualAmount = '-';
+                var deviation = { text: '-', class: '' };
+                
+                if (data.operation_type === 'fertilizer') {
+                    if (data.planned_fertilizer_amount) plannedAmount = data.planned_fertilizer_amount + ' kg/亩';
+                    if (data.actual_fertilizer_amount) actualAmount = data.actual_fertilizer_amount + ' kg/亩';
+                    if (data.planned_fertilizer_amount && data.actual_fertilizer_amount) {
+                        deviation = calculateDeviation(data.planned_fertilizer_amount, data.actual_fertilizer_amount);
+                    }
+                } else if (data.operation_type === 'irrigation') {
+                    if (data.planned_water_amount) plannedAmount = data.planned_water_amount + ' m³/亩';
+                    if (data.actual_water_amount) actualAmount = data.actual_water_amount + ' m³/亩';
+                    if (data.planned_water_amount && data.actual_water_amount) {
+                        deviation = calculateDeviation(data.planned_water_amount, data.actual_water_amount);
+                    }
+                }
+                
+                var content = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="120">操作类型:</th>
+                                    <td><i class="fas ${opType.icon} mr-1"></i>${opType.text}</td>
+                                </tr>
+                                <tr>
+                                    <th>地块名称:</th>
+                                    <td>${data.plot_name || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>执行时间:</th>
+                                    <td>${formatDateTime(data.execution_date)}</td>
+                                </tr>
+                                <tr>
+                                    <th>状态:</th>
+                                    <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>计划用量:</th>
+                                    <td>${plannedAmount}</td>
+                                </tr>
+                                <tr>
+                                    <th>实际用量:</th>
+                                    <td>${actualAmount}</td>
+                                </tr>
+                                <tr>
+                                    <th>用量偏差:</th>
+                                    <td><span class="${deviation.class}">${deviation.text}</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                `;
+                
+                // 添加特定类型的详情
+                if (data.operation_type === 'fertilizer') {
+                    content += `
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="120">肥料类型:</th>
+                                    <td>${fertilizerTypeMap[data.fertilizer_type] || data.fertilizer_type || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>肥料名称:</th>
+                                    <td>${data.fertilizer_name || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>施肥方法:</th>
+                                    <td>${data.fertilizer_method || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>创建时间:</th>
+                                    <td>${formatDateTime(data.created_at)}</td>
+                                </tr>
+                                <tr>
+                                    <th>更新时间:</th>
+                                    <td>${formatDateTime(data.updated_at)}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                } else if (data.operation_type === 'irrigation') {
+                    content += `
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="120">灌溉类型:</th>
+                                    <td>${irrigationTypeMap[data.irrigation_type] || data.irrigation_type || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>水源:</th>
+                                    <td>${waterSourceMap[data.water_source] || data.water_source || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>灌溉时长:</th>
+                                    <td>${data.irrigation_duration ? data.irrigation_duration + ' 小时' : '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>创建时间:</th>
+                                    <td>${formatDateTime(data.created_at)}</td>
+                                </tr>
+                                <tr>
+                                    <th>更新时间:</th>
+                                    <td>${formatDateTime(data.updated_at)}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                content += '</div>';
+                
+                // 添加土壤检测数据
+                var hasSoilData = data.soil_ph || data.soil_nitrogen || data.soil_phosphorus || data.soil_potassium || data.soil_moisture;
+                if (hasSoilData) {
+                    content += `
+                        <div class="border-top pt-3 mt-3">
+                            <h6><i class="fas fa-flask"></i> 土壤检测数据</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>pH值</th>
+                                    <th>氮含量 (mg/kg)</th>
+                                    <th>磷含量 (mg/kg)</th>
+                                    <th>钾含量 (mg/kg)</th>
+                                    <th>土壤湿度 (%)</th>
+                                    <th>检测日期</th>
+                                </tr>
+                                <tr>
+                                    <td>${data.soil_ph || '-'}</td>
+                                    <td>${data.soil_nitrogen || '-'}</td>
+                                    <td>${data.soil_phosphorus || '-'}</td>
+                                    <td>${data.soil_potassium || '-'}</td>
+                                    <td>${data.soil_moisture || '-'}</td>
+                                    <td>${formatDateInput(data.soil_test_date) || '-'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                // 添加备注
+                if (data.remarks) {
+                    content += `
+                        <div class="form-group mt-3">
+                            <label>备注说明:</label>
+                            <p class="text-muted">${data.remarks}</p>
+                        </div>
+                    `;
+                }
+                
+                $('#detail-content').html(content);
+                $('#detail-modal').modal('show');
+            } catch (error) {
+                console.error('加载详情失败:', error);
+            }
+        }
+        
+        // 保存数据
+        async function saveData() {
+            try {
+                var formData = {
+                    operation_type: $('#form-operation-type').val(),
+                    plot_name: $('#form-plot-name').val().trim(),
+                    execution_date: $('#form-execution-date').val(),
+                    status: $('#form-status').val(),
+                    
+                    // 施肥相关
+                    fertilizer_type: $('#form-fertilizer-type').val() || null,
+                    fertilizer_name: $('#form-fertilizer-name').val().trim() || null,
+                    planned_fertilizer_amount: parseFloat($('#form-planned-fertilizer').val()) || null,
+                    actual_fertilizer_amount: parseFloat($('#form-actual-fertilizer').val()) || null,
+                    fertilizer_method: $('#form-fertilizer-method').val().trim() || null,
+                    
+                    // 灌溉相关
+                    irrigation_type: $('#form-irrigation-type').val() || null,
+                    water_source: $('#form-water-source').val() || null,
+                    planned_water_amount: parseFloat($('#form-planned-water').val()) || null,
+                    actual_water_amount: parseFloat($('#form-actual-water').val()) || null,
+                    irrigation_duration: parseFloat($('#form-irrigation-duration').val()) || null,
+                    
+                    // 土壤检测数据
+                    soil_ph: parseFloat($('#form-soil-ph').val()) || null,
+                    soil_nitrogen: parseFloat($('#form-soil-nitrogen').val()) || null,
+                    soil_phosphorus: parseFloat($('#form-soil-phosphorus').val()) || null,
+                    soil_potassium: parseFloat($('#form-soil-potassium').val()) || null,
+                    soil_moisture: parseFloat($('#form-soil-moisture').val()) || null,
+                    soil_test_date: $('#form-soil-test-date').val() || null,
+                    
+                    remarks: $('#form-remarks').val().trim() || null
+                };
+                
+                // 验证必填项
+                if (!formData.operation_type) {
+                    showMessage('请选择操作类型', 'warning');
+                    return;
+                }
+                if (!formData.execution_date) {
+                    showMessage('请选择执行时间', 'warning');
+                    return;
+                }
+                
+                var url, method;
+                if (currentEditId) {
+                    url = API_BASE + '/fertilization-irrigations/' + currentEditId;
+                    method = 'PUT';
+                } else {
+                    url = API_BASE + '/fertilization-irrigations/';
+                    method = 'POST';
+                }
+                
+                await apiRequest(url, method, formData);
+                
+                $('#form-modal').modal('hide');
+                showMessage(currentEditId ? '更新成功！' : '添加成功！', 'success');
+                loadData();
+                loadStats();
+                
+            } catch (error) {
+                console.error('保存数据失败:', error);
+            }
+        }
+        
+        // 打开删除确认模态框
+        function openDeleteModal(id) {
+            $('#delete-id').val(id);
+            $('#delete-modal').modal('show');
+        }
+        
+        // 删除数据
+        async function deleteData() {
+            try {
+                var id = $('#delete-id').val();
+                await apiRequest(API_BASE + '/fertilization-irrigations/' + id, 'DELETE');
+                
+                $('#delete-modal').modal('hide');
+                showMessage('删除成功！', 'success');
+                loadData();
+                loadStats();
+                
+            } catch (error) {
+                console.error('删除数据失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>
