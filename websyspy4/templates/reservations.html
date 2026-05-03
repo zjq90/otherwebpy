@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>租借预约系统 - 我的预约</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-box-seam me-2"></i>租借预约系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-house-door me-1"></i>首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/products"><i class="bi bi-card-list me-1"></i>产品列表</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/reservations"><i class="bi bi-calendar-check me-1"></i>我的预约</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav" id="userNav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login"><i class="bi bi-box-arrow-in-right me-1"></i>登录</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="fw-bold"><i class="bi bi-calendar-check text-primary me-2"></i>我的预约</h2>
+                <p class="text-muted">查看和管理您的所有预约记录</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <form id="filterForm" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="statusFilter" class="form-label">状态筛选</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="">全部状态</option>
+                            <option value="pending">待确认</option>
+                            <option value="confirmed">已确认</option>
+                            <option value="paid">已支付押金</option>
+                            <option value="picked_up">已领取</option>
+                            <option value="returned">已归还</option>
+                            <option value="completed">已完成</option>
+                            <option value="cancelled">已取消</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-filter me-1"></i>筛选
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="loadReservations()">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>刷新
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="reservationsTable">
+                        <thead class="bg-light">
+                            <tr>
+                                <th scope="col">预约单号</th>
+                                <th scope="col">产品名称</th>
+                                <th scope="col">开始日期</th>
+                                <th scope="col">结束日期</th>
+                                <th scope="col">数量</th>
+                                <th scope="col">总租金</th>
+                                <th scope="col">押金</th>
+                                <th scope="col">状态</th>
+                                <th scope="col">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservationsBody">
+                            <tr>
+                                <td colspan="9" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">加载中...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">预约详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailModalBody">
+                </div>
+                <div class="modal-footer" id="detailModalFooter">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitle">提示</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastBody"></div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 租借预约系统. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        const toastEl = document.getElementById('toast');
+        const toast = new bootstrap.Toast(toastEl);
+        let currentReservations = [];
+        let detailModal;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+            
+            if (!isLoggedIn()) {
+                showToast('请先登录', true);
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1500);
+                return;
+            }
+
+            updateNavigation();
+            loadReservations();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                loadReservations();
+            });
+        }
+
+        function updateNavigation() {
+            const user = getCurrentUser();
+            const userNav = document.getElementById('userNav');
+            
+            if (user) {
+                let adminLink = '';
+                if (user.role === 'admin') {
+                    adminLink = `<li class="nav-item"><a class="nav-link" href="/admin"><i class="bi bi-gear me-1"></i>管理后台</a></li>`;
+                }
+                userNav.innerHTML = `
+                    ${adminLink}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>${user.name || user.phone}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">${user.phone}</h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-left me-2"></i>退出登录</a></li>
+                        </ul>
+                    </li>
+                `;
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const toastTitle = document.getElementById('toastTitle');
+            const toastBody = document.getElementById('toastBody');
+            toastTitle.textContent = isError ? '错误' : '成功';
+            toastTitle.className = `me-auto ${isError ? 'text-danger' : 'text-success'}`;
+            toastBody.textContent = message;
+            toast.show();
+        }
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                'pending': { class: 'bg-warning', text: '待确认' },
+                'confirmed': { class: 'bg-info', text: '已确认' },
+                'paid': { class: 'bg-primary', text: '已支付押金' },
+                'picked_up': { class: 'bg-secondary', text: '已领取' },
+                'returned': { class: 'bg-secondary', text: '已归还' },
+                'completed': { class: 'bg-success', text: '已完成' },
+                'cancelled': { class: 'bg-danger', text: '已取消' }
+            };
+            const s = statusMap[status] || { class: 'bg-secondary', text: status };
+            return `<span class="badge ${s.class}">${s.text}</span>`;
+        }
+
+        async function loadReservations() {
+            try {
+                const statusFilter = document.getElementById('statusFilter').value;
+                let url = '/api/reservations/';
+                if (statusFilter) {
+                    url += `?status=${statusFilter}`;
+                }
+
+                const response = await api.get(url);
+                currentReservations = response.data;
+                renderReservations(response.data);
+            } catch (error) {
+                console.error('加载预约失败:', error);
+                const tbody = document.getElementById('reservationsBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="bi bi-exclamation-triangle display-4 text-muted mb-3"></i>
+                            <p class="text-muted">加载失败，请稍后重试</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderReservations(reservations) {
+            const tbody = document.getElementById('reservationsBody');
+            
+            if (reservations.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="bi bi-calendar-x display-4 text-muted mb-3"></i>
+                            <p class="text-muted">暂无预约记录</p>
+                            <a href="/products" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>去预约
+                            </a>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = reservations.map(r => `
+                <tr>
+                    <td class="fw-bold">${r.reservation_no}</td>
+                    <td>${r.product_name || '-'}</td>
+                    <td>${r.start_date}</td>
+                    <td>${r.end_date}</td>
+                    <td>${r.quantity}</td>
+                    <td class="text-primary fw-bold">¥${r.total_rent}</td>
+                    <td class="text-warning fw-bold">¥${r.deposit}</td>
+                    <td>${getStatusBadge(r.status)}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="showDetail(${r.id})">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            ${getActionButtons(r)}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getActionButtons(reservation) {
+            let buttons = '';
+            
+            if (reservation.status === 'pending' || reservation.status === 'confirmed') {
+                buttons += `<button class="btn btn-outline-danger" onclick="cancelReservation(${reservation.id})">
+                    <i class="bi bi-x-circle"></i>
+                </button>`;
+            }
+            
+            if (reservation.status === 'confirmed' && !reservation.deposit_paid) {
+                buttons += `<button class="btn btn-outline-success" onclick="payDeposit(${reservation.id})">
+                    <i class="bi bi-credit-card"></i>
+                </button>`;
+            }
+            
+            if (reservation.status === 'pending' && !reservation.deposit_paid) {
+                buttons += `<button class="btn btn-outline-success" onclick="payDeposit(${reservation.id})">
+                    <i class="bi bi-credit-card"></i>
+                </button>`;
+            }
+            
+            return buttons;
+        }
+
+        function showDetail(id) {
+            const reservation = currentReservations.find(r => r.id === id);
+            if (!reservation) return;
+
+            const modalBody = document.getElementById('detailModalBody');
+            const modalFooter = document.getElementById('detailModalFooter');
+
+            modalBody.innerHTML = `
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small">预约单号</label>
+                        <p class="fw-bold mb-0">${reservation.reservation_no}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">预约状态</label>
+                        <p class="mb-0">${getStatusBadge(reservation.status)}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small">产品名称</label>
+                        <p class="mb-0">${reservation.product_name || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">用户</label>
+                        <p class="mb-0">${reservation.user_name || reservation.user_phone || '-'}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small">开始日期</label>
+                        <p class="mb-0">${reservation.start_date}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">结束日期</label>
+                        <p class="mb-0">${reservation.end_date}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="text-muted small">租借天数</label>
+                        <p class="mb-0">${reservation.rental_days} 天</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small">数量</label>
+                        <p class="mb-0">${reservation.quantity} 件</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small">日租金</label>
+                        <p class="mb-0">¥${reservation.daily_rent}</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="text-muted small">租金总额</label>
+                        <p class="text-primary fw-bold mb-0 fs-5">¥${reservation.total_rent}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small">押金</label>
+                        <p class="text-warning fw-bold mb-0 fs-5">¥${reservation.deposit}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-muted small">押金状态</label>
+                        <p class="mb-0">${reservation.deposit_paid ? 
+                            '<span class="text-success"><i class="bi bi-check-circle"></i> 已支付</span>' : 
+                            '<span class="text-danger"><i class="bi bi-x-circle"></i> 未支付</span>'}</p>
+                    </div>
+                </div>
+                ${reservation.remark ? `
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="text-muted small">备注</label>
+                        <p class="mb-0">${reservation.remark}</p>
+                    </div>
+                </div>
+                ` : ''}
+                <div class="row text-muted small">
+                    <div class="col-md-6">
+                        <label>创建时间</label>
+                        <p class="mb-0">${reservation.created_at || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label>更新时间</label>
+                        <p class="mb-0">${reservation.updated_at || '-'}</p>
+                    </div>
+                </div>
+            `;
+
+            let footerButtons = `
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            `;
+
+            if (reservation.status === 'pending' || reservation.status === 'confirmed') {
+                footerButtons += `
+                    <button type="button" class="btn btn-danger" onclick="cancelReservation(${reservation.id}); detailModal.hide();">
+                        <i class="bi bi-x-circle me-1"></i>取消预约
+                    </button>
+                `;
+            }
+
+            if ((reservation.status === 'pending' || reservation.status === 'confirmed') && !reservation.deposit_paid) {
+                footerButtons += `
+                    <button type="button" class="btn btn-success" onclick="payDeposit(${reservation.id}); detailModal.hide();">
+                        <i class="bi bi-credit-card me-1"></i>支付押金
+                    </button>
+                `;
+            }
+
+            modalFooter.innerHTML = footerButtons;
+            detailModal.show();
+        }
+
+        async function cancelReservation(id) {
+            if (!confirm('确定要取消此预约吗？')) return;
+            
+            try {
+                await api.post(`/api/reservations/${id}/cancel`);
+                showToast('预约已取消');
+                loadReservations();
+            } catch (error) {
+                const errMsg = error.response?.data?.detail || '操作失败';
+                showToast(errMsg, true);
+            }
+        }
+
+        async function payDeposit(id) {
+            if (!confirm('确定要支付押金吗？')) return;
+            
+            try {
+                await api.post(`/api/reservations/${id}/pay-deposit`);
+                showToast('押金支付成功！');
+                loadReservations();
+            } catch (error) {
+                const errMsg = error.response?.data?.detail || '操作失败';
+                showToast(errMsg, true);
+            }
+        }
+    </script>
+</body>
+</html>

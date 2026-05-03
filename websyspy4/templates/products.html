@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>租借预约系统 - 产品列表</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-box-seam me-2"></i>租借预约系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-house-door me-1"></i>首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/products"><i class="bi bi-card-list me-1"></i>产品列表</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav" id="userNav">
+                    <li class="nav-item" id="loginNav">
+                        <a class="nav-link" href="/login"><i class="bi bi-box-arrow-in-right me-1"></i>登录</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="fw-bold"><i class="bi bi-card-list text-primary me-2"></i>产品列表</h2>
+                <p class="text-muted">浏览所有可租借产品</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <form id="filterForm" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="categoryFilter" class="form-label">分类筛选</label>
+                        <select class="form-select" id="categoryFilter">
+                            <option value="">全部分类</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="hotFilter" class="form-label">热门产品</label>
+                        <select class="form-select" id="hotFilter">
+                            <option value="">全部</option>
+                            <option value="true">仅热门</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="searchInput" class="form-label">搜索</label>
+                        <input type="text" class="form-control" id="searchInput" placeholder="输入产品名称...">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-search me-1"></i>搜索
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetFilters()">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>重置
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row" id="productsList">
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="reserveModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="reserveModalLabel">预约产品</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reserveForm">
+                        <input type="hidden" id="reserveProductId">
+                        <div class="mb-3">
+                            <label class="form-label">产品名称</label>
+                            <input type="text" class="form-control" id="reserveProductName" readonly>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">日租金</label>
+                                <input type="text" class="form-control" id="reserveDailyRent" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">押金</label>
+                                <input type="text" class="form-control" id="reserveDeposit" readonly>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="reserveStartDate" class="form-label">开始日期</label>
+                                <input type="date" class="form-control" id="reserveStartDate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="reserveEndDate" class="form-label">结束日期</label>
+                                <input type="date" class="form-control" id="reserveEndDate" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="reserveQuantity" class="form-label">数量</label>
+                                <input type="number" class="form-control" id="reserveQuantity" min="1" value="1" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">可用数量</label>
+                                <input type="text" class="form-control" id="reserveAvailable" readonly>
+                            </div>
+                        </div>
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-2">费用预估</h6>
+                                <div class="row">
+                                    <div class="col-6">租借天数:</div>
+                                    <div class="col-6 text-end fw-bold" id="reserveDays">0 天</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">租金总额:</div>
+                                    <div class="col-6 text-end text-primary fw-bold" id="reserveTotalRent">¥0.00</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">押金总额:</div>
+                                    <div class="col-6 text-end text-warning fw-bold" id="reserveTotalDeposit">¥0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reserveRemark" class="form-label">备注（可选）</label>
+                            <textarea class="form-control" id="reserveRemark" rows="2" placeholder="请输入备注信息..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="submitReserveBtn">
+                        <i class="bi bi-check-circle me-1"></i>确认预约
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitle">提示</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastBody"></div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 租借预约系统. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        const toastEl = document.getElementById('toast');
+        const toast = new bootstrap.Toast(toastEl);
+        let currentProducts = [];
+        let categories = [];
+        let reserveModal;
+        let currentProduct = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            reserveModal = new bootstrap.Modal(document.getElementById('reserveModal'));
+            updateNavigation();
+            loadCategories();
+            loadProducts();
+            setupEventListeners();
+            setMinDate();
+        });
+
+        function setMinDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('reserveStartDate').min = today;
+            document.getElementById('reserveEndDate').min = today;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                loadProducts();
+            });
+
+            document.getElementById('reserveStartDate').addEventListener('change', calculateCost);
+            document.getElementById('reserveEndDate').addEventListener('change', calculateCost);
+            document.getElementById('reserveQuantity').addEventListener('change', calculateCost);
+
+            document.getElementById('submitReserveBtn').addEventListener('click', submitReservation);
+        }
+
+        function updateNavigation() {
+            const user = getCurrentUser();
+            const userNav = document.getElementById('userNav');
+            
+            if (user) {
+                let adminLink = '';
+                if (user.role === 'admin') {
+                    adminLink = `<li class="nav-item"><a class="nav-link" href="/admin"><i class="bi bi-gear me-1"></i>管理后台</a></li>`;
+                }
+                userNav.innerHTML = `
+                    <li class="nav-item">
+                        <a class="nav-link" href="/reservations"><i class="bi bi-calendar-check me-1"></i>我的预约</a>
+                    </li>
+                    ${adminLink}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>${user.name || user.phone}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">${user.phone}</h6></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-left me-2"></i>退出登录</a></li>
+                        </ul>
+                    </li>
+                `;
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const toastTitle = document.getElementById('toastTitle');
+            const toastBody = document.getElementById('toastBody');
+            toastTitle.textContent = isError ? '错误' : '成功';
+            toastTitle.className = `me-auto ${isError ? 'text-danger' : 'text-success'}`;
+            toastBody.textContent = message;
+            toast.show();
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await api.get('/api/categories/');
+                categories = response.data;
+                const select = document.getElementById('categoryFilter');
+                select.innerHTML = '<option value="">全部分类</option>';
+                categories.forEach(cat => {
+                    select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            } catch (error) {
+                console.error('加载分类失败:', error);
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                const categoryId = document.getElementById('categoryFilter').value;
+                const isHot = document.getElementById('hotFilter').value;
+                const search = document.getElementById('searchInput').value;
+
+                let url = '/api/products/?limit=100';
+                if (categoryId) url += `&category_id=${categoryId}`;
+                if (isHot) url += `&is_hot=${isHot}`;
+
+                const response = await api.get(url);
+                let products = response.data;
+
+                if (search) {
+                    products = products.filter(p => 
+                        p.name.toLowerCase().includes(search.toLowerCase())
+                    );
+                }
+
+                currentProducts = products;
+                renderProducts(products);
+            } catch (error) {
+                console.error('加载产品失败:', error);
+                document.getElementById('productsList').innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <p class="text-muted">加载失败，请稍后重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderProducts(products) {
+            const container = document.getElementById('productsList');
+            
+            if (products.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                        <p class="text-muted">暂无产品数据</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = products.map(product => `
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 product-card">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                            <i class="bi bi-box-seam display-1 text-primary opacity-50"></i>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">${product.name}</h5>
+                                <div>
+                                    ${product.is_hot ? '<span class="badge bg-danger me-1">热门</span>' : ''}
+                                    ${product.status === 2 ? '<span class="badge bg-secondary">下架</span>' : ''}
+                                </div>
+                            </div>
+                            <p class="card-text text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                ${product.description || '暂无描述'}
+                            </p>
+                            <div class="row g-2 small text-muted mb-3">
+                                <div class="col-6">
+                                    <i class="bi bi-tags me-1"></i>${product.category_name || '未分类'}
+                                </div>
+                                <div class="col-6 text-end">
+                                    <i class="bi bi-box me-1"></i>库存: ${product.available_quantity}/${product.stock_quantity}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-primary fw-bold fs-5">¥${product.daily_rent}</span>
+                                    <span class="text-muted small">/天</span>
+                                </div>
+                                <span class="text-muted small">押金: ¥${product.deposit}</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0">
+                            <button class="btn btn-primary w-100 ${product.status === 2 || product.available_quantity === 0 ? 'disabled' : ''}" 
+                                    onclick="openReserveModal(${product.id})"
+                                    ${product.status === 2 ? '' : ''}>
+                                ${product.status === 2 ? '产品已下架' : 
+                                  product.available_quantity === 0 ? '暂无库存' : 
+                                  '<i class="bi bi-calendar-plus me-1"></i>立即预约'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function resetFilters() {
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('hotFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            loadProducts();
+        }
+
+        function openReserveModal(productId) {
+            if (!isLoggedIn()) {
+                showToast('请先登录后再预约', true);
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1500);
+                return;
+            }
+
+            const product = currentProducts.find(p => p.id === productId);
+            if (!product) return;
+
+            currentProduct = product;
+            
+            document.getElementById('reserveProductId').value = product.id;
+            document.getElementById('reserveProductName').value = product.name;
+            document.getElementById('reserveDailyRent').value = '¥' + product.daily_rent + '/天';
+            document.getElementById('reserveDeposit').value = '¥' + product.deposit;
+            document.getElementById('reserveAvailable').value = product.available_quantity + ' 件';
+            document.getElementById('reserveQuantity').value = 1;
+            document.getElementById('reserveQuantity').max = product.available_quantity;
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('reserveStartDate').value = today;
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('reserveEndDate').value = tomorrow.toISOString().split('T')[0];
+            
+            calculateCost();
+            reserveModal.show();
+        }
+
+        function calculateCost() {
+            if (!currentProduct) return;
+
+            const startDate = document.getElementById('reserveStartDate').value;
+            const endDate = document.getElementById('reserveEndDate').value;
+            const quantity = parseInt(document.getElementById('reserveQuantity').value) || 1;
+
+            if (!startDate || !endDate) return;
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (end < start) {
+                showToast('结束日期不能早于开始日期', true);
+                return;
+            }
+
+            const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            const totalRent = currentProduct.daily_rent * days * quantity;
+            const totalDeposit = currentProduct.deposit * quantity;
+
+            document.getElementById('reserveDays').textContent = days + ' 天';
+            document.getElementById('reserveTotalRent').textContent = '¥' + totalRent.toFixed(2);
+            document.getElementById('reserveTotalDeposit').textContent = '¥' + totalDeposit.toFixed(2);
+        }
+
+        async function submitReservation() {
+            const btn = document.getElementById('submitReserveBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>提交中...';
+
+            try {
+                const data = {
+                    product_id: parseInt(document.getElementById('reserveProductId').value),
+                    start_date: document.getElementById('reserveStartDate').value,
+                    end_date: document.getElementById('reserveEndDate').value,
+                    quantity: parseInt(document.getElementById('reserveQuantity').value),
+                    remark: document.getElementById('reserveRemark').value
+                };
+
+                await api.post('/api/reservations/', data);
+                showToast('预约成功！请前往"我的预约"查看');
+                reserveModal.hide();
+                loadProducts();
+            } catch (error) {
+                const errMsg = error.response?.data?.detail || '预约失败，请稍后重试';
+                showToast(errMsg, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>确认预约';
+            }
+        }
+    </script>
+</body>
+</html>
