@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}农场信息管理 - 农场管理系统{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>
+                <i class="fa fa-building text-primary mr-2"></i>农场信息管理
+            </h3>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#farmModal">
+                <i class="fa fa-plus mr-1"></i>添加农场
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 数据列表卡片 -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table table-hover" id="farm-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>农场名称</th>
+                        <th>地址</th>
+                        <th>负责人</th>
+                        <th>联系方式</th>
+                        <th>土地面积(亩)</th>
+                        <th>认证类型</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="farm-tbody">
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑农场模态框 -->
+<div class="modal fade" id="farmModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="farmModalTitle">添加农场</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="farm-form">
+                <input type="hidden" id="farm-id" value="">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">农场名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="farm-name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">负责人 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="farm-manager" required>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">地址 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="farm-address" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">联系方式 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="farm-contact" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">土地面积(亩) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="farm-land-area" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">认证类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="farm-certification" required>
+                                <option value="绿色">绿色</option>
+                                <option value="有机">有机</option>
+                                <option value="无公害">无公害</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">农场描述</label>
+                            <textarea class="form-control" id="farm-description" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 查看详情模态框 -->
+<div class="modal fade" id="farmDetailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">农场详情</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="farm-detail-body">
+                <!-- 详情内容将通过JS动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/**
+ * 农场信息管理页面JavaScript
+ */
+
+// 当前编辑的农场ID
+let currentEditId = null;
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadFarms();
+    initForm();
+});
+
+/**
+ * 加载农场列表
+ */
+async function loadFarms() {
+    const tbody = document.getElementById('farm-tbody');
+    
+    try {
+        const farms = await apiRequest('/api/farms/');
+        
+        if (farms.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-muted">
+                        <div class="empty-state">
+                            <i class="fa fa-building"></i>
+                            <p>暂无农场数据</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = farms.map(farm => `
+            <tr>
+                <td>${farm.id}</td>
+                <td>${escapeHtml(farm.name)}</td>
+                <td>${escapeHtml(farm.address)}</td>
+                <td>${escapeHtml(farm.manager)}</td>
+                <td>${escapeHtml(farm.contact)}</td>
+                <td>${farm.land_area}</td>
+                <td>
+                    <span class="badge ${getCertificationBadgeClass(farm.certification_type)}">
+                        ${farm.certification_type}
+                    </span>
+                </td>
+                <td class="action-buttons">
+                    <button class="btn btn-info btn-sm" onclick="viewFarm(${farm.id})">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="btn btn-warning btn-sm text-white" onclick="editFarm(${farm.id})">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteFarm(${farm.id})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        showError('加载农场列表失败: ' + error.message);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-danger">
+                    加载失败，请刷新重试
+                </td>
+            </tr>
+        `;
+    }
+}
+
+/**
+ * 初始化表单
+ */
+function initForm() {
+    const form = document.getElementById('farm-form');
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const farmId = document.getElementById('farm-id').value;
+        const farmData = {
+            name: document.getElementById('farm-name').value.trim(),
+            address: document.getElementById('farm-address').value.trim(),
+            manager: document.getElementById('farm-manager').value.trim(),
+            contact: document.getElementById('farm-contact').value.trim(),
+            land_area: parseFloat(document.getElementById('farm-land-area').value),
+            certification_type: document.getElementById('farm-certification').value,
+            description: document.getElementById('farm-description').value.trim() || null
+        };
+        
+        try {
+            if (farmId) {
+                // 更新模式
+                await apiRequest(`/api/farms/${farmId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(farmData)
+                });
+                showSuccess('农场信息更新成功！');
+            } else {
+                // 新增模式
+                await apiRequest('/api/farms/', {
+                    method: 'POST',
+                    body: JSON.stringify(farmData)
+                });
+                showSuccess('农场添加成功！');
+            }
+            
+            // 关闭模态框并刷新列表
+            $('#farmModal').modal('hide');
+            loadFarms();
+            
+        } catch (error) {
+            showError('操作失败: ' + error.message);
+        }
+    });
+    
+    // 模态框隐藏时重置表单
+    $('#farmModal').on('hidden.bs.modal', function() {
+        form.reset();
+        document.getElementById('farm-id').value = '';
+        document.getElementById('farmModalTitle').textContent = '添加农场';
+        currentEditId = null;
+    });
+}
+
+/**
+ * 编辑农场
+ */
+async function editFarm(id) {
+    currentEditId = id;
+    
+    try {
+        const farm = await apiRequest(`/api/farms/${id}`);
+        
+        // 填充表单
+        document.getElementById('farm-id').value = farm.id;
+        document.getElementById('farm-name').value = farm.name;
+        document.getElementById('farm-address').value = farm.address;
+        document.getElementById('farm-manager').value = farm.manager;
+        document.getElementById('farm-contact').value = farm.contact;
+        document.getElementById('farm-land-area').value = farm.land_area;
+        document.getElementById('farm-certification').value = farm.certification_type;
+        document.getElementById('farm-description').value = farm.description || '';
+        
+        document.getElementById('farmModalTitle').textContent = '编辑农场';
+        $('#farmModal').modal('show');
+        
+    } catch (error) {
+        showError('获取农场信息失败: ' + error.message);
+    }
+}
+
+/**
+ * 删除农场
+ */
+async function deleteFarm(id) {
+    const confirmed = await showConfirm('确定要删除这个农场吗？此操作不可恢复。');
+    
+    if (!confirmed) return;
+    
+    try {
+        await apiRequest(`/api/farms/${id}`, {
+            method: 'DELETE'
+        });
+        showSuccess('农场删除成功！');
+        loadFarms();
+        
+    } catch (error) {
+        showError('删除失败: ' + error.message);
+    }
+}
+
+/**
+ * 查看农场详情
+ */
+async function viewFarm(id) {
+    try {
+        const farm = await apiRequest(`/api/farms/${id}`);
+        
+        const detailBody = document.getElementById('farm-detail-body');
+        detailBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <strong>农场名称:</strong> ${escapeHtml(farm.name)}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>认证类型:</strong> 
+                    <span class="badge ${getCertificationBadgeClass(farm.certification_type)}">
+                        ${farm.certification_type}
+                    </span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>负责人:</strong> ${escapeHtml(farm.manager)}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>联系方式:</strong> ${escapeHtml(farm.contact)}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>土地面积:</strong> ${farm.land_area} 亩
+                </div>
+                <div class="col-12 mb-3">
+                    <strong>地址:</strong> ${escapeHtml(farm.address)}
+                </div>
+                <div class="col-12 mb-3">
+                    <strong>农场描述:</strong><br>
+                    ${escapeHtml(farm.description || '暂无描述')}
+                </div>
+                <div class="col-md-6">
+                    <strong>创建时间:</strong> ${formatDateTime(farm.created_at)}
+                </div>
+                <div class="col-md-6">
+                    <strong>更新时间:</strong> ${formatDateTime(farm.updated_at)}
+                </div>
+            </div>
+        `;
+        
+        $('#farmDetailModal').modal('show');
+        
+    } catch (error) {
+        showError('获取农场详情失败: ' + error.message);
+    }
+}
+
+/**
+ * 获取认证类型的徽章样式类
+ */
+function getCertificationBadgeClass(type) {
+    const classes = {
+        '绿色': 'badge-success',
+        '有机': 'badge-info',
+        '无公害': 'badge-warning'
+    };
+    return classes[type] || 'badge-secondary';
+}
+
+/**
+ * HTML转义
+ */
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

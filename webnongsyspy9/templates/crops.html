@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}作物档案 - 农场管理系统{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>
+                <i class="fa fa-tree text-success mr-2"></i>作物档案管理
+            </h3>
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#cropModal">
+                <i class="fa fa-plus mr-1"></i>添加作物
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 数据列表卡片 -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table table-hover" id="crop-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>作物名称</th>
+                        <th>品种</th>
+                        <th>生长周期(天)</th>
+                        <th>播种季节</th>
+                        <th>收获季节</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="crop-tbody">
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑作物模态框 -->
+<div class="modal fade" id="cropModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cropModalTitle">添加作物</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="crop-form">
+                <input type="hidden" id="crop-id" value="">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">作物名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="crop-name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">品种 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="crop-variety" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">生长周期(天) <span class="text-danger">*</span></label>
+                            <input type="number" min="1" class="form-control" id="crop-growth-cycle" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">播种季节</label>
+                            <select class="form-control" id="crop-planting-season">
+                                <option value="">请选择</option>
+                                <option value="春季">春季</option>
+                                <option value="夏季">夏季</option>
+                                <option value="秋季">秋季</option>
+                                <option value="冬季">冬季</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">收获季节</label>
+                            <select class="form-control" id="crop-harvest-season">
+                                <option value="">请选择</option>
+                                <option value="春季">春季</option>
+                                <option value="夏季">夏季</option>
+                                <option value="秋季">秋季</option>
+                                <option value="冬季">冬季</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">适宜环境</label>
+                            <textarea class="form-control" id="crop-suitable-environment" rows="2" placeholder="如：温度范围、湿度要求、光照条件等"></textarea>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">病虫害记录</label>
+                            <textarea class="form-control" id="crop-pest-disease" rows="2" placeholder="常见病虫害及防治方法"></textarea>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">施肥标准</label>
+                            <textarea class="form-control" id="crop-fertilization" rows="2" placeholder="施肥时间、肥料类型、用量等"></textarea>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">备注</label>
+                            <textarea class="form-control" id="crop-remarks" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 查看详情模态框 -->
+<div class="modal fade" id="cropDetailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">作物详情</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="crop-detail-body">
+                <!-- 详情内容将通过JS动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/**
+ * 作物档案管理页面JavaScript
+ */
+
+// 当前编辑的作物ID
+let currentEditId = null;
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadCrops();
+    initForm();
+});
+
+/**
+ * 加载作物列表
+ */
+async function loadCrops() {
+    const tbody = document.getElementById('crop-tbody');
+    
+    try {
+        const crops = await apiRequest('/api/crops/');
+        
+        if (crops.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted">
+                        <div class="empty-state">
+                            <i class="fa fa-tree"></i>
+                            <p>暂无作物数据</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = crops.map(crop => `
+            <tr>
+                <td>${crop.id}</td>
+                <td>${escapeHtml(crop.name)}</td>
+                <td>${escapeHtml(crop.variety)}</td>
+                <td>${crop.growth_cycle}</td>
+                <td>${escapeHtml(crop.planting_season || '-')}</td>
+                <td>${escapeHtml(crop.harvest_season || '-')}</td>
+                <td class="action-buttons">
+                    <button class="btn btn-info btn-sm" onclick="viewCrop(${crop.id})">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="btn btn-warning btn-sm text-white" onclick="loadCrop(${crop.id})">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCrop(${crop.id})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        showError('加载作物列表失败: ' + error.message);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-danger">
+                    加载失败，请刷新重试
+                </td>
+            </tr>
+        `;
+    }
+}
+
+/**
+ * 初始化表单
+ */
+function initForm() {
+    const form = document.getElementById('crop-form');
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const cropId = document.getElementById('crop-id').value;
+        const cropData = {
+            name: document.getElementById('crop-name').value.trim(),
+            variety: document.getElementById('crop-variety').value.trim(),
+            growth_cycle: parseInt(document.getElementById('crop-growth-cycle').value),
+            planting_season: document.getElementById('crop-planting-season').value || null,
+            harvest_season: document.getElementById('crop-harvest-season').value || null,
+            suitable_environment: document.getElementById('crop-suitable-environment').value.trim() || null,
+            pest_disease_records: document.getElementById('crop-pest-disease').value.trim() || null,
+            fertilization_standard: document.getElementById('crop-fertilization').value.trim() || null,
+            remarks: document.getElementById('crop-remarks').value.trim() || null
+        };
+        
+        try {
+            if (cropId) {
+                await apiRequest(`/api/crops/${cropId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(cropData)
+                });
+                showSuccess('作物信息更新成功！');
+            } else {
+                await apiRequest('/api/crops/', {
+                    method: 'POST',
+                    body: JSON.stringify(cropData)
+                });
+                showSuccess('作物添加成功！');
+            }
+            
+            $('#cropModal').modal('hide');
+            loadCrops();
+            
+        } catch (error) {
+            showError('操作失败: ' + error.message);
+        }
+    });
+    
+    $('#cropModal').on('hidden.bs.modal', function() {
+        form.reset();
+        document.getElementById('crop-id').value = '';
+        document.getElementById('cropModalTitle').textContent = '添加作物';
+        currentEditId = null;
+    });
+}
+
+/**
+ * 加载作物信息到表单
+ */
+async function loadCrop(id) {
+    try {
+        const crop = await apiRequest(`/api/crops/${id}`);
+        
+        document.getElementById('crop-id').value = crop.id;
+        document.getElementById('crop-name').value = crop.name;
+        document.getElementById('crop-variety').value = crop.variety;
+        document.getElementById('crop-growth-cycle').value = crop.growth_cycle;
+        document.getElementById('crop-planting-season').value = crop.planting_season || '';
+        document.getElementById('crop-harvest-season').value = crop.harvest_season || '';
+        document.getElementById('crop-suitable-environment').value = crop.suitable_environment || '';
+        document.getElementById('crop-pest-disease').value = crop.pest_disease_records || '';
+        document.getElementById('crop-fertilization').value = crop.fertilization_standard || '';
+        document.getElementById('crop-remarks').value = crop.remarks || '';
+        
+        document.getElementById('cropModalTitle').textContent = '编辑作物';
+        $('#cropModal').modal('show');
+        
+    } catch (error) {
+        showError('获取作物信息失败: ' + error.message);
+    }
+}
+
+/**
+ * 删除作物
+ */
+async function deleteCrop(id) {
+    const confirmed = await showConfirm('确定要删除这个作物吗？此操作不可恢复。');
+    
+    if (!confirmed) return;
+    
+    try {
+        await apiRequest(`/api/crops/${id}`, {
+            method: 'DELETE'
+        });
+        showSuccess('作物删除成功！');
+        loadCrops();
+        
+    } catch (error) {
+        showError('删除失败: ' + error.message);
+    }
+}
+
+/**
+ * 查看作物详情
+ */
+async function viewCrop(id) {
+    try {
+        const crop = await apiRequest(`/api/crops/${id}`);
+        
+        const detailBody = document.getElementById('crop-detail-body');
+        detailBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <strong>作物名称:</strong> ${escapeHtml(crop.name)}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>品种:</strong> ${escapeHtml(crop.variety)}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <strong>生长周期:</strong> ${crop.growth_cycle} 天
+                </div>
+                <div class="col-md-4 mb-3">
+                    <strong>播种季节:</strong> ${escapeHtml(crop.planting_season || '-')}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <strong>收获季节:</strong> ${escapeHtml(crop.harvest_season || '-')}
+                </div>
+                <div class="col-12 mb-3">
+                    <strong>适宜环境:</strong><br>
+                    ${escapeHtml(crop.suitable_environment || '暂无记录')}
+                </div>
+                <div class="col-12 mb-3">
+                    <strong>病虫害记录:</strong><br>
+                    ${escapeHtml(crop.pest_disease_records || '暂无记录')}
+                </div>
+                <div class="col-12 mb-3">
+                    <strong>施肥标准:</strong><br>
+                    ${escapeHtml(crop.fertilization_standard || '暂无标准')}
+                </div>
+                <div class="col-12 mb-3">
+                    <strong>备注:</strong><br>
+                    ${escapeHtml(crop.remarks || '暂无备注')}
+                </div>
+                <div class="col-md-6">
+                    <strong>创建时间:</strong> ${formatDateTime(crop.created_at)}
+                </div>
+                <div class="col-md-6">
+                    <strong>更新时间:</strong> ${formatDateTime(crop.updated_at)}
+                </div>
+            </div>
+        `;
+        
+        $('#cropDetailModal').modal('show');
+        
+    } catch (error) {
+        showError('获取作物详情失败: ' + error.message);
+    }
+}
+
+/**
+ * HTML转义
+ */
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

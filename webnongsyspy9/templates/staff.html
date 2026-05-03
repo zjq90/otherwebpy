@@ -1,0 +1,784 @@
+{% extends "base.html" %}
+
+{% block title %}人员管理 - 农场管理系统{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3>
+                <i class="fa fa-users text-warning mr-2"></i>人员管理
+            </h3>
+            <button type="button" class="btn btn-warning text-white" data-toggle="modal" data-target="#staffModal">
+                <i class="fa fa-plus mr-1"></i>添加员工
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 数据列表卡片 -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table table-hover" id="staff-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>工号</th>
+                        <th>姓名</th>
+                        <th>性别</th>
+                        <th>岗位</th>
+                        <th>角色</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="staff-tbody">
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">加载中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑员工模态框 -->
+<div class="modal fade" id="staffModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staffModalTitle">添加员工</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="staff-form">
+                <input type="hidden" id="staff-id" value="">
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="staffTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="basic-tab" data-toggle="tab" href="#basic" role="tab">基本信息</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="role-tab" data-toggle="tab" href="#role" role="tab">权限配置</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content p-3 border border-top-0" id="staffTabsContent">
+                        <!-- 基本信息标签页 -->
+                        <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">员工工号 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="staff-number" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">姓名 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="staff-name" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">性别</label>
+                                    <select class="form-control" id="staff-gender">
+                                        <option value="">请选择</option>
+                                        <option value="男">男</option>
+                                        <option value="女">女</option>
+                                        <option value="其他">其他</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">年龄</label>
+                                    <input type="number" min="0" max="150" class="form-control" id="staff-age">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">联系电话</label>
+                                    <input type="text" class="form-control" id="staff-phone">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">邮箱</label>
+                                    <input type="email" class="form-control" id="staff-email">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">身份证号</label>
+                                    <input type="text" class="form-control" id="staff-id-card">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">入职日期</label>
+                                    <input type="date" class="form-control" id="staff-join-date">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">岗位职责 <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="staff-position" required>
+                                        <option value="">请选择岗位</option>
+                                        <option value="场长">场长</option>
+                                        <option value="副场长">副场长</option>
+                                        <option value="技术主管">技术主管</option>
+                                        <option value="技术员">技术员</option>
+                                        <option value="农机手">农机手</option>
+                                        <option value="农工">农工</option>
+                                        <option value="质检员">质检员</option>
+                                        <option value="仓库管理员">仓库管理员</option>
+                                        <option value="采购员">采购员</option>
+                                        <option value="销售员">销售员</option>
+                                        <option value="财务">财务</option>
+                                        <option value="行政">行政</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">所属部门</label>
+                                    <select class="form-control" id="staff-department">
+                                        <option value="">请选择部门</option>
+                                        <option value="场部">场部</option>
+                                        <option value="生产部">生产部</option>
+                                        <option value="技术部">技术部</option>
+                                        <option value="销售部">销售部</option>
+                                        <option value="财务部">财务部</option>
+                                        <option value="行政部">行政部</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">员工状态</label>
+                                    <select class="form-control" id="staff-status">
+                                        <option value="在职">在职</option>
+                                        <option value="休假">休假</option>
+                                        <option value="离职">离职</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">备注</label>
+                                    <textarea class="form-control" id="staff-remarks" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 权限配置标签页 -->
+                        <div class="tab-pane fade" id="role" role="tabpanel">
+                            <div class="row">
+                                <div class="col-12 mb-4">
+                                    <h6 class="text-primary mb-3"><i class="fa fa-user-circle mr-2"></i>角色分配</h6>
+                                    <div class="form-group">
+                                        <label class="form-label">选择角色</label>
+                                        <select class="form-control" id="staff-role">
+                                            <option value="">-- 请选择角色 --</option>
+                                        </select>
+                                        <small class="text-muted">分配角色后，员工将自动获得该角色的所有权限。如果需要自定义权限，可以在下方单独勾选。</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="text-primary mb-0"><i class="fa fa-key mr-2"></i>自定义权限</h6>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="selectAllPermissions()">全选</button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="deselectAllPermissions()">清空</button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mb-3">
+                                        <strong>注意：</strong>如果勾选了自定义权限，将优先使用自定义权限，角色权限将被忽略。如果未勾选任何自定义权限，则使用角色权限。
+                                    </small>
+                                    <div id="permissions-container" class="border rounded p-3">
+                                        <!-- 权限将通过JS动态加载 -->
+                                        <div class="text-center text-muted">加载权限列表中...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-warning text-white">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 查看详情模态框 -->
+<div class="modal fade" id="staffDetailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">员工详情</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="staff-detail-body">
+                <!-- 详情内容将通过JS动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/**
+ * 人员管理页面JavaScript
+ */
+
+// 当前编辑的员工ID
+let currentEditId = null;
+// 权限定义
+let permissionModules = {};
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadPermissions();
+    loadRoles();
+    loadStaffs();
+    initForm();
+});
+
+/**
+ * 加载权限定义
+ */
+async function loadPermissions() {
+    try {
+        const data = await apiRequest('/api/roles/permissions');
+        permissionModules = data.modules;
+        renderPermissions();
+    } catch (error) {
+        console.error('加载权限定义失败:', error);
+        document.getElementById('permissions-container').innerHTML = 
+            '<div class="text-center text-danger">加载权限列表失败</div>';
+    }
+}
+
+/**
+ * 加载角色列表
+ */
+async function loadRoles() {
+    try {
+        const roles = await apiRequest('/api/roles/');
+        const roleSelect = document.getElementById('staff-role');
+        
+        roleSelect.innerHTML = '<option value="">-- 请选择角色 --</option>' +
+            roles.map(role => 
+                `<option value="${role.id}">${escapeHtml(role.name)} ${role.is_system ? '(系统预设)' : ''} ${role.is_default ? ' [默认]' : ''}</option>`
+            ).join('');
+            
+        roleSelect.addEventListener('change', function() {
+            highlightRolePermissions(this.value);
+        });
+    } catch (error) {
+        console.error('加载角色列表失败:', error);
+    }
+}
+
+/**
+ * 渲染权限选择界面
+ */
+function renderPermissions() {
+    const container = document.getElementById('permissions-container');
+    let html = '';
+    
+    for (const [moduleCode, moduleInfo] of Object.entries(permissionModules)) {
+        html += `
+            <div class="mb-4">
+                <div class="d-flex align-items-center mb-2">
+                    <label class="mb-0 mr-3">
+                        <input type="checkbox" class="module-checkbox" data-module="${moduleCode}">
+                    </label>
+                    <i class="fa ${moduleInfo.icon} text-primary mr-2"></i>
+                    <strong>${moduleInfo.name}</strong>
+                </div>
+                <div class="row ml-4">
+                    ${moduleInfo.permissions.map(perm => `
+                        <div class="col-6 col-md-4 mb-2">
+                            <label class="mb-0">
+                                <input type="checkbox" class="permission-checkbox" 
+                                    data-module="${moduleCode}" 
+                                    data-code="${perm.code}"
+                                    title="${escapeHtml(perm.description)}">
+                                <span class="ml-1" title="${escapeHtml(perm.description)}">
+                                    ${escapeHtml(perm.name)}
+                                </span>
+                            </label>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+    
+    // 绑定模块全选事件
+    document.querySelectorAll('.module-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const moduleCode = this.dataset.module;
+            const isChecked = this.checked;
+            document.querySelectorAll(`.permission-checkbox[data-module="${moduleCode}"]`).forEach(perm => {
+                perm.checked = isChecked;
+            });
+        });
+    });
+    
+    // 绑定权限选择事件
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateModuleCheckbox);
+    });
+}
+
+/**
+ * 更新模块全选状态
+ */
+function updateModuleCheckbox() {
+    const moduleCode = this.dataset.module;
+    const allPerms = document.querySelectorAll(`.permission-checkbox[data-module="${moduleCode}"]`);
+    const checkedPerms = document.querySelectorAll(`.permission-checkbox[data-module="${moduleCode}"]:checked`);
+    const moduleCheckbox = document.querySelector(`.module-checkbox[data-module="${moduleCode}"]`);
+    
+    if (moduleCheckbox) {
+        moduleCheckbox.checked = allPerms.length > 0 && allPerms.length === checkedPerms.length;
+        moduleCheckbox.indeterminate = checkedPerms.length > 0 && checkedPerms.length < allPerms.length;
+    }
+}
+
+/**
+ * 高亮显示角色拥有的权限
+ */
+async function highlightRolePermissions(roleId) {
+    // 先清除所有高亮和禁用
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        checkbox.closest('label').style.backgroundColor = '';
+        checkbox.closest('label').style.padding = '';
+        checkbox.closest('label').style.borderRadius = '';
+    });
+    
+    if (!roleId) return;
+    
+    try {
+        const role = await apiRequest(`/api/roles/${roleId}`);
+        if (role && role.permission_list) {
+            role.permission_list.forEach(permCode => {
+                const checkbox = document.querySelector(`.permission-checkbox[data-code="${permCode}"]`);
+                if (checkbox) {
+                    checkbox.closest('label').style.backgroundColor = '#e3f2fd';
+                    checkbox.closest('label').style.padding = '2px 8px';
+                    checkbox.closest('label').style.borderRadius = '4px';
+                }
+            });
+        }
+    } catch (error) {
+        console.error('获取角色权限失败:', error);
+    }
+}
+
+/**
+ * 全选权限
+ */
+function selectAllPermissions() {
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    document.querySelectorAll('.module-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+        checkbox.indeterminate = false;
+    });
+}
+
+/**
+ * 清空权限
+ */
+function deselectAllPermissions() {
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.querySelectorAll('.module-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.indeterminate = false;
+    });
+}
+
+/**
+ * 获取选中的权限列表
+ */
+function getSelectedPermissions() {
+    const checkboxes = document.querySelectorAll('.permission-checkbox:checked');
+    const permissions = [];
+    checkboxes.forEach(checkbox => {
+        permissions.push(checkbox.dataset.code);
+    });
+    return permissions;
+}
+
+/**
+ * 设置选中的权限
+ */
+function setSelectedPermissions(permissions) {
+    if (!permissions || permissions.length === 0) {
+        deselectAllPermissions();
+        return;
+    }
+    
+    deselectAllPermissions();
+    
+    permissions.forEach(permCode => {
+        const checkbox = document.querySelector(`.permission-checkbox[data-code="${permCode}"]`);
+        if (checkbox) {
+            checkbox.checked = true;
+            const event = new Event('change');
+            checkbox.dispatchEvent(event);
+        }
+    });
+}
+
+/**
+ * 加载员工列表
+ */
+async function loadStaffs() {
+    const tbody = document.getElementById('staff-tbody');
+    
+    try {
+        const staffs = await apiRequest('/api/staff/');
+        
+        if (staffs.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center text-muted">
+                        <div class="empty-state">
+                            <i class="fa fa-users"></i>
+                            <p>暂无员工数据</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = staffs.map(staff => `
+            <tr>
+                <td>${staff.id}</td>
+                <td>${escapeHtml(staff.staff_number)}</td>
+                <td>${escapeHtml(staff.name)}</td>
+                <td>${escapeHtml(staff.gender || '-')}</td>
+                <td>${escapeHtml(staff.position)}</td>
+                <td>
+                    ${staff.role_info ? 
+                        `<span class="badge badge-primary">${escapeHtml(staff.role_info.role_name)}</span>` : 
+                        '<span class="badge badge-secondary">未分配</span>'}
+                </td>
+                <td>
+                    <span class="badge ${getStatusBadgeClass(staff.status)}">
+                        ${staff.status}
+                    </span>
+                </td>
+                <td class="action-buttons">
+                    <button class="btn btn-info btn-sm" onclick="viewStaff(${staff.id})">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <button class="btn btn-warning btn-sm text-white" onclick="loadStaff(${staff.id})">
+                        <i class="fa fa-pencil"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteStaff(${staff.id})">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        showError('加载员工列表失败: ' + error.message);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-danger">
+                    加载失败，请刷新重试
+                </td>
+            </tr>
+        `;
+    }
+}
+
+/**
+ * 获取状态徽章样式类
+ */
+function getStatusBadgeClass(status) {
+    const classes = {
+        '在职': 'badge-success',
+        '休假': 'badge-warning',
+        '离职': 'badge-secondary'
+    };
+    return classes[status] || 'badge-secondary';
+}
+
+/**
+ * 初始化表单
+ */
+function initForm() {
+    const form = document.getElementById('staff-form');
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const staffId = document.getElementById('staff-id').value;
+        
+        // 获取选中的权限
+        const selectedPerms = getSelectedPermissions();
+        const permissionsStr = selectedPerms.length > 0 ? selectedPerms.join(',') : null;
+        
+        const staffData = {
+            staff_number: document.getElementById('staff-number').value.trim(),
+            name: document.getElementById('staff-name').value.trim(),
+            gender: document.getElementById('staff-gender').value || null,
+            age: document.getElementById('staff-age').value ? parseInt(document.getElementById('staff-age').value) : null,
+            phone: document.getElementById('staff-phone').value.trim() || null,
+            email: document.getElementById('staff-email').value.trim() || null,
+            id_card: document.getElementById('staff-id-card').value.trim() || null,
+            role_id: document.getElementById('staff-role').value ? parseInt(document.getElementById('staff-role').value) : null,
+            position: document.getElementById('staff-position').value,
+            department: document.getElementById('staff-department').value || null,
+            permissions: permissionsStr,
+            join_date: document.getElementById('staff-join-date').value || null,
+            status: document.getElementById('staff-status').value,
+            remarks: document.getElementById('staff-remarks').value.trim() || null
+        };
+        
+        try {
+            if (staffId) {
+                await apiRequest(`/api/staff/${staffId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(staffData)
+                });
+                showSuccess('员工信息更新成功！');
+            } else {
+                await apiRequest('/api/staff/', {
+                    method: 'POST',
+                    body: JSON.stringify(staffData)
+                });
+                showSuccess('员工添加成功！');
+            }
+            
+            $('#staffModal').modal('hide');
+            loadStaffs();
+            
+        } catch (error) {
+            showError('操作失败: ' + error.message);
+        }
+    });
+    
+    $('#staffModal').on('hidden.bs.modal', function() {
+        form.reset();
+        document.getElementById('staff-id').value = '';
+        document.getElementById('staffModalTitle').textContent = '添加员工';
+        currentEditId = null;
+        deselectAllPermissions();
+    });
+}
+
+/**
+ * 加载员工信息到表单
+ */
+async function loadStaff(id) {
+    try {
+        const staff = await apiRequest(`/api/staff/${id}`);
+        
+        document.getElementById('staff-id').value = staff.id;
+        document.getElementById('staff-number').value = staff.staff_number;
+        document.getElementById('staff-name').value = staff.name;
+        document.getElementById('staff-gender').value = staff.gender || '';
+        document.getElementById('staff-age').value = staff.age || '';
+        document.getElementById('staff-phone').value = staff.phone || '';
+        document.getElementById('staff-email').value = staff.email || '';
+        document.getElementById('staff-id-card').value = staff.id_card || '';
+        document.getElementById('staff-position').value = staff.position;
+        document.getElementById('staff-department').value = staff.department || '';
+        document.getElementById('staff-status').value = staff.status;
+        document.getElementById('staff-remarks').value = staff.remarks || '';
+        
+        if (staff.role_id) {
+            document.getElementById('staff-role').value = staff.role_id;
+            // 高亮角色权限
+            setTimeout(() => {
+                highlightRolePermissions(staff.role_id);
+            }, 100);
+        }
+        
+        // 设置自定义权限
+        if (staff.permission_list && staff.permission_list.length > 0) {
+            setSelectedPermissions(staff.permission_list);
+        }
+        
+        if (staff.join_date) {
+            document.getElementById('staff-join-date').value = staff.join_date.substring(0, 10);
+        }
+        
+        document.getElementById('staffModalTitle').textContent = '编辑员工';
+        $('#staffModal').modal('show');
+        
+    } catch (error) {
+        showError('获取员工信息失败: ' + error.message);
+    }
+}
+
+/**
+ * 删除员工
+ */
+async function deleteStaff(id) {
+    const confirmed = await showConfirm('确定要删除这个员工吗？此操作不可恢复。');
+    
+    if (!confirmed) return;
+    
+    try {
+        await apiRequest(`/api/staff/${id}`, {
+            method: 'DELETE'
+        });
+        showSuccess('员工删除成功！');
+        loadStaffs();
+        
+    } catch (error) {
+        showError('删除失败: ' + error.message);
+    }
+}
+
+/**
+ * 查看员工详情
+ */
+async function viewStaff(id) {
+    try {
+        const staff = await apiRequest(`/api/staff/${id}`);
+        
+        const detailBody = document.getElementById('staff-detail-body');
+        
+        let roleInfoHtml = '<span class="badge badge-secondary">未分配</span>';
+        let rolePermissionsHtml = '';
+        
+        if (staff.role_info) {
+            roleInfoHtml = `<span class="badge badge-primary">${escapeHtml(staff.role_info.role_name)}</span> 
+                <small class="text-muted">(${escapeHtml(staff.role_info.role_code)})</small>`;
+            
+            if (staff.role_info.role_permissions && staff.role_info.role_permissions.length > 0) {
+                rolePermissionsHtml = `
+                    <div class="col-12 mb-3">
+                        <strong>角色权限:</strong><br>
+                        <div class="mt-2">
+                            ${staff.role_info.role_permissions.map(p => 
+                                `<span class="badge badge-info mr-1 mb-1">${escapeHtml(p)}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        let customPermsHtml = '';
+        if (staff.permission_list && staff.permission_list.length > 0) {
+            customPermsHtml = `
+                <div class="col-12 mb-3">
+                    <strong>自定义权限:</strong><br>
+                    <div class="alert alert-warning mt-2 mb-0">
+                        <small><i class="fa fa-info-circle mr-1"></i>使用自定义权限时，角色权限将被忽略</small>
+                    </div>
+                    <div class="mt-2">
+                        ${staff.permission_list.map(p => 
+                            `<span class="badge badge-success mr-1 mb-1">${escapeHtml(p)}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        let effectivePermsHtml = '';
+        if (staff.effective_permissions && staff.effective_permissions.length > 0) {
+            if (staff.effective_permissions.includes('*')) {
+                effectivePermsHtml = `
+                    <div class="col-12 mb-3">
+                        <strong>实际生效权限:</strong><br>
+                        <div class="alert alert-success mt-2 mb-0">
+                            <i class="fa fa-check-circle mr-1"></i>超级管理员权限（拥有所有权限）
+                        </div>
+                    </div>
+                `;
+            } else {
+                effectivePermsHtml = `
+                    <div class="col-12 mb-3">
+                        <strong>实际生效权限:</strong><br>
+                        <div class="mt-2">
+                            ${staff.effective_permissions.map(p => 
+                                `<span class="badge badge-primary mr-1 mb-1">${escapeHtml(p)}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        detailBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <strong>员工工号:</strong> ${escapeHtml(staff.staff_number)}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>姓名:</strong> ${escapeHtml(staff.name)}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <strong>性别:</strong> ${escapeHtml(staff.gender || '-')}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <strong>年龄:</strong> ${staff.age || '-'}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <strong>状态:</strong> 
+                    <span class="badge ${getStatusBadgeClass(staff.status)}">
+                        ${staff.status}
+                    </span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>联系电话:</strong> ${escapeHtml(staff.phone || '-')}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>邮箱:</strong> ${escapeHtml(staff.email || '-')}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>身份证号:</strong> ${escapeHtml(staff.id_card || '-')}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>入职日期:</strong> ${formatDate(staff.join_date)}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>岗位职责:</strong> ${escapeHtml(staff.position)}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <strong>所属部门:</strong> ${escapeHtml(staff.department || '-')}
+                </div>
+                <div class="col-12 mb-3">
+                    <strong>所属角色:</strong> ${roleInfoHtml}
+                </div>
+                ${rolePermissionsHtml}
+                ${customPermsHtml}
+                ${effectivePermsHtml}
+                <div class="col-12 mb-3">
+                    <strong>备注:</strong><br>
+                    ${escapeHtml(staff.remarks || '暂无备注')}
+                </div>
+                <div class="col-md-6">
+                    <strong>创建时间:</strong> ${formatDateTime(staff.created_at)}
+                </div>
+                <div class="col-md-6">
+                    <strong>更新时间:</strong> ${formatDateTime(staff.updated_at)}
+                </div>
+            </div>
+        `;
+        
+        $('#staffDetailModal').modal('show');
+        
+    } catch (error) {
+        showError('获取员工详情失败: ' + error.message);
+    }
+}
+
+/**
+ * HTML转义
+ */
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
