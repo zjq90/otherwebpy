@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% set hide_sidebar = true %}
+
+{% block title %}登录 - 进销存管理系统{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="bi bi-box-seam text-primary" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3 class="fw-bold">进销存管理系统</h3>
+                        <p class="text-muted">请登录您的账户</p>
+                    </div>
+                    
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label">用户名</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="username" placeholder="请输入用户名" value="admin">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">密码</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="password" placeholder="请输入密码" value="admin123">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>登录
+                        </button>
+                    </form>
+                    
+                    <div class="mt-4 text-center">
+                        <small class="text-muted">
+                            测试账号: admin / admin123 或 user1 / 123456
+                        </small>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <button class="btn btn-outline-primary" onclick="generateTestData()">
+                            <i class="bi bi-database-add me-2"></i>生成测试数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4 text-muted">
+                <small>基于 Python + FastAPI + SQLite + Bootstrap 5 构建</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    if (!username || !password) {
+        showToast('请输入用户名和密码', 'warning');
+        return;
+    }
+    
+    // 简单模拟登录，实际项目中应该使用JWT验证
+    showToast('登录成功！', 'success');
+    setTimeout(() => {
+        window.location.href = '/dashboard';
+    }, 500);
+});
+</script>
+{% endblock %}

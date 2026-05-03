@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}用户管理 - 进销存管理系统{% endblock %}
+{% block page_title %}用户管理{% endblock %}
+
+{% block content %}
+
+<!-- 搜索和工具栏 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="form-control" id="searchInput" placeholder="搜索用户名、真实姓名...">
+                </div>
+            </div>
+            <div class="col-md-auto">
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    <i class="bi bi-plus-lg me-2"></i>新增用户
+                </button>
+            </div>
+            <div class="col-md-auto ms-auto">
+                <button class="btn btn-outline-secondary" onclick="loadUsers()">
+                    <i class="bi bi-arrow-repeat me-2"></i>刷新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 用户列表 -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th width="60">ID</th>
+                        <th>用户名</th>
+                        <th>真实姓名</th>
+                        <th>邮箱</th>
+                        <th>电话</th>
+                        <th>角色</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th width="150" class="text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-people"></i>
+                                <p>暂无数据，点击"生成测试数据"按钮添加示例数据</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer" id="paginationContainer">
+        <!-- 分页将通过JS动态生成 -->
+    </div>
+</div>
+
+<!-- 新增/编辑用户模态框 -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">新增用户</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <input type="hidden" id="userId">
+                    <div class="mb-3">
+                        <label class="form-label">用户名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="username" required>
+                    </div>
+                    <div class="mb-3" id="passwordField">
+                        <label class="form-label">密码 <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="password">
+                        <div class="form-text">密码长度至少6位</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">真实姓名</label>
+                        <input type="text" class="form-control" id="realName">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="email">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">电话</label>
+                            <input type="text" class="form-control" id="phone">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">角色</label>
+                            <select class="form-select" id="role">
+                                <option value="user">普通用户</option>
+                                <option value="admin">管理员</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="statusField" style="display: none;">
+                            <label class="form-label">状态</label>
+                            <select class="form-select" id="isActive">
+                                <option value="true">激活</option>
+                                <option value="false">禁用</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveUser()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 确认删除模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除该用户吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+let pageSize = 10;
+let currentKeyword = '';
+let deleteUserId = null;
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadUsers();
+    
+    // 搜索框回车搜索
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            currentKeyword = this.value;
+            currentPage = 1;
+            loadUsers();
+        }
+    });
+});
+
+// 加载用户列表
+async function loadUsers() {
+    try {
+        const params = new URLSearchParams({
+            page: currentPage,
+            page_size: pageSize
+        });
+        if (currentKeyword) {
+            params.append('keyword', currentKeyword);
+        }
+        
+        const result = await apiRequest('/api/users?' + params.toString());
+        
+        renderUserTable(result.items);
+        renderPagination(result.total, result.page, result.page_size);
+    } catch (error) {
+        console.error('加载用户列表失败:', error);
+    }
+}
+
+// 渲染用户表格
+function renderUserTable(users) {
+    const tbody = document.getElementById('userTableBody');
+    
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="bi bi-people"></i>
+                        <p>暂无用户数据</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = users.map(user => `
+        <tr>
+            <td>${user.id}</td>
+            <td><strong>${user.username}</strong></td>
+            <td>${user.real_name || '-'}</td>
+            <td>${user.email || '-'}</td>
+            <td>${user.phone || '-'}</td>
+            <td>
+                <span class="status-badge ${user.role === 'admin' ? 'status-warning' : 'status-active'}">
+                    ${user.role === 'admin' ? '管理员' : '普通用户'}
+                </span>
+            </td>
+            <td>
+                <span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">
+                    ${user.is_active ? '激活' : '禁用'}
+                </span>
+            </td>
+            <td>${formatDate(user.created_at)}</td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary" onclick="editUser(${user.id})" title="编辑">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete(${user.id})" title="删除">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// 渲染分页
+function renderPagination(total, page, pageSize) {
+    const container = document.getElementById('paginationContainer');
+    container.innerHTML = renderPagination(total, page, pageSize, 'goToPage');
+}
+
+// 跳转到指定页
+function goToPage(page) {
+    currentPage = page;
+    loadUsers();
+}
+
+// 打开新增模态框
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = '新增用户';
+    document.getElementById('userId').value = '';
+    document.getElementById('userForm').reset();
+    document.getElementById('passwordField').style.display = 'block';
+    document.getElementById('statusField').style.display = 'none';
+    
+    const modal = new bootstrap.Modal(document.getElementById('userModal'));
+    modal.show();
+}
+
+// 编辑用户
+async function editUser(userId) {
+    try {
+        const user = await apiRequest('/api/users/' + userId);
+        
+        document.getElementById('modalTitle').textContent = '编辑用户';
+        document.getElementById('userId').value = user.id;
+        document.getElementById('username').value = user.username;
+        document.getElementById('realName').value = user.real_name || '';
+        document.getElementById('email').value = user.email || '';
+        document.getElementById('phone').value = user.phone || '';
+        document.getElementById('role').value = user.role;
+        document.getElementById('isActive').value = user.is_active.toString();
+        
+        // 编辑时密码可选
+        document.getElementById('passwordField').style.display = 'none';
+        document.getElementById('statusField').style.display = 'block';
+        
+        const modal = new bootstrap.Modal(document.getElementById('userModal'));
+        modal.show();
+    } catch (error) {
+        console.error('加载用户信息失败:', error);
+    }
+}
+
+// 保存用户
+async function saveUser() {
+    const userId = document.getElementById('userId').value;
+    const isEdit = userId !== '';
+    
+    const usernameVal = document.getElementById('username').value;
+    const realNameVal = document.getElementById('realName').value;
+    const emailVal = document.getElementById('email').value;
+    const phoneVal = document.getElementById('phone').value;
+    const passwordVal = document.getElementById('password').value;
+    
+    // 验证用户名
+    const usernameResult = validateUsername(usernameVal);
+    if (!usernameResult.valid) {
+        showToast(usernameResult.message, 'warning');
+        return;
+    }
+    
+    // 验证邮箱（可选）
+    const emailResult = validateEmail(emailVal);
+    if (!emailResult.valid) {
+        showToast(emailResult.message, 'warning');
+        return;
+    }
+    
+    // 验证手机号（可选）
+    const phoneResult = validatePhone(phoneVal);
+    if (!phoneResult.valid) {
+        showToast(phoneResult.message, 'warning');
+        return;
+    }
+    
+    // 验证密码
+    let passwordResult;
+    if (!isEdit) {
+        passwordResult = validatePassword(passwordVal, false);
+        if (!passwordResult.valid) {
+            showToast(passwordResult.message, 'warning');
+            return;
+        }
+    } else {
+        passwordResult = validatePassword(passwordVal, true);
+        if (!passwordResult.valid) {
+            showToast(passwordResult.message, 'warning');
+            return;
+        }
+    }
+    
+    const data = {
+        username: usernameResult.value,
+        real_name: realNameVal && realNameVal.trim() ? realNameVal.trim() : null,
+        email: emailResult.value,
+        phone: phoneResult.value,
+        role: document.getElementById('role').value
+    };
+    
+    if (passwordResult.value !== null) {
+        data.password = passwordResult.value;
+    }
+    
+    if (isEdit) {
+        data.is_active = document.getElementById('isActive').value === 'true';
+    }
+    
+    try {
+        if (isEdit) {
+            await apiRequest('/api/users/' + userId, {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+            showToast('用户更新成功', 'success');
+        } else {
+            await apiRequest('/api/users', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            showToast('用户创建成功', 'success');
+        }
+        
+        bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+        loadUsers();
+    } catch (error) {
+        console.error('保存用户失败:', error);
+    }
+}
+
+// 确认删除
+function confirmDelete(userId) {
+    deleteUserId = userId;
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// 绑定确认删除按钮
+document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+    if (deleteUserId) {
+        try {
+            await apiRequest('/api/users/' + deleteUserId, {
+                method: 'DELETE'
+            });
+            showToast('用户删除成功', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+            loadUsers();
+        } catch (error) {
+            console.error('删除用户失败:', error);
+        }
+    }
+});
+</script>
+{% endblock %}

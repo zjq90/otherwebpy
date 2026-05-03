@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}进销存管理 - 进销存管理系统{% endblock %}
+{% block page_title %}进销存管理{% endblock %}
+
+{% block content %}
+
+<!-- 搜索和工具栏 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-2">
+                <select class="form-select" id="recordTypeFilter">
+                    <option value="">全部类型</option>
+                    <option value="in">入库</option>
+                    <option value="out">出库</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" id="startDate" placeholder="开始日期">
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" id="endDate" placeholder="结束日期">
+            </div>
+            <div class="col-md-auto">
+                <button class="btn btn-outline-secondary" onclick="loadInventoryRecords()">
+                    <i class="bi bi-search me-2"></i>查询
+                </button>
+            </div>
+            <div class="col-md-auto">
+                <button class="btn btn-success" onclick="openAddModal('in')">
+                    <i class="bi bi-arrow-down-circle me-2"></i>入库
+                </button>
+                <button class="btn btn-warning text-white ms-2" onclick="openAddModal('out')">
+                    <i class="bi bi-arrow-up-circle me-2"></i>出库
+                </button>
+            </div>
+            <div class="col-md-auto ms-auto">
+                <button class="btn btn-outline-secondary" onclick="resetFilters()">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>重置
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 进销存记录列表 -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th width="60">ID</th>
+                        <th width="100">类型</th>
+                        <th>产品名称</th>
+                        <th width="80">数量</th>
+                        <th width="100">单价</th>
+                        <th width="100">总金额</th>
+                        <th width="100">参考单号</th>
+                        <th>备注</th>
+                        <th width="150">操作时间</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="bi bi-arrow-left-right"></i>
+                                <p>暂无进销存记录</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer" id="inventoryPaginationContainer">
+        <!-- 分页将通过JS动态生成 -->
+    </div>
+</div>
+
+<!-- 新增入库/出库模态框 -->
+<div class="modal fade" id="inventoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="inventoryModalTitle">新增入库</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="inventoryForm">
+                    <input type="hidden" id="recordType" value="in">
+                    <div class="mb-3">
+                        <label class="form-label">产品 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="inventoryProductId" required>
+                            <option value="">请选择产品</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">数量 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="inventoryQuantity" value="1" min="1">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">单价</label>
+                            <input type="number" class="form-control" id="inventoryUnitPrice" value="0" min="0" step="0.01">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">总金额</label>
+                        <input type="text" class="form-control" id="inventoryTotalAmount" value="¥0.00" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">参考单号</label>
+                        <input type="text" class="form-control" id="inventoryReferenceNo" placeholder="如：采购单号、订单号等">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">备注</label>
+                        <textarea class="form-control" id="inventoryRemark" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveInventoryRecord()">确认提交</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let inventoryPage = 1;
+let inventoryPageSize = 10;
+let inventoryRecordType = null;
+let inventoryStartDate = null;
+let inventoryEndDate = null;
+let allProducts = [];
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadProductsForSelect();
+    loadInventoryRecords();
+    
+    // 数量或单价变化时计算总金额
+    document.getElementById('inventoryQuantity').addEventListener('input', calculateTotal);
+    document.getElementById('inventoryUnitPrice').addEventListener('input', calculateTotal);
+});
+
+// 加载产品用于下拉选择
+async function loadProductsForSelect() {
+    try {
+        const params = new URLSearchParams({
+            page: 1,
+            page_size: 1000
+        });
+        
+        const result = await apiRequest('/api/products?' + params.toString());
+        allProducts = result.items || [];
+        
+        // 填充产品下拉框
+        const productSelect = document.getElementById('inventoryProductId');
+        productSelect.innerHTML = '<option value="">请选择产品</option>';
+        allProducts.forEach(product => {
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.textContent = `${product.name} (${product.code}) - 库存: ${product.stock_quantity}`;
+            option.dataset.stock = product.stock_quantity;
+            option.dataset.costPrice = product.cost_price;
+            option.dataset.sellingPrice = product.selling_price;
+            productSelect.appendChild(option);
+        });
+        
+        // 监听产品选择变化，自动填充单价
+        productSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                const recordType = document.getElementById('recordType').value;
+                const unitPrice = recordType === 'in' 
+                    ? selectedOption.dataset.costPrice 
+                    : selectedOption.dataset.sellingPrice;
+                document.getElementById('inventoryUnitPrice').value = unitPrice || 0;
+                calculateTotal();
+            }
+        });
+    } catch (error) {
+        console.error('加载产品列表失败:', error);
+    }
+}
+
+// 计算总金额
+function calculateTotal() {
+    const quantity = parseFloat(document.getElementById('inventoryQuantity').value) || 0;
+    const unitPrice = parseFloat(document.getElementById('inventoryUnitPrice').value) || 0;
+    const total = quantity * unitPrice;
+    document.getElementById('inventoryTotalAmount').value = '¥' + total.toFixed(2);
+}
+
+// 加载进销存记录列表
+async function loadInventoryRecords() {
+    try {
+        const params = new URLSearchParams({
+            page: inventoryPage,
+            page_size: inventoryPageSize
+        });
+        
+        if (inventoryRecordType) {
+            params.append('record_type', inventoryRecordType);
+        }
+        if (inventoryStartDate) {
+            params.append('start_date', inventoryStartDate);
+        }
+        if (inventoryEndDate) {
+            params.append('end_date', inventoryEndDate);
+        }
+        
+        const result = await apiRequest('/api/inventory?' + params.toString());
+        
+        renderInventoryTable(result.items);
+        renderInventoryPagination(result.total, result.page, result.page_size);
+    } catch (error) {
+        console.error('加载进销存记录列表失败:', error);
+    }
+}
+
+// 渲染进销存记录表格
+function renderInventoryTable(records) {
+    const tbody = document.getElementById('inventoryTableBody');
+    
+    if (!records || records.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="bi bi-arrow-left-right"></i>
+                        <p>暂无进销存记录</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = records.map(record => {
+        const product = allProducts.find(p => p.id === record.product_id);
+        const isIn = record.record_type === 'in';
+        
+        return `
+        <tr>
+            <td>${record.id}</td>
+            <td>
+                <span class="status-badge ${isIn ? 'status-active' : 'status-inactive'}">
+                    ${isIn ? '<i class="bi bi-arrow-down-circle"></i> 入库' : '<i class="bi bi-arrow-up-circle"></i> 出库'}
+                </span>
+            </td>
+            <td>
+                ${product ? product.name : '未知产品'}
+                <br><small class="text-muted">${product ? '编码: ' + product.code : ''}</small>
+            </td>
+            <td class="${isIn ? 'text-success' : 'text-danger'}">
+                <strong>${isIn ? '+' : '-'}${record.quantity}</strong>
+            </td>
+            <td>${formatMoney(record.unit_price)}</td>
+            <td><strong>${formatMoney(record.total_amount)}</strong></td>
+            <td>${record.reference_no || '<span class="text-muted">-</span>'}</td>
+            <td>${record.remark || '<span class="text-muted">-</span>'}</td>
+            <td>${formatDate(record.created_at)}</td>
+        </tr>
+    `}).join('');
+}
+
+// 渲染分页
+function renderInventoryPagination(total, page, pageSize) {
+    const container = document.getElementById('inventoryPaginationContainer');
+    container.innerHTML = renderPagination(total, page, pageSize, 'goToInventoryPage');
+}
+
+// 跳转到指定页
+function goToInventoryPage(page) {
+    inventoryPage = page;
+    loadInventoryRecords();
+}
+
+// 打开新增模态框
+function openAddModal(recordType) {
+    document.getElementById('recordType').value = recordType;
+    document.getElementById('inventoryModalTitle').textContent = recordType === 'in' ? '新增入库' : '新增出库';
+    document.getElementById('inventoryForm').reset();
+    document.getElementById('inventoryQuantity').value = 1;
+    document.getElementById('inventoryUnitPrice').value = 0;
+    document.getElementById('inventoryTotalAmount').value = '¥0.00';
+    
+    // 重置产品选择
+    document.getElementById('inventoryProductId').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('inventoryModal'));
+    modal.show();
+}
+
+// 保存进销存记录
+async function saveInventoryRecord() {
+    const productId = document.getElementById('inventoryProductId').value;
+    const quantity = parseInt(document.getElementById('inventoryQuantity').value);
+    const recordType = document.getElementById('recordType').value;
+    
+    if (!productId) {
+        showToast('请选择产品', 'warning');
+        return;
+    }
+    
+    if (!quantity || quantity < 1) {
+        showToast('请输入有效的数量', 'warning');
+        return;
+    }
+    
+    // 检查出库时库存是否充足
+    if (recordType === 'out') {
+        const selectedOption = document.getElementById('inventoryProductId').options[
+            document.getElementById('inventoryProductId').selectedIndex
+        ];
+        const stock = parseInt(selectedOption.dataset.stock) || 0;
+        if (quantity > stock) {
+            showToast(`库存不足，当前库存: ${stock}`, 'warning');
+            return;
+        }
+    }
+    
+    const data = {
+        product_id: parseInt(productId),
+        record_type: recordType,
+        quantity: quantity,
+        unit_price: parseFloat(document.getElementById('inventoryUnitPrice').value) || 0,
+        reference_no: document.getElementById('inventoryReferenceNo').value || null,
+        remark: document.getElementById('inventoryRemark').value || null
+    };
+    
+    try {
+        await apiRequest('/api/inventory', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        showToast(recordType === 'in' ? '入库成功' : '出库成功', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('inventoryModal')).hide();
+        
+        // 重新加载数据
+        loadProductsForSelect();
+        loadInventoryRecords();
+    } catch (error) {
+        console.error('保存进销存记录失败:', error);
+    }
+}
+
+// 重置筛选条件
+function resetFilters() {
+    document.getElementById('recordTypeFilter').value = '';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    
+    inventoryRecordType = null;
+    inventoryStartDate = null;
+    inventoryEndDate = null;
+    inventoryPage = 1;
+    
+    loadInventoryRecords();
+}
+
+// 监听筛选条件变化
+document.getElementById('recordTypeFilter').addEventListener('change', function() {
+    inventoryRecordType = this.value || null;
+});
+
+document.getElementById('startDate').addEventListener('change', function() {
+    inventoryStartDate = this.value || null;
+});
+
+document.getElementById('endDate').addEventListener('change', function() {
+    inventoryEndDate = this.value || null;
+});
+</script>
+{% endblock %}

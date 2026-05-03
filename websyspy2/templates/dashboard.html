@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}数据看板 - 进销存管理系统{% endblock %}
+{% block page_title %}数据看板{% endblock %}
+
+{% block content %}
+
+<!-- 统计卡片 -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <i class="bi bi-box stat-icon"></i>
+            <div class="stat-value" id="totalProducts">{{ stats.total_products or 0 }}</div>
+            <div class="stat-label">产品总数</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card blue">
+            <i class="bi bi-tags stat-icon"></i>
+            <div class="stat-value" id="totalCategories">{{ stats.total_categories or 0 }}</div>
+            <div class="stat-label">分类总数</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card green">
+            <i class="bi bi-people stat-icon"></i>
+            <div class="stat-value" id="totalUsers">{{ stats.total_users or 0 }}</div>
+            <div class="stat-label">用户总数</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card orange">
+            <i class="bi bi-cash-stack stat-icon"></i>
+            <div class="stat-value" id="totalStockValue">¥{{ "%.2f"|format(stats.total_stock_value or 0) }}</div>
+            <div class="stat-label">库存总价值</div>
+        </div>
+    </div>
+</div>
+
+<!-- 今日统计和低库存预警 -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i>今日统计</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-primary bg-opacity-10 rounded">
+                            <div class="h4 text-primary mb-1" id="todayInCount">{{ stats.today_in_count or 0 }}</div>
+                            <div class="small text-muted">今日入库数量</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-success bg-opacity-10 rounded">
+                            <div class="h4 text-success mb-1" id="todayOutCount">{{ stats.today_out_count or 0 }}</div>
+                            <div class="small text-muted">今日出库数量</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-info bg-opacity-10 rounded">
+                            <div class="h4 text-info mb-1" id="todayInAmount">¥{{ "%.2f"|format(stats.today_in_amount or 0) }}</div>
+                            <div class="small text-muted">今日入库金额</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-warning bg-opacity-10 rounded">
+                            <div class="h4 text-warning mb-1" id="todayOutAmount">¥{{ "%.2f"|format(stats.today_out_amount or 0) }}</div>
+                            <div class="small text-muted">今日出库金额</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>库存预警</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-4">
+                    <div class="display-1 text-warning mb-2" id="lowStockCount">{{ stats.low_stock_count or 0 }}</div>
+                    <div class="text-muted">低库存产品数</div>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="/products" class="btn btn-outline-warning">
+                        <i class="bi bi-eye me-2"></i>查看库存详情
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 快捷操作 -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>快捷操作</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-2">
+                <a href="/products" class="text-decoration-none">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-plus-circle text-primary" style="font-size: 2.5rem;"></i>
+                            <div class="mt-2 small text-dark">产品管理</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-2">
+                <a href="/categories" class="text-decoration-none">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-tags text-success" style="font-size: 2.5rem;"></i>
+                            <div class="mt-2 small text-dark">分类管理</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-2">
+                <a href="/inventory" class="text-decoration-none">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-arrow-down-circle text-info" style="font-size: 2.5rem;"></i>
+                            <div class="mt-2 small text-dark">入库管理</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-2">
+                <a href="/inventory" class="text-decoration-none">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-arrow-up-circle text-warning" style="font-size: 2.5rem;"></i>
+                            <div class="mt-2 small text-dark">出库管理</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-2">
+                <a href="/users" class="text-decoration-none">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people text-secondary" style="font-size: 2.5rem;"></i>
+                            <div class="mt-2 small text-dark">用户管理</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-2">
+                <a href="/products" class="text-decoration-none">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-earmark-excel text-success" style="font-size: 2.5rem;"></i>
+                            <div class="mt-2 small text-dark">导出Excel</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 定时刷新统计数据
+async function refreshStats() {
+    try {
+        const stats = await apiRequest('/api/dashboard/stats');
+        
+        document.getElementById('totalProducts').textContent = stats.total_products;
+        document.getElementById('totalCategories').textContent = stats.total_categories;
+        document.getElementById('totalUsers').textContent = stats.total_users;
+        document.getElementById('totalStockValue').textContent = '¥' + stats.total_stock_value.toFixed(2);
+        document.getElementById('lowStockCount').textContent = stats.low_stock_count;
+        document.getElementById('todayInCount').textContent = stats.today_in_count;
+        document.getElementById('todayOutCount').textContent = stats.today_out_count;
+        document.getElementById('todayInAmount').textContent = '¥' + stats.today_in_amount.toFixed(2);
+        document.getElementById('todayOutAmount').textContent = '¥' + stats.today_out_amount.toFixed(2);
+    } catch (error) {
+        console.error('刷新统计数据失败:', error);
+    }
+}
+
+// 每30秒刷新一次
+setInterval(refreshStats, 30000);
+</script>
+{% endblock %}

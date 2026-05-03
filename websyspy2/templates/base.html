@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}进销存管理系统{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --navbar-height: 56px;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        /* 侧边栏 */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-brand {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-brand h4 {
+            margin: 0;
+            font-weight: 700;
+            color: #e94560;
+        }
+        
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+        
+        .sidebar-nav .nav-link {
+            color: rgba(255,255,255,0.7);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-nav .nav-link:hover {
+            color: white;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .sidebar-nav .nav-link.active {
+            color: white;
+            background: rgba(233,69,96,0.2);
+            border-left-color: #e94560;
+        }
+        
+        .sidebar-nav .nav-link i {
+            font-size: 1.2rem;
+            width: 1.5rem;
+            text-align: center;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+        
+        /* 无边栏时的主内容区 */
+        .main-content.no-sidebar {
+            margin-left: 0;
+        }
+        
+        /* 顶部导航栏 */
+        .top-navbar {
+            position: sticky;
+            top: 0;
+            height: var(--navbar-height);
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+            z-index: 100;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        /* 页面内容 */
+        .page-content {
+            padding: 1.5rem;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #eee;
+            padding: 1rem 1.25rem;
+        }
+        
+        /* 按钮样式 */
+        .btn-primary {
+            background: #e94560;
+            border-color: #e94560;
+        }
+        
+        .btn-primary:hover {
+            background: #d63850;
+            border-color: #d63850;
+        }
+        
+        /* 表格样式 */
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* 状态标签 */
+        .status-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        /* 分页样式 */
+        .pagination {
+            margin-bottom: 0;
+        }
+        
+        .page-item.active .page-link {
+            background: #e94560;
+            border-color: #e94560;
+        }
+        
+        /* 表单样式 */
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        /* 搜索框 */
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .search-box input {
+            padding-left: 38px;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        
+        /* Toast 消息 */
+        .toast-container {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 1050;
+        }
+        
+        /* 产品图片缩略图 */
+        .product-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        /* 模态框表单 */
+        .modal-body .row {
+            margin-bottom: 1rem;
+        }
+        
+        /* 数据看板统计卡片 */
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card.blue {
+            background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+        }
+        
+        .stat-card.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .stat-card.orange {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .stat-card.purple {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .stat-icon {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3rem;
+            opacity: 0.3;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* 加载动画 */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0,0,0,0.1);
+            border-left-color: #e94560;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 侧边栏 -->
+    {% if hide_sidebar is not defined or not hide_sidebar %}
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <h4><i class="bi bi-box-seam"></i> 进销存系统</h4>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="nav-link {% if request.url.path == '/dashboard' %}active{% endif %}" href="/dashboard">
+                <i class="bi bi-speedometer2"></i>
+                <span>数据看板</span>
+            </a>
+            <a class="nav-link {% if request.url.path == '/users' %}active{% endif %}" href="/users">
+                <i class="bi bi-people"></i>
+                <span>用户管理</span>
+            </a>
+            <a class="nav-link {% if request.url.path == '/categories' %}active{% endif %}" href="/categories">
+                <i class="bi bi-tags"></i>
+                <span>分类管理</span>
+            </a>
+            <a class="nav-link {% if request.url.path == '/products' %}active{% endif %}" href="/products">
+                <i class="bi bi-box"></i>
+                <span>产品管理</span>
+            </a>
+            <a class="nav-link {% if request.url.path == '/inventory' %}active{% endif %}" href="/inventory">
+                <i class="bi bi-arrow-left-right"></i>
+                <span>进销存管理</span>
+            </a>
+        </nav>
+    </aside>
+    {% endif %}
+    
+    <!-- 主内容区 -->
+    <main class="main-content{% if hide_sidebar is defined and hide_sidebar %} no-sidebar{% endif %}">
+        <!-- 顶部导航栏 -->
+        {% if hide_sidebar is not defined or not hide_sidebar %}
+        <nav class="top-navbar">
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-link d-lg-none" id="sidebarToggle">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <span class="text-muted" id="currentPage">{% block page_title %}首页{% endblock %}</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-sm btn-outline-secondary" onclick="generateTestData()">
+                    <i class="bi bi-database-add"></i> 生成测试数据
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-link dropdown-toggle text-dark" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle fs-5"></i>
+                        <span class="ms-1">管理员</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        {% endif %}
+        
+        <!-- 页面内容 -->
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- Toast 消息容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- 公共 JavaScript -->
+    <script>
+        // API 基础 URL
+        const API_BASE = '';
+        
+        // 侧边栏切换
+        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('show');
+        });
+        
+        // Toast 消息提示
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toastId = 'toast_' + Date.now();
+            
+            const bgColor = type === 'success' ? 'bg-success' : 
+                           type === 'error' ? 'bg-danger' : 
+                           type === 'warning' ? 'bg-warning' : 'bg-info';
+            
+            const icon = type === 'success' ? 'check-circle' : 
+                        type === 'error' ? 'x-circle' : 
+                        type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+            
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white ${bgColor} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-${icon} me-2"></i>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            const toast = new bootstrap.Toast(document.getElementById(toastId), { delay: 3000 });
+            toast.show();
+            
+            document.getElementById(toastId).addEventListener('hidden.bs.toast', function() {
+                this.remove();
+            });
+        }
+        
+        // 通用 API 请求
+        async function apiRequest(url, options = {}) {
+            try {
+                const response = await fetch(API_BASE + url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || '请求失败');
+                }
+                
+                return data;
+            } catch (error) {
+                showToast(error.message, 'error');
+                throw error;
+            }
+        }
+        
+        // 生成测试数据
+        async function generateTestData() {
+            if (!confirm('确定要生成测试数据吗？这将添加示例用户、分类、产品和进销存记录。')) {
+                return;
+            }
+            
+            try {
+                const response = await apiRequest('/api/test/generate-data', {
+                    method: 'POST'
+                });
+                showToast(response.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // 格式化金额
+        function formatMoney(amount) {
+            if (amount === null || amount === undefined) return '¥0.00';
+            return '¥' + Number(amount).toFixed(2);
+        }
+        
+        // ==================== 表单验证函数 ====================
+        
+        // 验证用户名：首字母必须是英文字母，只能包含字母、数字、下划线，长度2-50
+        function validateUsername(username) {
+            if (!username || !username.trim()) {
+                return { valid: false, message: '用户名不能为空' };
+            }
+            username = username.trim();
+            if (username.length < 2) {
+                return { valid: false, message: '用户名长度至少为2个字符' };
+            }
+            if (username.length > 50) {
+                return { valid: false, message: '用户名长度不能超过50个字符' };
+            }
+            const pattern = /^[a-zA-Z][a-zA-Z0-9_]{1,49}$/;
+            if (!pattern.test(username)) {
+                return { 
+                    valid: false, 
+                    message: '用户名格式错误：首字母必须是英文字母，只能包含字母、数字、下划线' 
+                };
+            }
+            return { valid: true, value: username };
+        }
+        
+        // 验证手机号：11位中国大陆手机号
+        function validatePhone(phone) {
+            if (!phone || !phone.trim()) {
+                return { valid: true, value: null };
+            }
+            phone = phone.trim().replace(/[\s\-]/g, '');
+            const pattern = /^1[3-9]\d{9}$/;
+            if (!pattern.test(phone)) {
+                return { 
+                    valid: false, 
+                    message: '手机号格式错误：请输入11位有效的中国大陆手机号（如：13800138000）' 
+                };
+            }
+            return { valid: true, value: phone };
+        }
+        
+        // 验证邮箱：标准邮箱格式
+        function validateEmail(email) {
+            if (!email || !email.trim()) {
+                return { valid: true, value: null };
+            }
+            email = email.trim().toLowerCase();
+            if (email.length > 100) {
+                return { valid: false, message: '邮箱长度不能超过100个字符' };
+            }
+            const pattern = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+            if (!pattern.test(email)) {
+                return { 
+                    valid: false, 
+                    message: '邮箱格式错误：请输入有效的邮箱地址（如：user@example.com）' 
+                };
+            }
+            return { valid: true, value: email };
+        }
+        
+        // 验证密码：6-20位，至少包含两种类型（字母、数字、特殊字符）
+        function validatePassword(password, isOptional = false) {
+            if (isOptional && (!password || !password.trim())) {
+                return { valid: true, value: null };
+            }
+            if (!password) {
+                return { valid: false, message: '密码不能为空' };
+            }
+            if (password.includes(' ')) {
+                return { valid: false, message: '密码不能包含空格' };
+            }
+            if (password.length < 6) {
+                return { valid: false, message: '密码长度至少为6个字符' };
+            }
+            if (password.length > 20) {
+                return { valid: false, message: '密码长度不能超过20个字符' };
+            }
+            
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasDigit = /\d/.test(password);
+            const hasSpecial = /[!@#$%^&*()_+\-=\[\]{}|;:'",.<>?\/~`]/.test(password);
+            
+            const typeCount = [
+                hasUppercase || hasLowercase,
+                hasDigit,
+                hasSpecial
+            ].filter(Boolean).length;
+            
+            if (typeCount < 2) {
+                return { 
+                    valid: false, 
+                    message: '密码强度不足：密码必须至少包含两种类型（如：字母+数字、字母+特殊字符）' 
+                };
+            }
+            return { valid: true, value: password };
+        }
+        
+        // 验证产品编码：首字符必须是字母或数字，只能包含字母、数字、横线、下划线
+        function validateProductCode(code) {
+            if (!code || !code.trim()) {
+                return { valid: false, message: '产品编码不能为空' };
+            }
+            code = code.trim().toUpperCase();
+            if (code.length > 50) {
+                return { valid: false, message: '产品编码长度不能超过50个字符' };
+            }
+            const pattern = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,49}$/;
+            if (!pattern.test(code)) {
+                return { 
+                    valid: false, 
+                    message: '产品编码格式错误：首字符必须是字母或数字，只能包含字母、数字、横线、下划线' 
+                };
+            }
+            return { valid: true, value: code };
+        }
+        
+        // 验证价格：>=0，最多2位小数
+        function validatePrice(price, fieldName = '价格') {
+            const num = parseFloat(price);
+            if (isNaN(num)) {
+                return { valid: false, message: `${fieldName}必须是有效的数字` };
+            }
+            if (num < 0) {
+                return { valid: false, message: `${fieldName}不能为负数` };
+            }
+            if (num > 999999999.99) {
+                return { valid: false, message: `${fieldName}不能超过999,999,999.99` };
+            }
+            const str = String(price);
+            if (str.includes('.') && str.split('.')[1].length > 2) {
+                return { valid: false, message: `${fieldName}最多只能保留2位小数` };
+            }
+            return { valid: true, value: num };
+        }
+        
+        // 验证库存数量：>=0，整数
+        function validateStockQuantity(quantity, fieldName = '库存数量') {
+            const num = parseInt(quantity, 10);
+            if (isNaN(num) || !Number.isInteger(num)) {
+                return { valid: false, message: `${fieldName}必须是有效的整数` };
+            }
+            if (num < 0) {
+                return { valid: false, message: `${fieldName}不能为负数` };
+            }
+            if (num > 999999) {
+                return { valid: false, message: `${fieldName}不能超过999999` };
+            }
+            return { valid: true, value: num };
+        }
+        
+        // 验证最低/最高库存关系
+        function validateMinMaxStock(minStock, maxStock) {
+            const min = minStock !== null && minStock !== undefined ? parseInt(minStock, 10) : null;
+            const max = maxStock !== null && maxStock !== undefined ? parseInt(maxStock, 10) : null;
+            
+            if (min !== null && min < 0) {
+                return { valid: false, message: '最低库存不能为负数' };
+            }
+            if (max !== null && max < 1) {
+                return { valid: false, message: '最高库存必须至少为1' };
+            }
+            if (min !== null && max !== null && max <= min) {
+                return { valid: false, message: '最高库存必须大于最低库存' };
+            }
+            return { valid: true };
+        }
+        
+        // 生成分页HTML
+        function renderPagination(total, page, pageSize, onPageChange) {
+            const totalPages = Math.ceil(total / pageSize);
+            if (totalPages <= 1) return '';
+            
+            let html = '<nav><ul class="pagination justify-content-center">';
+            
+            // 上一页
+            const disabledPrev = page <= 1 ? 'disabled' : '';
+            html += `<li class="page-item ${disabledPrev}">
+                <a class="page-link" href="#" onclick="${onPageChange}(${page - 1}); return false;">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>`;
+            
+            // 页码
+            const startPage = Math.max(1, page - 2);
+            const endPage = Math.min(totalPages, page + 2);
+            
+            if (startPage > 1) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="${onPageChange}(1); return false;">1</a></li>`;
+                if (startPage > 2) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const active = i === page ? 'active' : '';
+                html += `<li class="page-item ${active}">
+                    <a class="page-link" href="#" onclick="${onPageChange}(${i}); return false;">${i}</a>
+                </li>`;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="${onPageChange}(${totalPages}); return false;">${totalPages}</a></li>`;
+            }
+            
+            // 下一页
+            const disabledNext = page >= totalPages ? 'disabled' : '';
+            html += `<li class="page-item ${disabledNext}">
+                <a class="page-link" href="#" onclick="${onPageChange}(${page + 1}); return false;">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>`;
+            
+            html += '</ul></nav>';
+            html += `<div class="text-center text-muted mt-2">共 ${total} 条记录，第 ${page}/${totalPages} 页</div>`;
+            
+            return html;
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
