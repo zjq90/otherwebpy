@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面标题 -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-award text-success mr-2"></i>认证证书管理
+    </h2>
+    <div>
+        <button class="btn btn-warning mr-2" onclick="checkExpiring()">
+            <i class="fas fa-exclamation-triangle mr-1"></i>检查到期证书
+        </button>
+        <button class="btn btn-success" data-toggle="modal" data-target="#addCertificateModal">
+            <i class="fas fa-plus mr-1"></i>添加证书
+        </button>
+    </div>
+</div>
+
+<!-- 即将到期警告 -->
+<div class="alert alert-warning alert-dismissible fade show d-none" id="expiringAlert" role="alert">
+    <h5 class="alert-heading">
+        <i class="fas fa-exclamation-triangle mr-2"></i>证书即将到期提醒
+    </h5>
+    <p id="expiringMessage">有证书即将到期，请及时处理续证！</p>
+    <button type="button" class="close" onclick="$('#expiringAlert').addClass('d-none')">
+        <span>&times;</span>
+    </button>
+</div>
+
+<!-- 搜索和筛选 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group mb-0">
+                    <select class="form-control" id="filterType" onchange="loadCertificates()">
+                        <option value="">所有认证类型</option>
+                        <option value="绿色食品">绿色食品</option>
+                        <option value="有机产品">有机产品</option>
+                        <option value="无公害产品">无公害产品</option>
+                        <option value="地理标志产品">地理标志产品</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group mb-0">
+                    <select class="form-control" id="filterStatus" onchange="loadCertificates()">
+                        <option value="">所有状态</option>
+                        <option value="有效">有效</option>
+                        <option value="即将过期">即将过期</option>
+                        <option value="过期">过期</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 text-right">
+                <button class="btn btn-outline-secondary" onclick="loadCertificates()">
+                    <i class="fas fa-sync-alt mr-1"></i>刷新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 证书列表 -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">认证证书列表</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>证书编号</th>
+                        <th>认证类型</th>
+                        <th>发证机构</th>
+                        <th>发证日期</th>
+                        <th>有效期至</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="certificateTableBody">
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <span class="loading-spinner"></span> 加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加证书模态框 -->
+<div class="modal fade" id="addCertificateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle text-success mr-2"></i>添加认证证书
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="addCertificateForm" onsubmit="return addCertificate(event)">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addCertificateNumber">证书编号 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="addCertificateNumber" name="certificate_number" required placeholder="证书编号">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addCertificateType">认证类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="addCertificateType" name="certificate_type" required>
+                                <option value="">请选择认证类型</option>
+                                <option value="绿色食品">绿色食品</option>
+                                <option value="有机产品">有机产品</option>
+                                <option value="无公害产品">无公害产品</option>
+                                <option value="地理标志产品">地理标志产品</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addIssuingOrganization">发证机构 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="addIssuingOrganization" name="issuing_organization" required placeholder="发证机构名称">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addProductId">关联产品</label>
+                            <select class="form-control" id="addProductId" name="product_id">
+                                <option value="">请选择产品（可选）</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addIssueDate">发证日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="addIssueDate" name="issue_date" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addValidUntil">有效期至 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="addValidUntil" name="valid_until" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="addHolder">证书持有人</label>
+                        <input type="text" class="form-control" id="addHolder" name="holder" placeholder="证书持有人名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="addScope">认证范围</label>
+                        <textarea class="form-control" id="addScope" name="scope" rows="2" placeholder="认证范围描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="addRemarks">备注</label>
+                        <textarea class="form-control" id="addRemarks" name="remarks" rows="2" placeholder="备注信息"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save mr-1"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑证书模态框 -->
+<div class="modal fade" id="editCertificateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit text-info mr-2"></i>编辑认证证书
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editCertificateForm" onsubmit="return updateCertificate(event)">
+                <input type="hidden" id="editCertificateId" name="id">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editCertificateNumber">证书编号 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editCertificateNumber" name="certificate_number" required placeholder="证书编号">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editCertificateType">认证类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editCertificateType" name="certificate_type" required>
+                                <option value="">请选择认证类型</option>
+                                <option value="绿色食品">绿色食品</option>
+                                <option value="有机产品">有机产品</option>
+                                <option value="无公害产品">无公害产品</option>
+                                <option value="地理标志产品">地理标志产品</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editIssuingOrganization">发证机构 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editIssuingOrganization" name="issuing_organization" required placeholder="发证机构名称">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editProductId">关联产品</label>
+                            <select class="form-control" id="editProductId" name="product_id">
+                                <option value="">请选择产品（可选）</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editIssueDate">发证日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editIssueDate" name="issue_date" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editValidUntil">有效期至 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editValidUntil" name="valid_until" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editHolder">证书持有人</label>
+                        <input type="text" class="form-control" id="editHolder" name="holder" placeholder="证书持有人名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="editScope">认证范围</label>
+                        <textarea class="form-control" id="editScope" name="scope" rows="2" placeholder="认证范围描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editRemarks">备注</label>
+                        <textarea class="form-control" id="editRemarks" name="remarks" rows="2" placeholder="备注信息"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save mr-1"></i>更新
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var currentEditId = null;
+
+$(document).ready(function() {
+    loadProductsForSelect();
+    loadCertificates();
+    checkExpiring();
+});
+
+// 加载产品到下拉选择框
+function loadProductsForSelect() {
+    $.get('/api/products/')
+        .done(function(products) {
+            var addOptions = '<option value="">请选择产品（可选）</option>';
+            
+            products.forEach(function(product) {
+                addOptions += '<option value="' + product.id + '">' + escapeHtml(product.name) + '</option>';
+            });
+            
+            $('#addProductId').html(addOptions);
+        })
+        .fail(function() {
+            console.error('加载产品列表失败');
+        });
+}
+
+// 加载证书列表
+function loadCertificates() {
+    loadTableData('/api/certificates/', '#certificateTableBody', renderCertificateRow);
+}
+
+// 渲染证书行
+function renderCertificateRow(cert, index) {
+    // 计算剩余天数
+    var today = new Date();
+    var validUntil = new Date(cert.valid_until);
+    var daysRemaining = Math.ceil((validUntil - today) / (1000 * 60 * 60 * 24));
+    
+    var statusHtml = getStatusBadge(cert.status);
+    if (cert.status === '即将过期') {
+        statusHtml += '<br><small class="text-warning">剩余 ' + daysRemaining + ' 天</small>';
+    } else if (cert.status === '过期') {
+        statusHtml += '<br><small class="text-danger">已过期 ' + Math.abs(daysRemaining) + ' 天</small>';
+    }
+    
+    return '<tr>' +
+        '<td>' + cert.id + '</td>' +
+        '<td><strong>' + escapeHtml(cert.certificate_number) + '</strong></td>' +
+        '<td><span class="badge badge-info">' + escapeHtml(cert.certificate_type) + '</span></td>' +
+        '<td>' + escapeHtml(cert.issuing_organization) + '</td>' +
+        '<td>' + formatDate(cert.issue_date) + '</td>' +
+        '<td>' + formatDate(cert.valid_until) + '</td>' +
+        '<td>' + statusHtml + '</td>' +
+        '<td>' +
+            '<button class="btn btn-sm btn-info mr-1" onclick="editCertificate(' + cert.id + ')" title="编辑">' +
+                '<i class="fas fa-edit"></i>' +
+            '</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="deleteCertificate(' + cert.id + ')" title="删除">' +
+                '<i class="fas fa-trash"></i>' +
+            '</button>' +
+        '</td>' +
+    '</tr>';
+}
+
+// 检查即将到期证书
+function checkExpiring() {
+    $.get('/api/certificates/expiring-soon/')
+        .done(function(certs) {
+            if (certs && certs.length > 0) {
+                $('#expiringMessage').text('有 ' + certs.length + ' 份证书即将到期，请及时处理续证！');
+                $('#expiringAlert').removeClass('d-none');
+            } else {
+                $('#expiringAlert').addClass('d-none');
+            }
+        })
+        .fail(function() {
+            console.error('检查到期证书失败');
+        });
+}
+
+// 添加证书
+function addCertificate(event) {
+    event.preventDefault();
+    var $form = $('#addCertificateForm');
+    var formData = serializeForm($form);
+    
+    $.ajax({
+        url: '/api/certificates/',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#addCertificateModal').modal('hide');
+        $form[0].reset();
+        showMessage('成功', '认证证书添加成功！', 'success');
+        loadCertificates();
+        checkExpiring();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '添加失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 编辑证书
+function editCertificate(id) {
+    currentEditId = id;
+    
+    $.get('/api/certificates/' + id)
+        .done(function(cert) {
+            // 先加载产品列表
+            $.get('/api/products/')
+                .done(function(products) {
+                    var options = '<option value="">请选择产品（可选）</option>';
+                    products.forEach(function(product) {
+                        var selected = product.id === cert.product_id ? ' selected' : '';
+                        options += '<option value="' + product.id + '"' + selected + '>' + escapeHtml(product.name) + '</option>';
+                    });
+                    $('#editProductId').html(options);
+                    
+                    // 填充表单
+                    populateForm($('#editCertificateForm'), cert);
+                    $('#editCertificateId').val(cert.id);
+                    $('#editCertificateModal').modal('show');
+                });
+        })
+        .fail(function(xhr) {
+            var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+                ? xhr.responseJSON.detail 
+                : '获取证书信息失败';
+            showMessage('错误', errorMsg, 'error');
+        });
+}
+
+// 更新证书
+function updateCertificate(event) {
+    event.preventDefault();
+    var $form = $('#editCertificateForm');
+    var formData = serializeForm($form);
+    var id = formData.id;
+    delete formData.id;
+    
+    $.ajax({
+        url: '/api/certificates/' + id,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#editCertificateModal').modal('hide');
+        showMessage('成功', '认证证书更新成功！', 'success');
+        loadCertificates();
+        checkExpiring();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '更新失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 删除证书
+function deleteCertificate(id) {
+    deleteById('/api/certificates', id, '认证证书', function() {
+        loadCertificates();
+        checkExpiring();
+    });
+}
+
+// 重置表单提交按钮
+function resetFormSubmitBtn($form) {
+    var $submitBtn = $form.find('[type="submit"]');
+    $submitBtn.prop('disabled', false);
+    $submitBtn.html('<i class="fas fa-save mr-1"></i>保存');
+}
+
+// HTML转义
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

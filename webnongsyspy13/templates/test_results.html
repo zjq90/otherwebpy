@@ -1,0 +1,457 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面标题 -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-vial text-success mr-2"></i>检测结果管理
+    </h2>
+    <button class="btn btn-success" data-toggle="modal" data-target="#addResultModal">
+        <i class="fas fa-plus mr-1"></i>添加记录
+    </button>
+</div>
+
+<!-- 搜索和筛选 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group mb-0">
+                    <select class="form-control" id="filterBatch" onchange="loadResults()">
+                        <option value="">所有批次</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group mb-0">
+                    <select class="form-control" id="filterTestType" onchange="loadResults()">
+                        <option value="">所有检测类型</option>
+                        <option value="自检">自检</option>
+                        <option value="第三方检测">第三方检测</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 text-right">
+                <button class="btn btn-outline-secondary" onclick="loadResults()">
+                    <i class="fas fa-sync-alt mr-1"></i>刷新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 检测结果列表 -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">检测结果列表</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>批次编号</th>
+                        <th>检测类型</th>
+                        <th>检测机构</th>
+                        <th>检测日期</th>
+                        <th>检测参数</th>
+                        <th>检测值</th>
+                        <th>结果</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="resultTableBody">
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <span class="loading-spinner"></span> 加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加记录模态框 -->
+<div class="modal fade" id="addResultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle text-success mr-2"></i>添加检测结果
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="addResultForm" onsubmit="return addResult(event)">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addBatchId">关联批次 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="addBatchId" name="batch_id" required>
+                                <option value="">请选择批次</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addTestType">检测类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="addTestType" name="test_type" required>
+                                <option value="">请选择检测类型</option>
+                                <option value="自检">自检</option>
+                                <option value="第三方检测">第三方检测</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addTestOrganization">检测机构</label>
+                            <input type="text" class="form-control" id="addTestOrganization" name="test_organization" placeholder="检测机构名称">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addTestDate">检测日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="addTestDate" name="test_date" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addTestItem">检测项目</label>
+                            <select class="form-control" id="addTestItem" name="test_item">
+                                <option value="">请选择检测项目</option>
+                                <option value="农残">农残检测</option>
+                                <option value="重金属">重金属检测</option>
+                                <option value="微生物">微生物检测</option>
+                                <option value="营养成分">营养成分检测</option>
+                                <option value="其他">其他检测</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addParameterName">检测参数 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="addParameterName" name="parameter_name" required placeholder="例如：农药残留、铅含量等">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="addTestValue">检测值</label>
+                            <input type="text" class="form-control" id="addTestValue" name="test_value" placeholder="检测结果值">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="addLimitValue">标准限值</label>
+                            <input type="text" class="form-control" id="addLimitValue" name="limit_value" placeholder="标准限值">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="addResultStatus">检测结果 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="addResultStatus" name="result" required>
+                                <option value="">请选择结果</option>
+                                <option value="合格">合格</option>
+                                <option value="不合格">不合格</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addReportNumber">报告编号</label>
+                            <input type="text" class="form-control" id="addReportNumber" name="report_number" placeholder="检测报告编号">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addTester">检测人员</label>
+                            <input type="text" class="form-control" id="addTester" name="tester" placeholder="检测人员姓名">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="addRemarks">备注</label>
+                        <textarea class="form-control" id="addRemarks" name="remarks" rows="2" placeholder="备注信息"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save mr-1"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑记录模态框 -->
+<div class="modal fade" id="editResultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit text-info mr-2"></i>编辑检测结果
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editResultForm" onsubmit="return updateResult(event)">
+                <input type="hidden" id="editResultId" name="id">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editBatchId">关联批次 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editBatchId" name="batch_id" required>
+                                <option value="">请选择批次</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editTestType">检测类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editTestType" name="test_type" required>
+                                <option value="">请选择检测类型</option>
+                                <option value="自检">自检</option>
+                                <option value="第三方检测">第三方检测</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editTestOrganization">检测机构</label>
+                            <input type="text" class="form-control" id="editTestOrganization" name="test_organization" placeholder="检测机构名称">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editTestDate">检测日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editTestDate" name="test_date" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editTestItem">检测项目</label>
+                            <select class="form-control" id="editTestItem" name="test_item">
+                                <option value="">请选择检测项目</option>
+                                <option value="农残">农残检测</option>
+                                <option value="重金属">重金属检测</option>
+                                <option value="微生物">微生物检测</option>
+                                <option value="营养成分">营养成分检测</option>
+                                <option value="其他">其他检测</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editParameterName">检测参数 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editParameterName" name="parameter_name" required placeholder="例如：农药残留、铅含量等">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="editTestValue">检测值</label>
+                            <input type="text" class="form-control" id="editTestValue" name="test_value" placeholder="检测结果值">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="editLimitValue">标准限值</label>
+                            <input type="text" class="form-control" id="editLimitValue" name="limit_value" placeholder="标准限值">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="editResultStatus">检测结果 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editResultStatus" name="result" required>
+                                <option value="">请选择结果</option>
+                                <option value="合格">合格</option>
+                                <option value="不合格">不合格</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editReportNumber">报告编号</label>
+                            <input type="text" class="form-control" id="editReportNumber" name="report_number" placeholder="检测报告编号">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editTester">检测人员</label>
+                            <input type="text" class="form-control" id="editTester" name="tester" placeholder="检测人员姓名">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editRemarks">备注</label>
+                        <textarea class="form-control" id="editRemarks" name="remarks" rows="2" placeholder="备注信息"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save mr-1"></i>更新
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var currentEditId = null;
+
+$(document).ready(function() {
+    loadBatchesForSelect();
+    loadResults();
+});
+
+// 加载批次到下拉选择框
+function loadBatchesForSelect() {
+    $.get('/api/batches/')
+        .done(function(batches) {
+            var filterOptions = '<option value="">所有批次</option>';
+            var addOptions = '<option value="">请选择批次</option>';
+            
+            batches.forEach(function(batch) {
+                var label = batch.batch_number;
+                filterOptions += '<option value="' + batch.id + '">' + escapeHtml(label) + '</option>';
+                addOptions += '<option value="' + batch.id + '">' + escapeHtml(label) + '</option>';
+            });
+            
+            $('#filterBatch').html(filterOptions);
+            $('#addBatchId').html(addOptions);
+        })
+        .fail(function() {
+            console.error('加载批次列表失败');
+        });
+}
+
+// 加载结果列表
+function loadResults() {
+    var testType = $('#filterTestType').val();
+    var url = '/api/test-results/';
+    if (testType) {
+        url += '?test_type=' + encodeURIComponent(testType);
+    }
+    loadTableData(url, '#resultTableBody', renderResultRow);
+}
+
+// 渲染结果行
+function renderResultRow(result, index) {
+    return '<tr>' +
+        '<td>' + result.id + '</td>' +
+        '<td>' + (result.batch_id || '-') + '</td>' +
+        '<td>' + getStatusBadge(result.test_type) + '</td>' +
+        '<td>' + escapeHtml(result.test_organization || '-') + '</td>' +
+        '<td>' + formatDate(result.test_date) + '</td>' +
+        '<td>' + escapeHtml(result.parameter_name) + '</td>' +
+        '<td>' + escapeHtml(result.test_value || '-') + '</td>' +
+        '<td>' + getStatusBadge(result.result) + '</td>' +
+        '<td>' +
+            '<button class="btn btn-sm btn-info mr-1" onclick="editResult(' + result.id + ')" title="编辑">' +
+                '<i class="fas fa-edit"></i>' +
+            '</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="deleteResult(' + result.id + ')" title="删除">' +
+                '<i class="fas fa-trash"></i>' +
+            '</button>' +
+        '</td>' +
+    '</tr>';
+}
+
+// 添加结果
+function addResult(event) {
+    event.preventDefault();
+    var $form = $('#addResultForm');
+    var formData = serializeForm($form);
+    
+    $.ajax({
+        url: '/api/test-results/',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#addResultModal').modal('hide');
+        $form[0].reset();
+        showMessage('成功', '检测结果添加成功！', 'success');
+        loadResults();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '添加失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 编辑结果
+function editResult(id) {
+    currentEditId = id;
+    
+    $.get('/api/test-results/' + id)
+        .done(function(result) {
+            // 先加载批次列表
+            $.get('/api/batches/')
+                .done(function(batches) {
+                    var options = '<option value="">请选择批次</option>';
+                    batches.forEach(function(batch) {
+                        var selected = batch.id === result.batch_id ? ' selected' : '';
+                        var label = batch.batch_number;
+                        options += '<option value="' + batch.id + '"' + selected + '>' + escapeHtml(label) + '</option>';
+                    });
+                    $('#editBatchId').html(options);
+                    
+                    // 填充表单
+                    populateForm($('#editResultForm'), result);
+                    $('#editResultId').val(result.id);
+                    $('#editResultStatus').val(result.result);
+                    $('#editResultModal').modal('show');
+                });
+        })
+        .fail(function(xhr) {
+            var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+                ? xhr.responseJSON.detail 
+                : '获取结果信息失败';
+            showMessage('错误', errorMsg, 'error');
+        });
+}
+
+// 更新结果
+function updateResult(event) {
+    event.preventDefault();
+    var $form = $('#editResultForm');
+    var formData = serializeForm($form);
+    var id = formData.id;
+    delete formData.id;
+    
+    $.ajax({
+        url: '/api/test-results/' + id,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#editResultModal').modal('hide');
+        showMessage('成功', '检测结果更新成功！', 'success');
+        loadResults();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '更新失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 删除结果
+function deleteResult(id) {
+    deleteById('/api/test-results', id, '检测结果', loadResults);
+}
+
+// 重置表单提交按钮
+function resetFormSubmitBtn($form) {
+    var $submitBtn = $form.find('[type="submit"]');
+    $submitBtn.prop('disabled', false);
+    $submitBtn.html('<i class="fas fa-save mr-1"></i>保存');
+}
+
+// HTML转义
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

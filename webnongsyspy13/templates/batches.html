@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面标题 -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-boxes text-success mr-2"></i>批次管理
+    </h2>
+    <button class="btn btn-success" data-toggle="modal" data-target="#addBatchModal">
+        <i class="fas fa-plus mr-1"></i>添加批次
+    </button>
+</div>
+
+<!-- 搜索和筛选 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group mb-0">
+                    <select class="form-control" id="filterProduct" onchange="loadBatches()">
+                        <option value="">所有产品</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchBatchNumber" placeholder="搜索批次编号...">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-success" type="button" onclick="searchBatch()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-right">
+                <button class="btn btn-outline-secondary" onclick="loadBatches()">
+                    <i class="fas fa-sync-alt mr-1"></i>刷新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 批次列表 -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">批次列表</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>批次编号</th>
+                        <th>产品名称</th>
+                        <th>数量</th>
+                        <th>种植日期</th>
+                        <th>收获日期</th>
+                        <th>二维码</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="batchTableBody">
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <span class="loading-spinner"></span> 加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加批次模态框 -->
+<div class="modal fade" id="addBatchModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle text-success mr-2"></i>添加新批次
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="addBatchForm" onsubmit="return addBatch(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="addBatchNumber">批次编号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="addBatchNumber" name="batch_number" required placeholder="例如：20240501-001">
+                    </div>
+                    <div class="form-group">
+                        <label for="addProductId">关联产品 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="addProductId" name="product_id" required>
+                            <option value="">请选择产品</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addQuantity">数量</label>
+                            <input type="number" step="0.01" class="form-control" id="addQuantity" name="quantity" placeholder="数量">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addUnit">单位</label>
+                            <select class="form-control" id="addUnit" name="unit">
+                                <option value="公斤">公斤</option>
+                                <option value="吨">吨</option>
+                                <option value="个">个</option>
+                                <option value="箱">箱</option>
+                                <option value="袋">袋</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addPlantingDate">种植开始日期</label>
+                            <input type="date" class="form-control" id="addPlantingDate" name="planting_date">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addHarvestDate">收获日期</label>
+                            <input type="date" class="form-control" id="addHarvestDate" name="harvest_date">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save mr-1"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑批次模态框 -->
+<div class="modal fade" id="editBatchModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit text-info mr-2"></i>编辑批次
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editBatchForm" onsubmit="return updateBatch(event)">
+                <input type="hidden" id="editBatchId" name="id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editBatchNumber">批次编号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editBatchNumber" name="batch_number" required placeholder="例如：20240501-001">
+                    </div>
+                    <div class="form-group">
+                        <label for="editProductId">关联产品 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="editProductId" name="product_id" required>
+                            <option value="">请选择产品</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editQuantity">数量</label>
+                            <input type="number" step="0.01" class="form-control" id="editQuantity" name="quantity" placeholder="数量">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editUnit">单位</label>
+                            <select class="form-control" id="editUnit" name="unit">
+                                <option value="公斤">公斤</option>
+                                <option value="吨">吨</option>
+                                <option value="个">个</option>
+                                <option value="箱">箱</option>
+                                <option value="袋">袋</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editPlantingDate">种植开始日期</label>
+                            <input type="date" class="form-control" id="editPlantingDate" name="planting_date">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editHarvestDate">收获日期</label>
+                            <input type="date" class="form-control" id="editHarvestDate" name="harvest_date">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save mr-1"></i>更新
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 二维码详情模态框 -->
+<div class="modal fade" id="qrcodeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-qrcode text-success mr-2"></i>批次二维码
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="qrcode-display">
+                    <img id="qrcodeImage" src="" alt="二维码" class="img-fluid">
+                </div>
+                <div class="mt-3">
+                    <p class="text-muted mb-1">批次编号：<strong id="qrcodeBatchNumber"></strong></p>
+                    <p class="text-muted">溯源链接：</p>
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" id="qrcodeUrl" readonly>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-success" type="button" onclick="copyQrcodeUrl()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var currentEditId = null;
+
+$(document).ready(function() {
+    loadProductsForSelect();
+    loadBatches();
+});
+
+// 加载产品到下拉选择框
+function loadProductsForSelect() {
+    $.get('/api/products/')
+        .done(function(products) {
+            var options = '<option value="">所有产品</option>';
+            var addOptions = '<option value="">请选择产品</option>';
+            
+            products.forEach(function(product) {
+                options += '<option value="' + product.id + '">' + escapeHtml(product.name) + '</option>';
+                addOptions += '<option value="' + product.id + '">' + escapeHtml(product.name) + '</option>';
+            });
+            
+            $('#filterProduct').html(options);
+            $('#addProductId').html(addOptions);
+        })
+        .fail(function() {
+            console.error('加载产品列表失败');
+        });
+}
+
+// 加载批次列表
+function loadBatches() {
+    var productId = $('#filterProduct').val();
+    var url = '/api/batches/';
+    if (productId) {
+        url += '?product_id=' + productId;
+    }
+    
+    loadTableData(url, '#batchTableBody', renderBatchRow);
+}
+
+// 渲染批次行
+function renderBatchRow(batch, index) {
+    var qrcodeHtml = '-';
+    if (batch.qrcode_path) {
+        qrcodeHtml = '<button class="btn btn-sm btn-outline-success" onclick="showQrcode(\'' + 
+            escapeHtml(batch.qrcode_path) + '\', \'' + escapeHtml(batch.batch_number) + '\', \'' + 
+            escapeHtml(batch.qrcode_content || '') + '\')" title="查看二维码">' +
+            '<i class="fas fa-qrcode"></i>' +
+        '</button>';
+    }
+    
+    return '<tr>' +
+        '<td>' + batch.id + '</td>' +
+        '<td><strong>' + escapeHtml(batch.batch_number) + '</strong></td>' +
+        '<td>' + escapeHtml((batch.product && batch.product.name) || '-') + '</td>' +
+        '<td>' + (batch.quantity || '-') + ' ' + escapeHtml(batch.unit || '') + '</td>' +
+        '<td>' + formatDate(batch.planting_date) + '</td>' +
+        '<td>' + formatDate(batch.harvest_date) + '</td>' +
+        '<td>' + qrcodeHtml + '</td>' +
+        '<td>' + formatDateTime(batch.created_at) + '</td>' +
+        '<td>' +
+            '<a href="/traceability/view/' + encodeURIComponent(batch.batch_number) + '" class="btn btn-sm btn-primary mr-1" title="查看溯源">' +
+                '<i class="fas fa-search"></i>' +
+            '</a>' +
+            '<button class="btn btn-sm btn-info mr-1" onclick="editBatch(' + batch.id + ')" title="编辑">' +
+                '<i class="fas fa-edit"></i>' +
+            '</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="deleteBatch(' + batch.id + ')" title="删除">' +
+                '<i class="fas fa-trash"></i>' +
+            '</button>' +
+        '</td>' +
+    '</tr>';
+}
+
+// 搜索批次
+function searchBatch() {
+    var batchNumber = $('#searchBatchNumber').val().trim();
+    if (batchNumber) {
+        $.get('/api/batches/number/' + encodeURIComponent(batchNumber))
+            .done(function(batch) {
+                var html = renderBatchRow(batch, 0);
+                $('#batchTableBody').html(html);
+            })
+            .fail(function(xhr) {
+                var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+                    ? xhr.responseJSON.detail 
+                    : '未找到该批次';
+                $('#batchTableBody').html(
+                    '<tr><td colspan="9" class="text-center text-warning">' +
+                    '<i class="fas fa-exclamation-circle mr-2"></i>' + errorMsg +
+                    '</td></tr>'
+                );
+            });
+    } else {
+        loadBatches();
+    }
+}
+
+// 添加批次
+function addBatch(event) {
+    event.preventDefault();
+    var $form = $('#addBatchForm');
+    var formData = serializeForm($form);
+    
+    $.ajax({
+        url: '/api/batches/',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#addBatchModal').modal('hide');
+        $form[0].reset();
+        showMessage('成功', '批次添加成功！已自动生成二维码。', 'success');
+        loadBatches();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '添加失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 编辑批次
+function editBatch(id) {
+    currentEditId = id;
+    
+    $.get('/api/batches/' + id)
+        .done(function(batch) {
+            // 先加载产品列表
+            $.get('/api/products/')
+                .done(function(products) {
+                    var options = '<option value="">请选择产品</option>';
+                    products.forEach(function(product) {
+                        var selected = product.id === batch.product_id ? ' selected' : '';
+                        options += '<option value="' + product.id + '"' + selected + '>' + escapeHtml(product.name) + '</option>';
+                    });
+                    $('#editProductId').html(options);
+                    
+                    // 填充表单
+                    populateForm($('#editBatchForm'), batch);
+                    $('#editBatchId').val(batch.id);
+                    $('#editBatchModal').modal('show');
+                });
+        })
+        .fail(function(xhr) {
+            var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+                ? xhr.responseJSON.detail 
+                : '获取批次信息失败';
+            showMessage('错误', errorMsg, 'error');
+        });
+}
+
+// 更新批次
+function updateBatch(event) {
+    event.preventDefault();
+    var $form = $('#editBatchForm');
+    var formData = serializeForm($form);
+    var id = formData.id;
+    delete formData.id;
+    
+    $.ajax({
+        url: '/api/batches/' + id,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#editBatchModal').modal('hide');
+        showMessage('成功', '批次更新成功！', 'success');
+        loadBatches();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '更新失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 删除批次
+function deleteBatch(id) {
+    deleteById('/api/batches', id, '批次', loadBatches);
+}
+
+// 显示二维码
+function showQrcode(qrcodePath, batchNumber, qrcodeContent) {
+    $('#qrcodeImage').attr('src', qrcodePath);
+    $('#qrcodeBatchNumber').text(batchNumber);
+    $('#qrcodeUrl').val(qrcodeContent);
+    $('#qrcodeModal').modal('show');
+}
+
+// 复制二维码链接
+function copyQrcodeUrl() {
+    var url = $('#qrcodeUrl').val();
+    copyToClipboard(url);
+}
+
+// 重置表单提交按钮
+function resetFormSubmitBtn($form) {
+    var $submitBtn = $form.find('[type="submit"]');
+    $submitBtn.prop('disabled', false);
+    $submitBtn.html('<i class="fas fa-save mr-1"></i>保存');
+}
+
+// HTML转义
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

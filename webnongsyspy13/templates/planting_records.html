@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面标题 -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-seedling text-success mr-2"></i>种植记录管理
+    </h2>
+    <button class="btn btn-success" data-toggle="modal" data-target="#addRecordModal">
+        <i class="fas fa-plus mr-1"></i>添加记录
+    </button>
+</div>
+
+<!-- 搜索和筛选 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group mb-0">
+                    <select class="form-control" id="filterBatch" onchange="loadRecords()">
+                        <option value="">所有批次</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group mb-0">
+                    <select class="form-control" id="filterOperation" onchange="loadRecords()">
+                        <option value="">所有操作类型</option>
+                        <option value="播种">播种</option>
+                        <option value="施肥">施肥</option>
+                        <option value="浇水">浇水</option>
+                        <option value="除草">除草</option>
+                        <option value="病虫害防治">病虫害防治</option>
+                        <option value="收获">收获</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 text-right">
+                <button class="btn btn-outline-secondary" onclick="loadRecords()">
+                    <i class="fas fa-sync-alt mr-1"></i>刷新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 种植记录列表 -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">种植记录列表</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>批次编号</th>
+                        <th>记录日期</th>
+                        <th>操作类型</th>
+                        <th>操作人员</th>
+                        <th>描述</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="recordTableBody">
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <span class="loading-spinner"></span> 加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加记录模态框 -->
+<div class="modal fade" id="addRecordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle text-success mr-2"></i>添加种植记录
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="addRecordForm" onsubmit="return addRecord(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="addBatchId">关联批次 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="addBatchId" name="batch_id" required>
+                            <option value="">请选择批次</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="addRecordDate">记录日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="addRecordDate" name="record_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="addOperationType">操作类型 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="addOperationType" name="operation_type" required>
+                            <option value="">请选择操作类型</option>
+                            <option value="播种">播种</option>
+                            <option value="施肥">施肥</option>
+                            <option value="浇水">浇水</option>
+                            <option value="除草">除草</option>
+                            <option value="病虫害防治">病虫害防治</option>
+                            <option value="收获">收获</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="addOperator">操作人员</label>
+                        <input type="text" class="form-control" id="addOperator" name="operator" placeholder="请输入操作人员">
+                    </div>
+                    <div class="form-group">
+                        <label for="addDescription">详细描述</label>
+                        <textarea class="form-control" id="addDescription" name="description" rows="3" placeholder="请输入详细描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="addRemarks">备注</label>
+                        <textarea class="form-control" id="addRemarks" name="remarks" rows="2" placeholder="请输入备注"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save mr-1"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑记录模态框 -->
+<div class="modal fade" id="editRecordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit text-info mr-2"></i>编辑种植记录
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editRecordForm" onsubmit="return updateRecord(event)">
+                <input type="hidden" id="editRecordId" name="id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editBatchId">关联批次 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="editBatchId" name="batch_id" required>
+                            <option value="">请选择批次</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editRecordDate">记录日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="editRecordDate" name="record_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editOperationType">操作类型 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="editOperationType" name="operation_type" required>
+                            <option value="">请选择操作类型</option>
+                            <option value="播种">播种</option>
+                            <option value="施肥">施肥</option>
+                            <option value="浇水">浇水</option>
+                            <option value="除草">除草</option>
+                            <option value="病虫害防治">病虫害防治</option>
+                            <option value="收获">收获</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editOperator">操作人员</label>
+                        <input type="text" class="form-control" id="editOperator" name="operator" placeholder="请输入操作人员">
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescription">详细描述</label>
+                        <textarea class="form-control" id="editDescription" name="description" rows="3" placeholder="请输入详细描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editRemarks">备注</label>
+                        <textarea class="form-control" id="editRemarks" name="remarks" rows="2" placeholder="请输入备注"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save mr-1"></i>更新
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var currentEditId = null;
+
+$(document).ready(function() {
+    loadBatchesForSelect();
+    loadRecords();
+});
+
+// 加载批次到下拉选择框
+function loadBatchesForSelect() {
+    $.get('/api/batches/')
+        .done(function(batches) {
+            var filterOptions = '<option value="">所有批次</option>';
+            var addOptions = '<option value="">请选择批次</option>';
+            
+            batches.forEach(function(batch) {
+                var label = batch.batch_number;
+                filterOptions += '<option value="' + batch.id + '">' + escapeHtml(label) + '</option>';
+                addOptions += '<option value="' + batch.id + '">' + escapeHtml(label) + '</option>';
+            });
+            
+            $('#filterBatch').html(filterOptions);
+            $('#addBatchId').html(addOptions);
+        })
+        .fail(function() {
+            console.error('加载批次列表失败');
+        });
+}
+
+// 加载记录列表
+function loadRecords() {
+    loadTableData('/api/planting-records/', '#recordTableBody', renderRecordRow);
+}
+
+// 渲染记录行
+function renderRecordRow(record, index) {
+    return '<tr>' +
+        '<td>' + record.id + '</td>' +
+        '<td>' + (record.batch_id || '-') + '</td>' +
+        '<td>' + formatDate(record.record_date) + '</td>' +
+        '<td><span class="badge badge-info">' + escapeHtml(record.operation_type) + '</span></td>' +
+        '<td>' + escapeHtml(record.operator || '-') + '</td>' +
+        '<td>' + (record.description ? escapeHtml(record.description.substring(0, 30)) + (record.description.length > 30 ? '...' : '') : '-') + '</td>' +
+        '<td>' + formatDateTime(record.created_at) + '</td>' +
+        '<td>' +
+            '<button class="btn btn-sm btn-info mr-1" onclick="editRecord(' + record.id + ')" title="编辑">' +
+                '<i class="fas fa-edit"></i>' +
+            '</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="deleteRecord(' + record.id + ')" title="删除">' +
+                '<i class="fas fa-trash"></i>' +
+            '</button>' +
+        '</td>' +
+    '</tr>';
+}
+
+// 添加记录
+function addRecord(event) {
+    event.preventDefault();
+    var $form = $('#addRecordForm');
+    var formData = serializeForm($form);
+    
+    $.ajax({
+        url: '/api/planting-records/',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#addRecordModal').modal('hide');
+        $form[0].reset();
+        showMessage('成功', '种植记录添加成功！', 'success');
+        loadRecords();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '添加失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 编辑记录
+function editRecord(id) {
+    currentEditId = id;
+    
+    $.get('/api/planting-records/' + id)
+        .done(function(record) {
+            // 先加载批次列表
+            $.get('/api/batches/')
+                .done(function(batches) {
+                    var options = '<option value="">请选择批次</option>';
+                    batches.forEach(function(batch) {
+                        var selected = batch.id === record.batch_id ? ' selected' : '';
+                        var label = batch.batch_number;
+                        options += '<option value="' + batch.id + '"' + selected + '>' + escapeHtml(label) + '</option>';
+                    });
+                    $('#editBatchId').html(options);
+                    
+                    // 填充表单
+                    populateForm($('#editRecordForm'), record);
+                    $('#editRecordId').val(record.id);
+                    $('#editRecordModal').modal('show');
+                });
+        })
+        .fail(function(xhr) {
+            var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+                ? xhr.responseJSON.detail 
+                : '获取记录信息失败';
+            showMessage('错误', errorMsg, 'error');
+        });
+}
+
+// 更新记录
+function updateRecord(event) {
+    event.preventDefault();
+    var $form = $('#editRecordForm');
+    var formData = serializeForm($form);
+    var id = formData.id;
+    delete formData.id;
+    
+    $.ajax({
+        url: '/api/planting-records/' + id,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#editRecordModal').modal('hide');
+        showMessage('成功', '种植记录更新成功！', 'success');
+        loadRecords();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '更新失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 删除记录
+function deleteRecord(id) {
+    deleteById('/api/planting-records', id, '种植记录', loadRecords);
+}
+
+// 重置表单提交按钮
+function resetFormSubmitBtn($form) {
+    var $submitBtn = $form.find('[type="submit"]');
+    $submitBtn.prop('disabled', false);
+    $submitBtn.html('<i class="fas fa-save mr-1"></i>保存');
+}
+
+// HTML转义
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

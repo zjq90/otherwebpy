@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-seedling mr-2"></i>农产品溯源系统
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home mr-1"></i>首页
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="manageDropdown" role="button" data-toggle="dropdown">
+                            <i class="fas fa-cogs mr-1"></i>基础管理
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="/products">
+                                <i class="fas fa-carrot mr-2"></i>产品管理
+                            </a>
+                            <a class="dropdown-item" href="/batches">
+                                <i class="fas fa-boxes mr-2"></i>批次管理
+                            </a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="traceDropdown" role="button" data-toggle="dropdown">
+                            <i class="fas fa-history mr-1"></i>溯源管理
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="/planting-records">
+                                <i class="fas fa-seedling mr-2"></i>种植记录
+                            </a>
+                            <a class="dropdown-item" href="/agrochemical-usages">
+                                <i class="fas fa-flask mr-2"></i>农资使用
+                            </a>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="certDropdown" role="button" data-toggle="dropdown">
+                            <i class="fas fa-certificate mr-1"></i>检测认证
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="/test-results">
+                                <i class="fas fa-vial mr-2"></i>检测结果
+                            </a>
+                            <a class="dropdown-item" href="/certificates">
+                                <i class="fas fa-award mr-2"></i>认证证书
+                            </a>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/traceability">
+                            <i class="fas fa-search mr-1"></i>溯源查询
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="container mt-4 mb-5">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="fas fa-seedling mr-2"></i>
+                农产品溯源与认证管理系统 v1.0.0
+            </p>
+            <p class="mb-0 text-muted mt-2">
+                &copy; 2024 农产品溯源系统 - 保障食品安全，从源头开始
+            </p>
+        </div>
+    </footer>
+
+    <!-- 提示消息模态框 -->
+    <div class="modal fade" id="messageModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messageModalTitle">提示</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="messageModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/static/js/common.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

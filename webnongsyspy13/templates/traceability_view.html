@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农产品溯源详情 - {{ batch_number }}</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* 自定义样式 */
+        body {
+            background-color: #f8f9fa;
+            padding-bottom: 60px;
+        }
+        .traceability-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 20px;
+        }
+        .info-card {
+            margin-bottom: 20px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .info-card .card-header {
+            background-color: #fff;
+            border-bottom: 2px solid #28a745;
+            font-weight: bold;
+            padding: 15px 20px;
+        }
+        .info-item {
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .info-value {
+            color: #212529;
+            font-weight: 500;
+        }
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 5px 12px;
+        }
+        .loading-container {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .error-container {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #343a40;
+            color: #fff;
+            padding: 15px 0;
+            text-align: center;
+        }
+        .table-responsive {
+            margin-top: 10px;
+        }
+        .badge-success { background-color: #28a745; }
+        .badge-danger { background-color: #dc3545; }
+        .badge-info { background-color: #17a2b8; }
+        .badge-primary { background-color: #007bff; }
+        .qrcode-container {
+            text-align: center;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        .qrcode-container img {
+            max-width: 120px;
+            height: auto;
+        }
+        .section-icon {
+            color: #28a745;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <header class="traceability-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3 class="mb-0">
+                        <i class="fas fa-seedling mr-2"></i>农产品溯源详情
+                    </h3>
+                    <p class="mb-0 mt-2 text-white-50">
+                        批次编号：<span id="displayBatchNumber">{{ batch_number }}</span>
+                    </p>
+                </div>
+                <div class="col-md-4 text-right d-none d-md-block">
+                    <i class="fas fa-qrcode" style="font-size: 48px; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容 -->
+    <main class="container">
+        <!-- 加载状态 -->
+        <div id="loadingArea" class="loading-container">
+            <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+                <span class="sr-only">加载中...</span>
+            </div>
+            <p class="mt-3 text-muted">正在加载溯源信息...</p>
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="errorArea" class="error-container" style="display: none;">
+            <i class="fas fa-exclamation-triangle text-warning" style="font-size: 64px;"></i>
+            <h4 class="mt-3 text-muted">未找到该批次的溯源信息</h4>
+            <p class="text-muted mt-2">请检查批次编号是否正确</p>
+            <p class="text-danger" id="errorMessage"></p>
+        </div>
+
+        <!-- 溯源详情 -->
+        <div id="traceabilityContent" style="display: none;">
+            <!-- 产品基本信息 -->
+            <div class="card info-card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle section-icon"></i>产品基本信息
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-6 col-md-4 info-item">
+                                    <div class="info-label">产品名称</div>
+                                    <div class="info-value" id="viewProductName">-</div>
+                                </div>
+                                <div class="col-6 col-md-4 info-item">
+                                    <div class="info-label">产品类别</div>
+                                    <div class="info-value" id="viewProductCategory">-</div>
+                                </div>
+                                <div class="col-6 col-md-4 info-item">
+                                    <div class="info-label">产地</div>
+                                    <div class="info-value" id="viewOrigin">-</div>
+                                </div>
+                                <div class="col-6 col-md-4 info-item">
+                                    <div class="info-label">供应商</div>
+                                    <div class="info-value" id="viewSupplier">-</div>
+                                </div>
+                                <div class="col-6 col-md-4 info-item">
+                                    <div class="info-label">批次数量</div>
+                                    <div class="info-value" id="viewQuantity">-</div>
+                                </div>
+                                <div class="col-6 col-md-4 info-item">
+                                    <div class="info-label">种植日期</div>
+                                    <div class="info-value" id="viewPlantingDate">-</div>
+                                </div>
+                                <div class="col-6 col-md-4 info-item">
+                                    <div class="info-label">收获日期</div>
+                                    <div class="info-value" id="viewHarvestDate">-</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="qrcode-container">
+                                <p class="text-muted small mb-2">溯源二维码</p>
+                                <img id="viewQrcode" src="" alt="二维码" style="display: none;">
+                                <p id="viewNoQrcode" class="text-muted small">暂无二维码</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 种植记录 -->
+            <div class="card info-card" id="plantingCard" style="display: none;">
+                <div class="card-header">
+                    <i class="fas fa-seedling section-icon"></i>种植记录
+                    <span class="badge badge-success status-badge ml-2" id="plantingCountBadge">0</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>日期</th>
+                                    <th>操作类型</th>
+                                    <th>详细描述</th>
+                                    <th>操作人员</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plantingRecordsList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 农资使用记录 -->
+            <div class="card info-card" id="usageCard" style="display: none;">
+                <div class="card-header">
+                    <i class="fas fa-flask section-icon"></i>农资使用记录
+                    <span class="badge badge-info status-badge ml-2" id="usageCountBadge">0</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>日期</th>
+                                    <th>类型</th>
+                                    <th>名称</th>
+                                    <th>使用量</th>
+                                    <th>安全间隔期</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usageRecordsList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 检测结果 -->
+            <div class="card info-card" id="testCard" style="display: none;">
+                <div class="card-header">
+                    <i class="fas fa-vial section-icon"></i>检测结果
+                    <span class="badge badge-warning status-badge ml-2" id="testCountBadge">0</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>检测日期</th>
+                                    <th>检测类型</th>
+                                    <th>检测参数</th>
+                                    <th>检测值</th>
+                                    <th>标准限值</th>
+                                    <th>结果</th>
+                                </tr>
+                            </thead>
+                            <tbody id="testResultsList"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 检测结果统计 -->
+            <div class="card info-card" id="statCard" style="display: none;">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie section-icon"></i>检测结果统计
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 col-md-3">
+                            <h6 class="text-muted">总检测项</h6>
+                            <h3 class="font-weight-bold text-primary" id="statViewTotal">0</h3>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <h6 class="text-muted">合格项</h6>
+                            <h3 class="font-weight-bold text-success" id="statViewPassed">0</h3>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <h6 class="text-muted">不合格项</h6>
+                            <h3 class="font-weight-bold text-danger" id="statViewFailed">0</h3>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <h6 class="text-muted">合格率</h6>
+                            <h3 class="font-weight-bold text-info" id="statViewRate">-</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p class="mb-0">
+            <i class="fas fa-seedling mr-1"></i>
+            农产品溯源系统 - 保障食品安全，从源头开始
+        </p>
+    </footer>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    $(document).ready(function() {
+        var batchNumber = '{{ batch_number }}';
+        if (batchNumber) {
+            loadTraceabilityData(batchNumber);
+        }
+    });
+
+    // 加载溯源数据
+    function loadTraceabilityData(batchNumber) {
+        $.get('/api/traceability/batch/' + encodeURIComponent(batchNumber))
+            .done(function(data) {
+                $('#loadingArea').hide();
+                if (data && data.batch) {
+                    displayData(data);
+                    $('#traceabilityContent').show();
+                } else {
+                    $('#errorArea').show();
+                }
+            })
+            .fail(function(xhr) {
+                $('#loadingArea').hide();
+                $('#errorArea').show();
+                var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+                    ? xhr.responseJSON.detail 
+                    : '查询失败';
+                $('#errorMessage').text(errorMsg);
+            });
+    }
+
+    // 显示数据
+    function displayData(data) {
+        var batch = data.batch;
+        var product = data.product;
+        var plantingRecords = data.planting_records || [];
+        var agrochemicalUsages = data.agrochemical_usages || [];
+        var testResults = data.test_results || [];
+
+        // 产品信息
+        $('#viewProductName').text(product ? product.name : '-');
+        $('#viewProductCategory').text(product ? (product.category || '-') : '-');
+        $('#viewOrigin').text(product ? (product.origin || '-') : '-');
+        $('#viewSupplier').text(product ? (product.supplier || '-') : '-');
+        $('#viewQuantity').text((batch.quantity || '-') + (batch.unit ? ' ' + batch.unit : ''));
+        $('#viewPlantingDate').text(batch.planting_date ? formatDate(batch.planting_date) : '-');
+        $('#viewHarvestDate').text(batch.harvest_date ? formatDate(batch.harvest_date) : '-');
+
+        // 二维码
+        if (batch.qrcode_path) {
+            $('#viewQrcode').attr('src', batch.qrcode_path).show();
+            $('#viewNoQrcode').hide();
+        }
+
+        // 种植记录
+        if (plantingRecords.length > 0) {
+            $('#plantingCard').show();
+            $('#plantingCountBadge').text(plantingRecords.length);
+            var plantingHtml = '';
+            plantingRecords.forEach(function(record) {
+                plantingHtml += '<tr>';
+                plantingHtml += '<td>' + formatDate(record.record_date) + '</td>';
+                plantingHtml += '<td>' + escapeHtml(record.operation_type) + '</td>';
+                plantingHtml += '<td>' + escapeHtml(record.description || '-') + '</td>';
+                plantingHtml += '<td>' + escapeHtml(record.operator || '-') + '</td>';
+                plantingHtml += '</tr>';
+            });
+            $('#plantingRecordsList').html(plantingHtml);
+        }
+
+        // 农资使用记录
+        if (agrochemicalUsages.length > 0) {
+            $('#usageCard').show();
+            $('#usageCountBadge').text(agrochemicalUsages.length);
+            var usageHtml = '';
+            agrochemicalUsages.forEach(function(usage) {
+                usageHtml += '<tr>';
+                usageHtml += '<td>' + formatDate(usage.usage_date) + '</td>';
+                usageHtml += '<td>' + escapeHtml(usage.chemical_type) + '</td>';
+                usageHtml += '<td>' + escapeHtml(usage.chemical_name) + '</td>';
+                usageHtml += '<td>' + (usage.quantity || '-') + (usage.unit ? ' ' + usage.unit : '') + '</td>';
+                usageHtml += '<td>' + (usage.safety_interval ? usage.safety_interval + '天' : '-') + '</td>';
+                usageHtml += '</tr>';
+            });
+            $('#usageRecordsList').html(usageHtml);
+        }
+
+        // 检测结果
+        if (testResults.length > 0) {
+            $('#testCard').show();
+            $('#statCard').show();
+            $('#testCountBadge').text(testResults.length);
+            
+            var testHtml = '';
+            var passed = 0;
+            var failed = 0;
+            
+            testResults.forEach(function(test) {
+                testHtml += '<tr>';
+                testHtml += '<td>' + formatDate(test.test_date) + '</td>';
+                testHtml += '<td><span class="badge ' + getTestTypeBadgeClass(test.test_type) + '">' + escapeHtml(test.test_type) + '</span></td>';
+                testHtml += '<td>' + escapeHtml(test.parameter_name) + '</td>';
+                testHtml += '<td>' + escapeHtml(test.test_value || '-') + '</td>';
+                testHtml += '<td>' + escapeHtml(test.limit_value || '-') + '</td>';
+                testHtml += '<td><span class="badge ' + getResultBadgeClass(test.result) + '">' + escapeHtml(test.result) + '</span></td>';
+                testHtml += '</tr>';
+                
+                if (test.result === '合格') passed++;
+                else if (test.result === '不合格') failed++;
+            });
+            
+            $('#testResultsList').html(testHtml);
+            
+            // 统计
+            var total = testResults.length;
+            $('#statViewTotal').text(total);
+            $('#statViewPassed').text(passed);
+            $('#statViewFailed').text(failed);
+            $('#statViewRate').text(total > 0 ? Math.round((passed / total) * 100) + '%' : '-');
+        }
+    }
+
+    // 格式化日期
+    function formatDate(date) {
+        if (!date) return '-';
+        var d = new Date(date);
+        var year = d.getFullYear();
+        var month = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+    }
+
+    // HTML转义
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // 获取检测类型徽章类
+    function getTestTypeBadgeClass(type) {
+        switch(type) {
+            case '自检': return 'badge-info';
+            case '第三方检测': return 'badge-primary';
+            default: return 'badge-secondary';
+        }
+    }
+
+    // 获取结果徽章类
+    function getResultBadgeClass(result) {
+        switch(result) {
+            case '合格': return 'badge-success';
+            case '不合格': return 'badge-danger';
+            default: return 'badge-secondary';
+        }
+    }
+    </script>
+</body>
+</html>

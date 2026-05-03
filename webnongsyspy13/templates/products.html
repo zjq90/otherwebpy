@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面标题 -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-carrot text-success mr-2"></i>产品管理
+    </h2>
+    <button class="btn btn-success" data-toggle="modal" data-target="#addProductModal">
+        <i class="fas fa-plus mr-1"></i>添加产品
+    </button>
+</div>
+
+<!-- 搜索框 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchKeyword" placeholder="搜索产品名称、类别、产地...">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-success" type="button" onclick="searchProducts()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-right">
+                <button class="btn btn-outline-secondary" onclick="loadProducts()">
+                    <i class="fas fa-sync-alt mr-1"></i>刷新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 产品列表 -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">产品列表</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>产品名称</th>
+                        <th>产品类别</th>
+                        <th>产地</th>
+                        <th>供应商</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody">
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <span class="loading-spinner"></span> 加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加产品模态框 -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle text-success mr-2"></i>添加新产品
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="addProductForm" onsubmit="return addProduct(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="addName">产品名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="addName" name="name" required placeholder="请输入产品名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="addCategory">产品类别</label>
+                        <select class="form-control" id="addCategory" name="category">
+                            <option value="">请选择类别</option>
+                            <option value="蔬菜">蔬菜</option>
+                            <option value="水果">水果</option>
+                            <option value="谷物">谷物</option>
+                            <option value="肉类">肉类</option>
+                            <option value="水产">水产</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="addOrigin">产地</label>
+                        <input type="text" class="form-control" id="addOrigin" name="origin" placeholder="请输入产地">
+                    </div>
+                    <div class="form-group">
+                        <label for="addSupplier">供应商</label>
+                        <input type="text" class="form-control" id="addSupplier" name="supplier" placeholder="请输入供应商">
+                    </div>
+                    <div class="form-group">
+                        <label for="addDescription">产品描述</label>
+                        <textarea class="form-control" id="addDescription" name="description" rows="3" placeholder="请输入产品描述"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save mr-1"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑产品模态框 -->
+<div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit text-info mr-2"></i>编辑产品
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editProductForm" onsubmit="return updateProduct(event)">
+                <input type="hidden" id="editProductId" name="id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editName">产品名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editName" name="name" required placeholder="请输入产品名称">
+                    </div>
+                    <div class="form-group">
+                        <label for="editCategory">产品类别</label>
+                        <select class="form-control" id="editCategory" name="category">
+                            <option value="">请选择类别</option>
+                            <option value="蔬菜">蔬菜</option>
+                            <option value="水果">水果</option>
+                            <option value="谷物">谷物</option>
+                            <option value="肉类">肉类</option>
+                            <option value="水产">水产</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editOrigin">产地</label>
+                        <input type="text" class="form-control" id="editOrigin" name="origin" placeholder="请输入产地">
+                    </div>
+                    <div class="form-group">
+                        <label for="editSupplier">供应商</label>
+                        <input type="text" class="form-control" id="editSupplier" name="supplier" placeholder="请输入供应商">
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescription">产品描述</label>
+                        <textarea class="form-control" id="editDescription" name="description" rows="3" placeholder="请输入产品描述"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save mr-1"></i>更新
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var currentEditId = null;
+
+$(document).ready(function() {
+    loadProducts();
+});
+
+// 加载产品列表
+function loadProducts() {
+    loadTableData('/api/products/', '#productTableBody', renderProductRow);
+}
+
+// 渲染产品行
+function renderProductRow(product, index) {
+    return '<tr>' +
+        '<td>' + product.id + '</td>' +
+        '<td><strong>' + escapeHtml(product.name) + '</strong></td>' +
+        '<td><span class="badge badge-info">' + escapeHtml(product.category || '-') + '</span></td>' +
+        '<td>' + escapeHtml(product.origin || '-') + '</td>' +
+        '<td>' + escapeHtml(product.supplier || '-') + '</td>' +
+        '<td>' + formatDateTime(product.created_at) + '</td>' +
+        '<td>' +
+            '<button class="btn btn-sm btn-info mr-1" onclick="editProduct(' + product.id + ')" title="编辑">' +
+                '<i class="fas fa-edit"></i>' +
+            '</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="deleteProduct(' + product.id + ')" title="删除">' +
+                '<i class="fas fa-trash"></i>' +
+            '</button>' +
+        '</td>' +
+    '</tr>';
+}
+
+// 搜索产品
+function searchProducts() {
+    var keyword = $('#searchKeyword').val().trim();
+    if (keyword) {
+        loadTableData('/api/products/search/?keyword=' + encodeURIComponent(keyword), '#productTableBody', renderProductRow);
+    } else {
+        loadProducts();
+    }
+}
+
+// 添加产品
+function addProduct(event) {
+    event.preventDefault();
+    var $form = $('#addProductForm');
+    var formData = serializeForm($form);
+    
+    $.ajax({
+        url: '/api/products/',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#addProductModal').modal('hide');
+        $form[0].reset();
+        showMessage('成功', '产品添加成功！', 'success');
+        loadProducts();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '添加失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 编辑产品
+function editProduct(id) {
+    currentEditId = id;
+    
+    $.get('/api/products/' + id)
+        .done(function(product) {
+            $('#editProductId').val(product.id);
+            populateForm($('#editProductForm'), product);
+            $('#editProductModal').modal('show');
+        })
+        .fail(function(xhr) {
+            var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+                ? xhr.responseJSON.detail 
+                : '获取产品信息失败';
+            showMessage('错误', errorMsg, 'error');
+        });
+}
+
+// 更新产品
+function updateProduct(event) {
+    event.preventDefault();
+    var $form = $('#editProductForm');
+    var formData = serializeForm($form);
+    var id = formData.id;
+    delete formData.id;
+    
+    $.ajax({
+        url: '/api/products/' + id,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#editProductModal').modal('hide');
+        showMessage('成功', '产品更新成功！', 'success');
+        loadProducts();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '更新失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 删除产品
+function deleteProduct(id) {
+    deleteById('/api/products', id, '产品', loadProducts);
+}
+
+// 重置表单提交按钮
+function resetFormSubmitBtn($form) {
+    var $submitBtn = $form.find('[type="submit"]');
+    $submitBtn.prop('disabled', false);
+    $submitBtn.html('<i class="fas fa-save mr-1"></i>保存');
+}
+
+// HTML转义
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

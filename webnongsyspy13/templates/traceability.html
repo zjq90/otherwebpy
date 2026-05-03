@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面标题 -->
+<div class="page-header mb-4">
+    <h2>
+        <i class="fas fa-search mr-2"></i>溯源查询
+    </h2>
+    <p class="text-muted">输入批次编号或扫描二维码，查询农产品完整溯源信息</p>
+</div>
+
+<!-- 查询表单 -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-search mr-2"></i>查询条件
+        </h5>
+    </div>
+    <div class="card-body">
+        <form id="searchForm">
+            <div class="row align-items-end">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="batchNumber">批次编号</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="batchNumber" 
+                                   placeholder="请输入批次编号，如：BATCH20240101001" required>
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-search mr-1"></i>查询
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-right">
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        提示：消费者扫描产品二维码将自动跳转到溯源详情页面
+                    </p>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 查询结果区域 -->
+<div id="resultArea" style="display: none;">
+    <!-- 加载状态 -->
+    <div id="loadingArea" class="text-center py-5">
+        <div class="spinner-border text-success" role="status">
+            <span class="sr-only">加载中...</span>
+        </div>
+        <p class="mt-3 text-muted">正在查询溯源信息...</p>
+    </div>
+
+    <!-- 溯源详情 -->
+    <div id="traceabilityDetails" style="display: none;">
+        <!-- 批次和产品信息卡片 -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle mr-2"></i>产品与批次信息
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="120">产品名称：</th>
+                                <td id="resultProductName">-</td>
+                            </tr>
+                            <tr>
+                                <th>产品类别：</th>
+                                <td id="resultProductCategory">-</td>
+                            </tr>
+                            <tr>
+                                <th>产地：</th>
+                                <td id="resultOrigin">-</td>
+                            </tr>
+                            <tr>
+                                <th>供应商：</th>
+                                <td id="resultSupplier">-</td>
+                            </tr>
+                            <tr>
+                                <th>批次编号：</th>
+                                <td id="resultBatchNumber">-</td>
+                            </tr>
+                            <tr>
+                                <th>数量：</th>
+                                <td id="resultQuantity">-</td>
+                            </tr>
+                            <tr>
+                                <th>种植日期：</th>
+                                <td id="resultPlantingDate">-</td>
+                            </tr>
+                            <tr>
+                                <th>收获日期：</th>
+                                <td id="resultHarvestDate">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="border rounded p-3 bg-light">
+                            <p class="text-muted mb-2">溯源二维码</p>
+                            <img id="resultQrcode" src="" alt="二维码" class="img-fluid" 
+                                 style="max-width: 150px; display: none;">
+                            <p id="noQrcode" class="text-muted small mt-2">暂无二维码</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 种植记录 -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-seedling mr-2"></i>种植记录
+                    <span class="badge badge-light ml-2" id="plantingCount">0</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>记录日期</th>
+                                <th>操作类型</th>
+                                <th>详细描述</th>
+                                <th>操作人员</th>
+                                <th>备注</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plantingRecordsBody">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">暂无种植记录</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 农资使用记录 -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-flask mr-2"></i>农资使用记录
+                    <span class="badge badge-light ml-2" id="usageCount">0</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>使用日期</th>
+                                <th>农资类型</th>
+                                <th>农资名称</th>
+                                <th>使用量</th>
+                                <th>使用方法</th>
+                                <th>安全间隔期</th>
+                                <th>操作人员</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usageRecordsBody">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">暂无农资使用记录</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 检测结果 -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-vial mr-2"></i>检测结果
+                    <span class="badge badge-light ml-2" id="testCount">0</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>检测日期</th>
+                                <th>检测类型</th>
+                                <th>检测机构</th>
+                                <th>检测项目</th>
+                                <th>检测参数</th>
+                                <th>检测值</th>
+                                <th>标准限值</th>
+                                <th>结果</th>
+                                <th>报告编号</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testResultsBody">
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">暂无检测结果</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 检测结果统计 -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie mr-2"></i>检测结果统计
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card text-center border-left-primary">
+                            <div class="card-body">
+                                <h6 class="text-muted">总检测项</h6>
+                                <h3 class="font-weight-bold text-primary" id="statTotal">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center border-left-success">
+                            <div class="card-body">
+                                <h6 class="text-muted">合格项</h6>
+                                <h3 class="font-weight-bold text-success" id="statPassed">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center border-left-danger">
+                            <div class="card-body">
+                                <h6 class="text-muted">不合格项</h6>
+                                <h3 class="font-weight-bold text-danger" id="statFailed">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center border-left-info">
+                            <div class="card-body">
+                                <h6 class="text-muted">合格率</h6>
+                                <h3 class="font-weight-bold text-info" id="statRate">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 无结果提示 -->
+<div id="noResultArea" class="card" style="display: none;">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-search text-muted" style="font-size: 64px;"></i>
+        <h4 class="mt-3 text-muted">未找到该批次的溯源信息</h4>
+        <p class="text-muted mt-2">请检查批次编号是否正确，或联系管理员确认数据是否已录入</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 绑定查询表单提交事件
+    $('#searchForm').on('submit', function(e) {
+        e.preventDefault();
+        var batchNumber = $('#batchNumber').val().trim();
+        if (batchNumber) {
+            searchTraceability(batchNumber);
+        }
+    });
+});
+
+// 查询溯源信息
+function searchTraceability(batchNumber) {
+    // 显示结果区域和加载状态
+    $('#resultArea').show();
+    $('#noResultArea').hide();
+    $('#loadingArea').show();
+    $('#traceabilityDetails').hide();
+
+    // 调用API查询
+    $.get('/api/traceability/batch/' + encodeURIComponent(batchNumber))
+        .done(function(data) {
+            $('#loadingArea').hide();
+            if (data && data.batch) {
+                displayTraceabilityData(data);
+                $('#traceabilityDetails').show();
+            } else {
+                $('#noResultArea').show();
+            }
+        })
+        .fail(function(xhr) {
+            $('#loadingArea').hide();
+            $('#noResultArea').show();
+            var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+                ? xhr.responseJSON.detail 
+                : '查询失败';
+            showMessage('错误', errorMsg, 'error');
+        });
+}
+
+// 显示溯源数据
+function displayTraceabilityData(data) {
+    var batch = data.batch;
+    var product = data.product;
+    var plantingRecords = data.planting_records || [];
+    var agrochemicalUsages = data.agrochemical_usages || [];
+    var testResults = data.test_results || [];
+
+    // 填充产品和批次信息
+    $('#resultProductName').text(product ? product.name : '-');
+    $('#resultProductCategory').text(product ? (product.category || '-') : '-');
+    $('#resultOrigin').text(product ? (product.origin || '-') : '-');
+    $('#resultSupplier').text(product ? (product.supplier || '-') : '-');
+    $('#resultBatchNumber').text(batch.batch_number);
+    $('#resultQuantity').text((batch.quantity || '-') + (batch.unit ? ' ' + batch.unit : ''));
+    $('#resultPlantingDate').text(batch.planting_date ? formatDate(batch.planting_date) : '-');
+    $('#resultHarvestDate').text(batch.harvest_date ? formatDate(batch.harvest_date) : '-');
+
+    // 显示二维码
+    if (batch.qrcode_path) {
+        $('#resultQrcode').attr('src', batch.qrcode_path).show();
+        $('#noQrcode').hide();
+    } else {
+        $('#resultQrcode').hide();
+        $('#noQrcode').show();
+    }
+
+    // 填充种植记录
+    $('#plantingCount').text(plantingRecords.length);
+    if (plantingRecords.length > 0) {
+        var plantingHtml = '';
+        plantingRecords.forEach(function(record) {
+            plantingHtml += '<tr>';
+            plantingHtml += '<td>' + formatDate(record.record_date) + '</td>';
+            plantingHtml += '<td>' + escapeHtml(record.operation_type) + '</td>';
+            plantingHtml += '<td>' + escapeHtml(record.description || '-') + '</td>';
+            plantingHtml += '<td>' + escapeHtml(record.operator || '-') + '</td>';
+            plantingHtml += '<td>' + escapeHtml(record.remarks || '-') + '</td>';
+            plantingHtml += '</tr>';
+        });
+        $('#plantingRecordsBody').html(plantingHtml);
+    } else {
+        $('#plantingRecordsBody').html('<tr><td colspan="5" class="text-center text-muted">暂无种植记录</td></tr>');
+    }
+
+    // 填充农资使用记录
+    $('#usageCount').text(agrochemicalUsages.length);
+    if (agrochemicalUsages.length > 0) {
+        var usageHtml = '';
+        agrochemicalUsages.forEach(function(usage) {
+            usageHtml += '<tr>';
+            usageHtml += '<td>' + formatDate(usage.usage_date) + '</td>';
+            usageHtml += '<td>' + escapeHtml(usage.chemical_type) + '</td>';
+            usageHtml += '<td>' + escapeHtml(usage.chemical_name) + '</td>';
+            usageHtml += '<td>' + (usage.quantity || '-') + (usage.unit ? ' ' + usage.unit : '') + '</td>';
+            usageHtml += '<td>' + escapeHtml(usage.usage_method || '-') + '</td>';
+            usageHtml += '<td>' + (usage.safety_interval ? usage.safety_interval + '天' : '-') + '</td>';
+            usageHtml += '<td>' + escapeHtml(usage.operator || '-') + '</td>';
+            usageHtml += '</tr>';
+        });
+        $('#usageRecordsBody').html(usageHtml);
+    } else {
+        $('#usageRecordsBody').html('<tr><td colspan="7" class="text-center text-muted">暂无农资使用记录</td></tr>');
+    }
+
+    // 填充检测结果
+    $('#testCount').text(testResults.length);
+    if (testResults.length > 0) {
+        var testHtml = '';
+        testResults.forEach(function(test) {
+            testHtml += '<tr>';
+            testHtml += '<td>' + formatDate(test.test_date) + '</td>';
+            testHtml += '<td>' + getStatusBadge(test.test_type) + '</td>';
+            testHtml += '<td>' + escapeHtml(test.test_organization || '-') + '</td>';
+            testHtml += '<td>' + escapeHtml(test.test_item || '-') + '</td>';
+            testHtml += '<td>' + escapeHtml(test.parameter_name) + '</td>';
+            testHtml += '<td>' + escapeHtml(test.test_value || '-') + '</td>';
+            testHtml += '<td>' + escapeHtml(test.limit_value || '-') + '</td>';
+            testHtml += '<td>' + getStatusBadge(test.result) + '</td>';
+            testHtml += '<td>' + escapeHtml(test.report_number || '-') + '</td>';
+            testHtml += '</tr>';
+        });
+        $('#testResultsBody').html(testHtml);
+    } else {
+        $('#testResultsBody').html('<tr><td colspan="9" class="text-center text-muted">暂无检测结果</td></tr>');
+    }
+
+    // 计算检测结果统计
+    var total = testResults.length;
+    var passed = 0;
+    var failed = 0;
+    
+    testResults.forEach(function(test) {
+        if (test.result === '合格') {
+            passed++;
+        } else if (test.result === '不合格') {
+            failed++;
+        }
+    });
+
+    $('#statTotal').text(total);
+    $('#statPassed').text(passed);
+    $('#statFailed').text(failed);
+    $('#statRate').text(total > 0 ? Math.round((passed / total) * 100) + '%' : '-');
+}
+
+// HTML转义
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

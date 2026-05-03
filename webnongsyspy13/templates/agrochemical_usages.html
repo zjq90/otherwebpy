@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 页面标题 -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-flask text-success mr-2"></i>农资使用管理
+    </h2>
+    <button class="btn btn-success" data-toggle="modal" data-target="#addUsageModal">
+        <i class="fas fa-plus mr-1"></i>添加记录
+    </button>
+</div>
+
+<!-- 搜索和筛选 -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group mb-0">
+                    <select class="form-control" id="filterBatch" onchange="loadUsages()">
+                        <option value="">所有批次</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group mb-0">
+                    <select class="form-control" id="filterType" onchange="loadUsages()">
+                        <option value="">所有农资类型</option>
+                        <option value="农药">农药</option>
+                        <option value="化肥">化肥</option>
+                        <option value="除草剂">除草剂</option>
+                        <option value="生长调节剂">生长调节剂</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4 text-right">
+                <button class="btn btn-outline-secondary" onclick="loadUsages()">
+                    <i class="fas fa-sync-alt mr-1"></i>刷新
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 农资使用记录列表 -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">农资使用记录列表</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-container">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>批次编号</th>
+                        <th>使用日期</th>
+                        <th>农资类型</th>
+                        <th>农资名称</th>
+                        <th>使用量</th>
+                        <th>安全间隔期</th>
+                        <th>操作人员</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="usageTableBody">
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <span class="loading-spinner"></span> 加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加记录模态框 -->
+<div class="modal fade" id="addUsageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle text-success mr-2"></i>添加农资使用记录
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="addUsageForm" onsubmit="return addUsage(event)">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addBatchId">关联批次 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="addBatchId" name="batch_id" required>
+                                <option value="">请选择批次</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addUsageDate">使用日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="addUsageDate" name="usage_date" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="addChemicalType">农资类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="addChemicalType" name="chemical_type" required>
+                                <option value="">请选择农资类型</option>
+                                <option value="农药">农药</option>
+                                <option value="化肥">化肥</option>
+                                <option value="除草剂">除草剂</option>
+                                <option value="生长调节剂">生长调节剂</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="addChemicalName">农资名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="addChemicalName" name="chemical_name" required placeholder="请输入农资名称">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="addQuantity">使用量</label>
+                            <input type="number" step="0.01" class="form-control" id="addQuantity" name="quantity" placeholder="使用量">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="addUnit">单位</label>
+                            <select class="form-control" id="addUnit" name="unit">
+                                <option value="">请选择单位</option>
+                                <option value="公斤">公斤</option>
+                                <option value="克">克</option>
+                                <option value="升">升</option>
+                                <option value="毫升">毫升</option>
+                                <option value="袋">袋</option>
+                                <option value="瓶">瓶</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="addSafetyInterval">安全间隔期(天)</label>
+                            <input type="number" class="form-control" id="addSafetyInterval" name="safety_interval" placeholder="安全间隔期">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="addUsageMethod">使用方法</label>
+                        <input type="text" class="form-control" id="addUsageMethod" name="usage_method" placeholder="例如：喷雾、撒施、浇灌等">
+                    </div>
+                    <div class="form-group">
+                        <label for="addOperator">操作人员</label>
+                        <input type="text" class="form-control" id="addOperator" name="operator" placeholder="请输入操作人员">
+                    </div>
+                    <div class="form-group">
+                        <label for="addRemarks">备注</label>
+                        <textarea class="form-control" id="addRemarks" name="remarks" rows="2" placeholder="请输入备注"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save mr-1"></i>保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑记录模态框 -->
+<div class="modal fade" id="editUsageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit text-info mr-2"></i>编辑农资使用记录
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editUsageForm" onsubmit="return updateUsage(event)">
+                <input type="hidden" id="editUsageId" name="id">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editBatchId">关联批次 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editBatchId" name="batch_id" required>
+                                <option value="">请选择批次</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editUsageDate">使用日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="editUsageDate" name="usage_date" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="editChemicalType">农资类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="editChemicalType" name="chemical_type" required>
+                                <option value="">请选择农资类型</option>
+                                <option value="农药">农药</option>
+                                <option value="化肥">化肥</option>
+                                <option value="除草剂">除草剂</option>
+                                <option value="生长调节剂">生长调节剂</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="editChemicalName">农资名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editChemicalName" name="chemical_name" required placeholder="请输入农资名称">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="editQuantity">使用量</label>
+                            <input type="number" step="0.01" class="form-control" id="editQuantity" name="quantity" placeholder="使用量">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="editUnit">单位</label>
+                            <select class="form-control" id="editUnit" name="unit">
+                                <option value="">请选择单位</option>
+                                <option value="公斤">公斤</option>
+                                <option value="克">克</option>
+                                <option value="升">升</option>
+                                <option value="毫升">毫升</option>
+                                <option value="袋">袋</option>
+                                <option value="瓶">瓶</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="editSafetyInterval">安全间隔期(天)</label>
+                            <input type="number" class="form-control" id="editSafetyInterval" name="safety_interval" placeholder="安全间隔期">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUsageMethod">使用方法</label>
+                        <input type="text" class="form-control" id="editUsageMethod" name="usage_method" placeholder="例如：喷雾、撒施、浇灌等">
+                    </div>
+                    <div class="form-group">
+                        <label for="editOperator">操作人员</label>
+                        <input type="text" class="form-control" id="editOperator" name="operator" placeholder="请输入操作人员">
+                    </div>
+                    <div class="form-group">
+                        <label for="editRemarks">备注</label>
+                        <textarea class="form-control" id="editRemarks" name="remarks" rows="2" placeholder="请输入备注"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save mr-1"></i>更新
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var currentEditId = null;
+
+$(document).ready(function() {
+    loadBatchesForSelect();
+    loadUsages();
+});
+
+// 加载批次到下拉选择框
+function loadBatchesForSelect() {
+    $.get('/api/batches/')
+        .done(function(batches) {
+            var filterOptions = '<option value="">所有批次</option>';
+            var addOptions = '<option value="">请选择批次</option>';
+            
+            batches.forEach(function(batch) {
+                var label = batch.batch_number;
+                filterOptions += '<option value="' + batch.id + '">' + escapeHtml(label) + '</option>';
+                addOptions += '<option value="' + batch.id + '">' + escapeHtml(label) + '</option>';
+            });
+            
+            $('#filterBatch').html(filterOptions);
+            $('#addBatchId').html(addOptions);
+        })
+        .fail(function() {
+            console.error('加载批次列表失败');
+        });
+}
+
+// 加载记录列表
+function loadUsages() {
+    loadTableData('/api/agrochemical-usages/', '#usageTableBody', renderUsageRow);
+}
+
+// 渲染记录行
+function renderUsageRow(usage, index) {
+    var quantityText = usage.quantity ? (usage.quantity + (usage.unit ? ' ' + usage.unit : '')) : '-';
+    var safetyText = usage.safety_interval ? (usage.safety_interval + ' 天') : '-';
+    
+    return '<tr>' +
+        '<td>' + usage.id + '</td>' +
+        '<td>' + (usage.batch_id || '-') + '</td>' +
+        '<td>' + formatDate(usage.usage_date) + '</td>' +
+        '<td><span class="badge badge-info">' + escapeHtml(usage.chemical_type) + '</span></td>' +
+        '<td>' + escapeHtml(usage.chemical_name) + '</td>' +
+        '<td>' + quantityText + '</td>' +
+        '<td>' + safetyText + '</td>' +
+        '<td>' + escapeHtml(usage.operator || '-') + '</td>' +
+        '<td>' +
+            '<button class="btn btn-sm btn-info mr-1" onclick="editUsage(' + usage.id + ')" title="编辑">' +
+                '<i class="fas fa-edit"></i>' +
+            '</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="deleteUsage(' + usage.id + ')" title="删除">' +
+                '<i class="fas fa-trash"></i>' +
+            '</button>' +
+        '</td>' +
+    '</tr>';
+}
+
+// 添加记录
+function addUsage(event) {
+    event.preventDefault();
+    var $form = $('#addUsageForm');
+    var formData = serializeForm($form);
+    
+    $.ajax({
+        url: '/api/agrochemical-usages/',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#addUsageModal').modal('hide');
+        $form[0].reset();
+        showMessage('成功', '农资使用记录添加成功！', 'success');
+        loadUsages();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '添加失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 编辑记录
+function editUsage(id) {
+    currentEditId = id;
+    
+    $.get('/api/agrochemical-usages/' + id)
+        .done(function(usage) {
+            // 先加载批次列表
+            $.get('/api/batches/')
+                .done(function(batches) {
+                    var options = '<option value="">请选择批次</option>';
+                    batches.forEach(function(batch) {
+                        var selected = batch.id === usage.batch_id ? ' selected' : '';
+                        var label = batch.batch_number;
+                        options += '<option value="' + batch.id + '"' + selected + '>' + escapeHtml(label) + '</option>';
+                    });
+                    $('#editBatchId').html(options);
+                    
+                    // 填充表单
+                    populateForm($('#editUsageForm'), usage);
+                    $('#editUsageId').val(usage.id);
+                    $('#editUsageModal').modal('show');
+                });
+        })
+        .fail(function(xhr) {
+            var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+                ? xhr.responseJSON.detail 
+                : '获取记录信息失败';
+            showMessage('错误', errorMsg, 'error');
+        });
+}
+
+// 更新记录
+function updateUsage(event) {
+    event.preventDefault();
+    var $form = $('#editUsageForm');
+    var formData = serializeForm($form);
+    var id = formData.id;
+    delete formData.id;
+    
+    $.ajax({
+        url: '/api/agrochemical-usages/' + id,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData)
+    })
+    .done(function(response) {
+        $('#editUsageModal').modal('hide');
+        showMessage('成功', '农资使用记录更新成功！', 'success');
+        loadUsages();
+    })
+    .fail(function(xhr) {
+        var errorMsg = xhr.responseJSON && xhr.responseJSON.detail 
+            ? xhr.responseJSON.detail 
+            : '更新失败';
+        showMessage('错误', errorMsg, 'error');
+    })
+    .always(function() {
+        resetFormSubmitBtn($form);
+    });
+    
+    return false;
+}
+
+// 删除记录
+function deleteUsage(id) {
+    deleteById('/api/agrochemical-usages', id, '农资使用记录', loadUsages);
+}
+
+// 重置表单提交按钮
+function resetFormSubmitBtn($form) {
+    var $submitBtn = $form.find('[type="submit"]');
+    $submitBtn.prop('disabled', false);
+    $submitBtn.html('<i class="fas fa-save mr-1"></i>保存');
+}
+
+// HTML转义
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
