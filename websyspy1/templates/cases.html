@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}案例展示 - 企业展示系统{% endblock %}
+
+{% block content %}
+<!-- 页面头部 -->
+<section class="page-header">
+    <div class="container text-center">
+        <h1>案例展示</h1>
+        <p class="mb-0">精选优秀案例，展示我们的专业能力</p>
+    </div>
+</section>
+
+<!-- 筛选栏 -->
+<section class="bg-light py-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="d-flex align-items-center">
+                    <span class="me-3 fw-medium">分类：</span>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="filterByCategory('all')">
+                            全部
+                        </button>
+                        {% for category in categories %}
+                        <button type="button" class="btn btn-outline-primary" onclick="filterByCategory('{{ category }}')">
+                            {{ category }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="featuredOnly" onchange="filterFeatured()">
+                    <label class="form-check-label" for="featuredOnly">
+                        仅显示推荐案例
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 案例列表 -->
+<section class="section-padding">
+    <div class="container">
+        {% if cases %}
+        <div class="row g-4" id="caseList">
+            {% for case in cases %}
+            <div class="col-lg-4 col-md-6 case-item" 
+                 data-category="{{ case.category or '' }}"
+                 data-featured="{{ 'true' if case.is_featured else 'false' }}">
+                <div class="card h-100">
+                    <div class="position-relative">
+                        {% if case.image_url %}
+                        <img src="{{ case.image_url }}" class="card-img-top" alt="{{ case.title }}">
+                        {% else %}
+                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-clipboard-check display-1 text-white"></i>
+                        </div>
+                        {% endif %}
+                        {% if case.is_featured %}
+                        <span class="badge bg-warning text-dark position-absolute top-3 start-3 m-2">
+                            <i class="bi bi-star-fill me-1"></i>推荐
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        {% if case.category %}
+                        <span class="badge bg-light text-primary mb-2">{{ case.category }}</span>
+                        {% endif %}
+                        <h5 class="card-title fw-bold">{{ case.title }}</h5>
+                        <p class="card-text text-secondary small mb-3">{{ case.description }}</p>
+                        {% if case.client_name %}
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-building me-1"></i>客户：{{ case.client_name }}
+                        </p>
+                        {% endif %}
+                        <a href="/cases/{{ case.id }}" class="btn btn-outline-primary w-100">
+                            查看详情 <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-clipboard-check display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">暂无案例信息</h3>
+            <p class="text-muted">请稍后再来查看</p>
+            <a href="/home" class="btn btn-primary mt-3">
+                <i class="bi bi-arrow-left me-2"></i>返回首页
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 按分类筛选
+    function filterByCategory(category) {
+        const items = document.querySelectorAll('.case-item');
+        const buttons = document.querySelectorAll('.btn-group .btn');
+        
+        // 更新按钮状态
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // 筛选案例
+        items.forEach(item => {
+            const itemCategory = item.dataset.category;
+            if (category === 'all' || itemCategory === category) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // 同时应用推荐筛选
+        filterFeatured();
+    }
+    
+    // 筛选推荐案例
+    function filterFeatured() {
+        const checkbox = document.getElementById('featuredOnly');
+        const items = document.querySelectorAll('.case-item');
+        
+        items.forEach(item => {
+            if (checkbox.checked) {
+                const isFeatured = item.dataset.featured === 'true';
+                if (isFeatured && item.style.display !== 'none') {
+                    item.style.display = 'block';
+                } else if (!isFeatured) {
+                    item.style.display = 'none';
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

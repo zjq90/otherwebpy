@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}秘钥申请 - 企业展示系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1><i class="bi bi-key me-3"></i>秘钥申请</h1>
+                <p>申请API访问秘钥，解锁更多高级功能</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container section-padding">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            {% if has_pending %}
+            <div class="card mb-4">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-hourglass-split text-warning" style="font-size: 4rem;"></i>
+                    </div>
+                    <h3 class="mb-3">您有待审核的申请</h3>
+                    <p class="text-muted mb-4">
+                        您的秘钥申请正在审核中，请耐心等待。审核完成后，结果将发送到您的邮箱。
+                    </p>
+                    <a href="/profile" class="btn btn-primary">
+                        <i class="bi bi-person me-2"></i>查看申请记录
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-header bg-transparent py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="bi bi-shield-lock text-primary" style="font-size: 2rem;"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1">申请API秘钥</h4>
+                            <p class="text-muted mb-0">填写以下信息申请API访问秘钥</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="keyApplicationForm">
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label fw-medium">申请人姓名</label>
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-person-circle me-1"></i>{{ user.full_name or user.username }}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">联系邮箱</label>
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-envelope me-1"></i>{{ user.email }}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-medium" for="application_type">
+                                申请类型 <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="application_type" name="application_type" required>
+                                <option value="">请选择申请类型</option>
+                                <option value="trial">试用版（免费，30天有效期）</option>
+                                <option value="basic">基础版（付费，年付）</option>
+                                <option value="pro">专业版（付费，年付）</option>
+                                <option value="enterprise">企业版（定制化服务）</option>
+                            </select>
+                            <div class="form-text">
+                                不同版本提供不同的API调用次数和功能支持
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-medium" for="company_name">
+                                公司名称 <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="company_name" name="company_name" 
+                                   placeholder="请输入您的公司名称" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-medium" for="website">
+                                公司网站
+                            </label>
+                            <input type="url" class="form-control" id="website" name="website" 
+                                   placeholder="https://www.example.com">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-medium" for="use_case">
+                                使用场景说明 <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="use_case" name="use_case" rows="4"
+                                      placeholder="请详细描述您计划如何使用API，包括：&#10;1. 您的业务场景&#10;2. 预计的API调用量&#10;3. 需要集成的系统或平台&#10;4. 其他特殊需求" required></textarea>
+                            <div class="form-text">
+                                详细的说明有助于我们更快地审核您的申请
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-medium" for="expected_calls">
+                                预计日均API调用量
+                            </label>
+                            <select class="form-select" id="expected_calls" name="expected_calls">
+                                <option value="">请选择</option>
+                                <option value="<1000">1,000次以下</option>
+                                <option value="1000-10000">1,000 - 10,000次</option>
+                                <option value="10000-100000">10,000 - 100,000次</option>
+                                <option value="100000-1000000">100,000 - 1,000,000次</option>
+                                <option value=">1000000">1,000,000次以上</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="agree_terms" required>
+                                <label class="form-check-label" for="agree_terms">
+                                    我已阅读并同意 <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">API使用条款</a> 和 <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">隐私政策</a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-3 d-sm-flex justify-content-sm-end">
+                            <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+                                <i class="bi bi-arrow-left me-2"></i>取消
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="bi bi-send me-2"></i>提交申请
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-transparent">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>申请须知</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-clock-history text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">审核时间</h6>
+                                    <p class="text-muted mb-0 small">通常1-3个工作日内完成审核</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-envelope text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">结果通知</h6>
+                                    <p class="text-muted mb-0 small">审核结果将通过邮件发送给您</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-shield-check text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">秘钥安全</h6>
+                                    <p class="text-muted mb-0 small">请妥善保管您的API秘钥，不要泄露给他人</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-headset text-primary" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">技术支持</h6>
+                                    <p class="text-muted mb-0 small">如有问题请联系我们的技术支持</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">API使用条款</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. 服务描述</h6>
+                <p>本API服务允许开发者访问我们的平台功能和数据。您需要通过申请获得API秘钥才能使用这些服务。</p>
+                
+                <h6>2. 访问限制</h6>
+                <p>不同套餐有不同的API调用限制。超出限制可能导致服务暂时中断。我们保留随时调整调用限制的权利。</p>
+                
+                <h6>3. 数据使用</h6>
+                <p>您通过API获取的数据仅可用于您申请时描述的业务场景。不得将数据用于非法目的或转售给第三方。</p>
+                
+                <h6>4. 安全责任</h6>
+                <p>您有责任妥善保管API秘钥。如发现秘钥泄露，请立即联系我们重置。因秘钥泄露造成的损失由您自行承担。</p>
+                
+                <h6>5. 服务变更</h6>
+                <p>我们保留随时修改或终止API服务的权利。重大变更将提前通过邮件通知您。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">隐私政策</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. 信息收集</h6>
+                <p>我们收集您在申请过程中提供的信息，包括姓名、邮箱、公司信息等，用于审核申请和提供服务。</p>
+                
+                <h6>2. 信息使用</h6>
+                <p>您的个人信息仅用于API服务相关的目的，包括审核、服务通知、技术支持等。我们不会将您的信息出售给第三方。</p>
+                
+                <h6>3. 信息保护</h6>
+                <p>我们采取适当的技术和组织措施保护您的个人信息安全，防止未经授权的访问、使用或披露。</p>
+                
+                <h6>4. 您的权利</h6>
+                <p>您有权访问、更正或删除您的个人信息。如有需要，请联系我们的客服团队。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('keyApplicationForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner me-2"></span>提交中...';
+            
+            try {
+                const formData = {
+                    application_type: document.getElementById('application_type').value,
+                    company_name: document.getElementById('company_name').value,
+                    website: document.getElementById('website').value,
+                    use_case: document.getElementById('use_case').value,
+                    expected_calls: document.getElementById('expected_calls').value
+                };
+                
+                await apiRequest('/key-applications/', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                showMessage('申请提交成功！请等待审核', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '/profile';
+                }, 1500);
+                
+            } catch (error) {
+                showMessage(error.message || '提交失败，请重试', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-send me-2"></i>提交申请';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

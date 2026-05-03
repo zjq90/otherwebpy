@@ -1,0 +1,1561 @@
+{% extends "base.html" %}
+
+{% block title %}管理后台 - 企业展示系统{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-card.primary {
+        border-left-color: #2563eb;
+    }
+    
+    .stat-card.success {
+        border-left-color: #10b981;
+    }
+    
+    .stat-card.warning {
+        border-left-color: #f59e0b;
+    }
+    
+    .stat-card.danger {
+        border-left-color: #ef4444;
+    }
+    
+    .sidebar-menu .list-group-item {
+        border: none;
+        border-radius: 0.5rem;
+        margin-bottom: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-menu .list-group-item:hover,
+    .sidebar-menu .list-group-item.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .sidebar-menu .list-group-item i {
+        width: 24px;
+    }
+    
+    .admin-content {
+        display: none;
+    }
+    
+    .admin-content.active {
+        display: block;
+    }
+    
+    .table-responsive {
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    
+    .table thead th {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        font-weight: 600;
+        padding: 1rem;
+    }
+    
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+    
+    .action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .modal-lg-scroll {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1><i class="bi bi-gear me-3"></i>管理后台</h1>
+                <p>管理系统用户、产品、服务、案例和秘钥申请</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <div class="d-inline-flex align-items-center bg-white bg-opacity-10 rounded-pill px-4 py-2">
+                    <i class="bi bi-person-circle me-2"></i>
+                    <span>管理员：{{ user.username }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container section-padding">
+    <div class="row mb-5">
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card stat-card primary h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="bi bi-people text-primary" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0">{{ stats.user_count }}</h3>
+                            <p class="text-muted mb-0">注册用户</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card stat-card success h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="bi bi-box text-success" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0">{{ stats.product_count }}</h3>
+                            <p class="text-muted mb-0">上架产品</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card stat-card warning h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="bi bi-clipboard-check text-warning" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0">{{ stats.case_count }}</h3>
+                            <p class="text-muted mb-0">展示案例</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-4">
+            <div class="card stat-card danger h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="bi bi-hourglass-split text-danger" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0">{{ stats.pending_app_count }}</h3>
+                            <p class="text-muted mb-0">待审核申请</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-3 mb-4 mb-lg-0">
+            <div class="card sticky-top" style="top: 80px;">
+                <div class="card-body">
+                    <h6 class="text-uppercase text-muted mb-3">管理菜单</h6>
+                    <div class="list-group sidebar-menu" id="adminMenu">
+                        <button class="list-group-item active" data-target="users">
+                            <i class="bi bi-people me-2"></i>用户管理
+                        </button>
+                        <button class="list-group-item" data-target="products">
+                            <i class="bi bi-box me-2"></i>产品管理
+                        </button>
+                        <button class="list-group-item" data-target="services">
+                            <i class="bi bi-briefcase me-2"></i>服务管理
+                        </button>
+                        <button class="list-group-item" data-target="cases">
+                            <i class="bi bi-clipboard-check me-2"></i>案例管理
+                        </button>
+                        <button class="list-group-item" data-target="documents">
+                            <i class="bi bi-file-text me-2"></i>文档管理
+                        </button>
+                        <button class="list-group-item" data-target="key-applications">
+                            <i class="bi bi-key me-2"></i>秘钥申请
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <div id="users" class="admin-content active">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-people me-2"></i>用户管理</h4>
+                    <button class="btn btn-primary" onclick="refreshUsers()">
+                        <i class="bi bi-arrow-repeat me-2"></i>刷新
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>用户名</th>
+                                        <th>邮箱</th>
+                                        <th>姓名</th>
+                                        <th>管理员</th>
+                                        <th>状态</th>
+                                        <th>注册时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="bi bi-arrow-repeat me-2"></i>加载中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="products" class="admin-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-box me-2"></i>产品管理</h4>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="showCreateModal('product')">
+                            <i class="bi bi-plus-lg me-2"></i>新增产品
+                        </button>
+                        <button class="btn btn-primary" onclick="refreshProducts()">
+                            <i class="bi bi-arrow-repeat me-2"></i>刷新
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>产品名称</th>
+                                        <th>分类</th>
+                                        <th>价格</th>
+                                        <th>排序</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="bi bi-arrow-repeat me-2"></i>加载中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="services" class="admin-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-briefcase me-2"></i>服务管理</h4>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="showCreateModal('service')">
+                            <i class="bi bi-plus-lg me-2"></i>新增服务
+                        </button>
+                        <button class="btn btn-primary" onclick="refreshServices()">
+                            <i class="bi bi-arrow-repeat me-2"></i>刷新
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>服务名称</th>
+                                        <th>图标</th>
+                                        <th>排序</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="servicesTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="bi bi-arrow-repeat me-2"></i>加载中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="cases" class="admin-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-clipboard-check me-2"></i>案例管理</h4>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="showCreateModal('case')">
+                            <i class="bi bi-plus-lg me-2"></i>新增案例
+                        </button>
+                        <button class="btn btn-primary" onclick="refreshCases()">
+                            <i class="bi bi-arrow-repeat me-2"></i>刷新
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>案例标题</th>
+                                        <th>客户</th>
+                                        <th>分类</th>
+                                        <th>推荐</th>
+                                        <th>排序</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="casesTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="bi bi-arrow-repeat me-2"></i>加载中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="documents" class="admin-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-file-text me-2"></i>文档管理</h4>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="showCreateModal('document')">
+                            <i class="bi bi-plus-lg me-2"></i>新增文档
+                        </button>
+                        <button class="btn btn-primary" onclick="refreshDocuments()">
+                            <i class="bi bi-arrow-repeat me-2"></i>刷新
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>文档标题</th>
+                                        <th>分类</th>
+                                        <th>阅读量</th>
+                                        <th>排序</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="documentsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="bi bi-arrow-repeat me-2"></i>加载中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="key-applications" class="admin-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-key me-2"></i>秘钥申请管理</h4>
+                    <div class="btn-group">
+                        <button class="btn btn-outline-secondary active" onclick="filterApplications('all')">全部</button>
+                        <button class="btn btn-outline-secondary" onclick="filterApplications('pending')">待审核</button>
+                        <button class="btn btn-outline-secondary" onclick="filterApplications('approved')">已通过</button>
+                        <button class="btn btn-outline-secondary" onclick="filterApplications('rejected')">已拒绝</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="refreshKeyApplications()">
+                        <i class="bi bi-arrow-repeat me-2"></i>刷新
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>申请人</th>
+                                        <th>公司</th>
+                                        <th>申请类型</th>
+                                        <th>状态</th>
+                                        <th>申请时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="keyApplicationsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="bi bi-arrow-repeat me-2"></i>加载中...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalTitle">编辑</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modal-lg-scroll" id="editModalBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="modalSaveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">审核秘钥申请</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reviewApplicationInfo"></div>
+                <hr>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">审核结果</label>
+                    <select class="form-select" id="reviewStatus">
+                        <option value="approved">通过</option>
+                        <option value="rejected">拒绝</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">审核备注</label>
+                    <textarea class="form-control" id="reviewNotes" rows="3" placeholder="请输入审核备注..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="submitReviewBtn">提交审核</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentFilter = 'all';
+let currentEditId = null;
+let currentEditType = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#adminMenu button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('#adminMenu button').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const target = this.dataset.target;
+            document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(target).classList.add('active');
+            
+            switch(target) {
+                case 'users': refreshUsers(); break;
+                case 'products': refreshProducts(); break;
+                case 'services': refreshServices(); break;
+                case 'cases': refreshCases(); break;
+                case 'documents': refreshDocuments(); break;
+                case 'key-applications': refreshKeyApplications(); break;
+            }
+        });
+    });
+    
+    refreshUsers();
+});
+
+async function refreshUsers() {
+    try {
+        const users = await apiRequest('/users/');
+        renderUsers(users);
+    } catch (error) {
+        showMessage('加载用户列表失败', 'error');
+    }
+}
+
+function renderUsers(users) {
+    const tbody = document.getElementById('usersTableBody');
+    if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = users.map(user => `
+        <tr>
+            <td>${user.id}</td>
+            <td>${user.username}</td>
+            <td>${user.email || '-'}</td>
+            <td>${user.full_name || '-'}</td>
+            <td>
+                <span class="badge ${user.is_admin ? 'bg-primary' : 'bg-secondary'}">
+                    ${user.is_admin ? '是' : '否'}
+                </span>
+            </td>
+            <td>
+                <span class="badge ${user.is_active ? 'bg-success' : 'bg-danger'}">
+                    ${user.is_active ? '正常' : '禁用'}
+                </span>
+            </td>
+            <td>${new Date(user.created_at).toLocaleDateString()}</td>
+            <td>
+                ${!user.is_admin ? `
+                    <button class="btn btn-sm ${user.is_active ? 'btn-warning' : 'btn-success'} action-btn me-1" 
+                            onclick="toggleUserStatus(${user.id}, ${!user.is_active})">
+                        ${user.is_active ? '禁用' : '启用'}
+                    </button>
+                    <button class="btn btn-sm btn-primary action-btn me-1" 
+                            onclick="toggleUserAdmin(${user.id}, !user.is_admin)">
+                        设为管理员
+                    </button>
+                    <button class="btn btn-sm btn-danger action-btn" 
+                            onclick="deleteUser(${user.id})">
+                        删除
+                    </button>
+                ` : '<span class="text-muted">管理员账号</span>'}
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function toggleUserStatus(userId, isActive) {
+    try {
+        await apiRequest(`/users/${userId}/toggle-active`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_active: isActive })
+        });
+        showMessage('用户状态已更新', 'success');
+        refreshUsers();
+    } catch (error) {
+        showMessage(error.message || '操作失败', 'error');
+    }
+}
+
+async function toggleUserAdmin(userId, isAdmin) {
+    try {
+        await apiRequest(`/users/${userId}/toggle-admin`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_admin: isAdmin })
+        });
+        showMessage('用户权限已更新', 'success');
+        refreshUsers();
+    } catch (error) {
+        showMessage(error.message || '操作失败', 'error');
+    }
+}
+
+async function deleteUser(userId) {
+    if (!confirm('确定要删除该用户吗？此操作不可恢复。')) return;
+    
+    try {
+        await apiRequest(`/users/${userId}`, { method: 'DELETE' });
+        showMessage('用户已删除', 'success');
+        refreshUsers();
+    } catch (error) {
+        showMessage(error.message || '删除失败', 'error');
+    }
+}
+
+async function refreshProducts() {
+    try {
+        const products = await apiRequest('/products/');
+        renderProducts(products);
+    } catch (error) {
+        showMessage('加载产品列表失败', 'error');
+    }
+}
+
+function renderProducts(products) {
+    const tbody = document.getElementById('productsTableBody');
+    if (!products || products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = products.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.name}</td>
+            <td>${p.category || '-'}</td>
+            <td>¥${p.price || '0.00'}</td>
+            <td>${p.sort_order || 0}</td>
+            <td>
+                <span class="badge ${p.is_active ? 'bg-success' : 'bg-secondary'}">
+                    ${p.is_active ? '上架' : '下架'}
+                </span>
+            </td>
+            <td>${new Date(p.created_at).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-sm btn-primary action-btn me-1" onclick="editProduct(${p.id})">
+                    编辑
+                </button>
+                <button class="btn btn-sm ${p.is_active ? 'btn-warning' : 'btn-success'} action-btn me-1" 
+                        onclick="toggleProductStatus(${p.id}, ${!p.is_active})">
+                    ${p.is_active ? '下架' : '上架'}
+                </button>
+                <button class="btn btn-sm btn-danger action-btn" onclick="deleteProduct(${p.id})">
+                    删除
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function toggleProductStatus(id, isActive) {
+    try {
+        await apiRequest(`/products/${id}/toggle-active`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_active: isActive })
+        });
+        showMessage('产品状态已更新', 'success');
+        refreshProducts();
+    } catch (error) {
+        showMessage(error.message || '操作失败', 'error');
+    }
+}
+
+async function deleteProduct(id) {
+    if (!confirm('确定要删除该产品吗？')) return;
+    
+    try {
+        await apiRequest(`/products/${id}`, { method: 'DELETE' });
+        showMessage('产品已删除', 'success');
+        refreshProducts();
+    } catch (error) {
+        showMessage(error.message || '删除失败', 'error');
+    }
+}
+
+async function refreshServices() {
+    try {
+        const services = await apiRequest('/services/');
+        renderServices(services);
+    } catch (error) {
+        showMessage('加载服务列表失败', 'error');
+    }
+}
+
+function renderServices(services) {
+    const tbody = document.getElementById('servicesTableBody');
+    if (!services || services.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = services.map(s => `
+        <tr>
+            <td>${s.id}</td>
+            <td>${s.name}</td>
+            <td><i class="${s.icon || 'bi bi-gear'}"></i></td>
+            <td>${s.sort_order || 0}</td>
+            <td>
+                <span class="badge ${s.is_active ? 'bg-success' : 'bg-secondary'}">
+                    ${s.is_active ? '启用' : '禁用'}
+                </span>
+            </td>
+            <td>${new Date(s.created_at).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-sm btn-primary action-btn me-1" onclick="editService(${s.id})">
+                    编辑
+                </button>
+                <button class="btn btn-sm ${s.is_active ? 'btn-warning' : 'btn-success'} action-btn me-1" 
+                        onclick="toggleServiceStatus(${s.id}, ${!s.is_active})">
+                    ${s.is_active ? '禁用' : '启用'}
+                </button>
+                <button class="btn btn-sm btn-danger action-btn" onclick="deleteService(${s.id})">
+                    删除
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function toggleServiceStatus(id, isActive) {
+    try {
+        await apiRequest(`/services/${id}/toggle-active`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_active: isActive })
+        });
+        showMessage('服务状态已更新', 'success');
+        refreshServices();
+    } catch (error) {
+        showMessage(error.message || '操作失败', 'error');
+    }
+}
+
+async function deleteService(id) {
+    if (!confirm('确定要删除该服务吗？')) return;
+    
+    try {
+        await apiRequest(`/services/${id}`, { method: 'DELETE' });
+        showMessage('服务已删除', 'success');
+        refreshServices();
+    } catch (error) {
+        showMessage(error.message || '删除失败', 'error');
+    }
+}
+
+async function refreshCases() {
+    try {
+        const cases = await apiRequest('/cases/');
+        renderCases(cases);
+    } catch (error) {
+        showMessage('加载案例列表失败', 'error');
+    }
+}
+
+function renderCases(cases) {
+    const tbody = document.getElementById('casesTableBody');
+    if (!cases || cases.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = cases.map(c => `
+        <tr>
+            <td>${c.id}</td>
+            <td>${c.title}</td>
+            <td>${c.client || '-'}</td>
+            <td>${c.category || '-'}</td>
+            <td>
+                <span class="badge ${c.is_featured ? 'bg-primary' : 'bg-secondary'}">
+                    ${c.is_featured ? '推荐' : '普通'}
+                </span>
+            </td>
+            <td>${c.sort_order || 0}</td>
+            <td>
+                <span class="badge ${c.is_active ? 'bg-success' : 'bg-secondary'}">
+                    ${c.is_active ? '启用' : '禁用'}
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-primary action-btn me-1" onclick="editCase(${c.id})">
+                    编辑
+                </button>
+                <button class="btn btn-sm ${c.is_active ? 'btn-warning' : 'btn-success'} action-btn me-1" 
+                        onclick="toggleCaseStatus(${c.id}, ${!c.is_active})">
+                    ${c.is_active ? '禁用' : '启用'}
+                </button>
+                <button class="btn btn-sm btn-danger action-btn" onclick="deleteCase(${c.id})">
+                    删除
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function toggleCaseStatus(id, isActive) {
+    try {
+        await apiRequest(`/cases/${id}/toggle-active`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_active: isActive })
+        });
+        showMessage('案例状态已更新', 'success');
+        refreshCases();
+    } catch (error) {
+        showMessage(error.message || '操作失败', 'error');
+    }
+}
+
+async function deleteCase(id) {
+    if (!confirm('确定要删除该案例吗？')) return;
+    
+    try {
+        await apiRequest(`/cases/${id}`, { method: 'DELETE' });
+        showMessage('案例已删除', 'success');
+        refreshCases();
+    } catch (error) {
+        showMessage(error.message || '删除失败', 'error');
+    }
+}
+
+async function refreshDocuments() {
+    try {
+        const documents = await apiRequest('/documents/');
+        renderDocuments(documents);
+    } catch (error) {
+        showMessage('加载文档列表失败', 'error');
+    }
+}
+
+function renderDocuments(documents) {
+    const tbody = document.getElementById('documentsTableBody');
+    if (!documents || documents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = documents.map(d => `
+        <tr>
+            <td>${d.id}</td>
+            <td>${d.title}</td>
+            <td>${d.category || '-'}</td>
+            <td>${d.view_count || 0}</td>
+            <td>${d.sort_order || 0}</td>
+            <td>
+                <span class="badge ${d.is_active ? 'bg-success' : 'bg-secondary'}">
+                    ${d.is_active ? '启用' : '禁用'}
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-primary action-btn me-1" onclick="editDocument(${d.id})">
+                    编辑
+                </button>
+                <button class="btn btn-sm ${d.is_active ? 'btn-warning' : 'btn-success'} action-btn me-1" 
+                        onclick="toggleDocumentStatus(${d.id}, ${!d.is_active})">
+                    ${d.is_active ? '禁用' : '启用'}
+                </button>
+                <button class="btn btn-sm btn-danger action-btn" onclick="deleteDocument(${d.id})">
+                    删除
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function toggleDocumentStatus(id, isActive) {
+    try {
+        await apiRequest(`/documents/${id}/toggle-active`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_active: isActive })
+        });
+        showMessage('文档状态已更新', 'success');
+        refreshDocuments();
+    } catch (error) {
+        showMessage(error.message || '操作失败', 'error');
+    }
+}
+
+async function deleteDocument(id) {
+    if (!confirm('确定要删除该文档吗？')) return;
+    
+    try {
+        await apiRequest(`/documents/${id}`, { method: 'DELETE' });
+        showMessage('文档已删除', 'success');
+        refreshDocuments();
+    } catch (error) {
+        showMessage(error.message || '删除失败', 'error');
+    }
+}
+
+async function refreshKeyApplications() {
+    try {
+        let url = '/key-applications/';
+        if (currentFilter !== 'all') {
+            url += `?status=${currentFilter}`;
+        }
+        const apps = await apiRequest(url);
+        renderKeyApplications(apps);
+    } catch (error) {
+        showMessage('加载申请列表失败', 'error');
+    }
+}
+
+function filterApplications(status) {
+    currentFilter = status;
+    document.querySelectorAll('#key-applications .btn-group button').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.trim() === (status === 'all' ? '全部' : 
+            status === 'pending' ? '待审核' : 
+            status === 'approved' ? '已通过' : '已拒绝')) {
+            btn.classList.add('active');
+        }
+    });
+    refreshKeyApplications();
+}
+
+function renderKeyApplications(apps) {
+    const tbody = document.getElementById('keyApplicationsTableBody');
+    if (!apps || apps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">暂无数据</td></tr>';
+        return;
+    }
+    
+    const statusLabels = {
+        pending: { class: 'status-pending', text: '待审核' },
+        approved: { class: 'status-approved', text: '已通过' },
+        rejected: { class: 'status-rejected', text: '已拒绝' }
+    };
+    
+    const typeLabels = {
+        trial: '试用版',
+        basic: '基础版',
+        pro: '专业版',
+        enterprise: '企业版'
+    };
+    
+    tbody.innerHTML = apps.map(app => `
+        <tr>
+            <td>${app.id}</td>
+            <td>${app.user?.username || '未知'}</td>
+            <td>${app.company_name || '-'}</td>
+            <td>${typeLabels[app.application_type] || app.application_type}</td>
+            <td>
+                <span class="badge ${statusLabels[app.status]?.class}">
+                    ${statusLabels[app.status]?.text}
+                </span>
+            </td>
+            <td>${new Date(app.created_at).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-sm btn-primary action-btn me-1" onclick="viewApplication(${app.id})">
+                    查看
+                </button>
+                ${app.status === 'pending' ? `
+                    <button class="btn btn-sm btn-success action-btn me-1" onclick="reviewApplication(${app.id})">
+                        审核
+                    </button>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function viewApplication(id) {
+    try {
+        const app = await apiRequest(`/key-applications/${id}`);
+        const typeLabels = { trial: '试用版', basic: '基础版', pro: '专业版', enterprise: '企业版' };
+        const statusLabels = { pending: '待审核', approved: '已通过', rejected: '已拒绝' };
+        
+        document.getElementById('editModalTitle').textContent = '秘钥申请详情';
+        document.getElementById('editModalBody').innerHTML = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">申请人</label>
+                    <p class="fw-medium">${app.user?.username || '未知'}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">申请时间</label>
+                    <p class="fw-medium">${new Date(app.created_at).toLocaleString()}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">申请类型</label>
+                    <p class="fw-medium">${typeLabels[app.application_type] || app.application_type}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">状态</label>
+                    <p class="fw-medium">${statusLabels[app.status] || app.status}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">公司名称</label>
+                    <p class="fw-medium">${app.company_name || '-'}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">公司网站</label>
+                    <p class="fw-medium">${app.website || '-'}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted">预计调用量</label>
+                    <p class="fw-medium">${app.expected_calls || '-'}</p>
+                </div>
+                ${app.api_key ? `
+                <div class="col-md-12 mb-3">
+                    <label class="form-label text-muted">API秘钥</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" value="${app.api_key}" readonly>
+                        <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('${app.api_key}'); showMessage('已复制', 'success')">
+                            复制
+                        </button>
+                    </div>
+                </div>
+                ` : ''}
+                <div class="col-12 mb-3">
+                    <label class="form-label text-muted">使用场景说明</label>
+                    <p class="fw-medium">${app.use_case || '-'}</p>
+                </div>
+                ${app.review_notes ? `
+                <div class="col-12">
+                    <label class="form-label text-muted">审核备注</label>
+                    <p class="fw-medium">${app.review_notes || '-'}</p>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        document.getElementById('modalSaveBtn').style.display = 'none';
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    } catch (error) {
+        showMessage('加载详情失败', 'error');
+    }
+}
+
+async function reviewApplication(id) {
+    try {
+        const app = await apiRequest(`/key-applications/${id}`);
+        currentEditId = id;
+        
+        const typeLabels = { trial: '试用版', basic: '基础版', pro: '专业版', enterprise: '企业版' };
+        
+        document.getElementById('reviewApplicationInfo').innerHTML = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted small">申请人</label>
+                    <p class="mb-0">${app.user?.username || '未知'}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted small">申请类型</label>
+                    <p class="mb-0">${typeLabels[app.application_type] || app.application_type}</p>
+                </div>
+                <div class="col-12 mb-3">
+                    <label class="form-label text-muted small">公司名称</label>
+                    <p class="mb-0">${app.company_name || '-'}</p>
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-muted small">使用场景</label>
+                    <p class="mb-0 small">${app.use_case || '-'}</p>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('reviewStatus').value = 'approved';
+        document.getElementById('reviewNotes').value = '';
+        
+        new bootstrap.Modal(document.getElementById('reviewModal')).show();
+    } catch (error) {
+        showMessage('加载申请详情失败', 'error');
+    }
+}
+
+document.getElementById('submitReviewBtn')?.addEventListener('click', async function() {
+    if (!currentEditId) return;
+    
+    const status = document.getElementById('reviewStatus').value;
+    const notes = document.getElementById('reviewNotes').value;
+    
+    try {
+        await apiRequest(`/key-applications/${currentEditId}/review`, {
+            method: 'PUT',
+            body: JSON.stringify({ status, review_notes: notes })
+        });
+        
+        showMessage('审核完成', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+        refreshKeyApplications();
+    } catch (error) {
+        showMessage(error.message || '审核失败', 'error');
+    }
+});
+
+function showCreateModal(type) {
+    currentEditType = type;
+    currentEditId = null;
+    
+    let formHtml = '';
+    let title = '';
+    
+    switch(type) {
+        case 'product':
+            title = '新增产品';
+            formHtml = `
+                <div class="mb-3">
+                    <label class="form-label fw-medium">产品名称 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="form_name" placeholder="请输入产品名称" required>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">分类</label>
+                        <input type="text" class="form-control" id="form_category" placeholder="如：企业版、基础版">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">价格</label>
+                        <input type="number" class="form-control" id="form_price" placeholder="0.00" step="0.01">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">封面图片URL</label>
+                    <input type="url" class="form-control" id="form_image_url" placeholder="https://...">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">简短描述</label>
+                    <input type="text" class="form-control" id="form_short_desc" placeholder="简短描述">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">详细描述</label>
+                    <textarea class="form-control" id="form_description" rows="4"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">排序</label>
+                        <input type="number" class="form-control" id="form_sort_order" value="0">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">状态</label>
+                        <select class="form-select" id="form_is_active">
+                            <option value="true" selected>上架</option>
+                            <option value="false">下架</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case 'service':
+            title = '新增服务';
+            formHtml = `
+                <div class="mb-3">
+                    <label class="form-label fw-medium">服务名称 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="form_name" placeholder="请输入服务名称" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">图标类名（Bootstrap Icons）</label>
+                    <input type="text" class="form-control" id="form_icon" placeholder="bi bi-gear">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">简短描述</label>
+                    <input type="text" class="form-control" id="form_short_desc" placeholder="简短描述">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">详细描述</label>
+                    <textarea class="form-control" id="form_description" rows="4"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">排序</label>
+                        <input type="number" class="form-control" id="form_sort_order" value="0">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">状态</label>
+                        <select class="form-select" id="form_is_active">
+                            <option value="true" selected>启用</option>
+                            <option value="false">禁用</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case 'case':
+            title = '新增案例';
+            formHtml = `
+                <div class="mb-3">
+                    <label class="form-label fw-medium">案例标题 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="form_title" placeholder="请输入案例标题" required>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">客户名称</label>
+                        <input type="text" class="form-control" id="form_client" placeholder="客户公司名称">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">分类</label>
+                        <input type="text" class="form-control" id="form_category" placeholder="如：金融、电商、教育">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">封面图片URL</label>
+                    <input type="url" class="form-control" id="form_image_url" placeholder="https://...">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">简短描述</label>
+                    <input type="text" class="form-control" id="form_short_desc" placeholder="简短描述">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">案例内容</label>
+                    <textarea class="form-control" id="form_content" rows="6"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-medium">排序</label>
+                        <input type="number" class="form-control" id="form_sort_order" value="0">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-medium">推荐案例</label>
+                        <select class="form-select" id="form_is_featured">
+                            <option value="true">是</option>
+                            <option value="false" selected>否</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-medium">状态</label>
+                        <select class="form-select" id="form_is_active">
+                            <option value="true" selected>启用</option>
+                            <option value="false">禁用</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case 'document':
+            title = '新增文档';
+            formHtml = `
+                <div class="mb-3">
+                    <label class="form-label fw-medium">文档标题 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="form_title" placeholder="请输入文档标题" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">分类</label>
+                    <input type="text" class="form-control" id="form_category" placeholder="如：API文档、使用指南">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">简短描述</label>
+                    <input type="text" class="form-control" id="form_short_desc" placeholder="简短描述">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-medium">文档内容</label>
+                    <textarea class="form-control" id="form_content" rows="8"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">排序</label>
+                        <input type="number" class="form-control" id="form_sort_order" value="0">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">状态</label>
+                        <select class="form-select" id="form_is_active">
+                            <option value="true" selected>启用</option>
+                            <option value="false">禁用</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            break;
+    }
+    
+    document.getElementById('editModalTitle').textContent = title;
+    document.getElementById('editModalBody').innerHTML = formHtml;
+    document.getElementById('modalSaveBtn').style.display = 'inline-block';
+    new bootstrap.Modal(document.getElementById('editModal')).show();
+}
+
+document.getElementById('modalSaveBtn')?.addEventListener('click', async function() {
+    let data = {};
+    let endpoint = '';
+    let method = 'POST';
+    
+    switch(currentEditType) {
+        case 'product':
+            data = {
+                name: document.getElementById('form_name').value,
+                category: document.getElementById('form_category').value || null,
+                price: parseFloat(document.getElementById('form_price').value) || null,
+                image_url: document.getElementById('form_image_url').value || null,
+                short_desc: document.getElementById('form_short_desc').value || null,
+                description: document.getElementById('form_description').value || null,
+                sort_order: parseInt(document.getElementById('form_sort_order').value) || 0,
+                is_active: document.getElementById('form_is_active').value === 'true'
+            };
+            endpoint = currentEditId ? `/products/${currentEditId}` : '/products/';
+            method = currentEditId ? 'PUT' : 'POST';
+            break;
+            
+        case 'service':
+            data = {
+                name: document.getElementById('form_name').value,
+                icon: document.getElementById('form_icon').value || null,
+                short_desc: document.getElementById('form_short_desc').value || null,
+                description: document.getElementById('form_description').value || null,
+                sort_order: parseInt(document.getElementById('form_sort_order').value) || 0,
+                is_active: document.getElementById('form_is_active').value === 'true'
+            };
+            endpoint = currentEditId ? `/services/${currentEditId}` : '/services/';
+            method = currentEditId ? 'PUT' : 'POST';
+            break;
+            
+        case 'case':
+            data = {
+                title: document.getElementById('form_title').value,
+                client: document.getElementById('form_client').value || null,
+                category: document.getElementById('form_category').value || null,
+                image_url: document.getElementById('form_image_url').value || null,
+                short_desc: document.getElementById('form_short_desc').value || null,
+                content: document.getElementById('form_content').value || null,
+                sort_order: parseInt(document.getElementById('form_sort_order').value) || 0,
+                is_featured: document.getElementById('form_is_featured').value === 'true',
+                is_active: document.getElementById('form_is_active').value === 'true'
+            };
+            endpoint = currentEditId ? `/cases/${currentEditId}` : '/cases/';
+            method = currentEditId ? 'PUT' : 'POST';
+            break;
+            
+        case 'document':
+            data = {
+                title: document.getElementById('form_title').value,
+                category: document.getElementById('form_category').value || null,
+                short_desc: document.getElementById('form_short_desc').value || null,
+                content: document.getElementById('form_content').value || null,
+                sort_order: parseInt(document.getElementById('form_sort_order').value) || 0,
+                is_active: document.getElementById('form_is_active').value === 'true'
+            };
+            endpoint = currentEditId ? `/documents/${currentEditId}` : '/documents/';
+            method = currentEditId ? 'PUT' : 'POST';
+            break;
+    }
+    
+    try {
+        await apiRequest(endpoint, {
+            method,
+            body: JSON.stringify(data)
+        });
+        
+        showMessage(currentEditId ? '更新成功' : '创建成功', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+        
+        switch(currentEditType) {
+            case 'product': refreshProducts(); break;
+            case 'service': refreshServices(); break;
+            case 'case': refreshCases(); break;
+            case 'document': refreshDocuments(); break;
+        }
+    } catch (error) {
+        showMessage(error.message || '操作失败', 'error');
+    }
+});
+
+async function editProduct(id) {
+    try {
+        const product = await apiRequest(`/products/${id}`);
+        currentEditId = id;
+        currentEditType = 'product';
+        
+        document.getElementById('editModalTitle').textContent = '编辑产品';
+        document.getElementById('editModalBody').innerHTML = `
+            <div class="mb-3">
+                <label class="form-label fw-medium">产品名称 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="form_name" value="${product.name || ''}" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">分类</label>
+                    <input type="text" class="form-control" id="form_category" value="${product.category || ''}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">价格</label>
+                    <input type="number" class="form-control" id="form_price" value="${product.price || ''}" step="0.01">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">封面图片URL</label>
+                <input type="url" class="form-control" id="form_image_url" value="${product.image_url || ''}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">简短描述</label>
+                <input type="text" class="form-control" id="form_short_desc" value="${product.short_desc || ''}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">详细描述</label>
+                <textarea class="form-control" id="form_description" rows="4">${product.description || ''}</textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">排序</label>
+                    <input type="number" class="form-control" id="form_sort_order" value="${product.sort_order || 0}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">状态</label>
+                    <select class="form-select" id="form_is_active">
+                        <option value="true" ${product.is_active ? 'selected' : ''}>上架</option>
+                        <option value="false" ${!product.is_active ? 'selected' : ''}>下架</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalSaveBtn').style.display = 'inline-block';
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    } catch (error) {
+        showMessage('加载产品详情失败', 'error');
+    }
+}
+
+async function editService(id) {
+    try {
+        const service = await apiRequest(`/services/${id}`);
+        currentEditId = id;
+        currentEditType = 'service';
+        
+        document.getElementById('editModalTitle').textContent = '编辑服务';
+        document.getElementById('editModalBody').innerHTML = `
+            <div class="mb-3">
+                <label class="form-label fw-medium">服务名称 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="form_name" value="${service.name || ''}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">图标类名</label>
+                <input type="text" class="form-control" id="form_icon" value="${service.icon || ''}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">简短描述</label>
+                <input type="text" class="form-control" id="form_short_desc" value="${service.short_desc || ''}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">详细描述</label>
+                <textarea class="form-control" id="form_description" rows="4">${service.description || ''}</textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">排序</label>
+                    <input type="number" class="form-control" id="form_sort_order" value="${service.sort_order || 0}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">状态</label>
+                    <select class="form-select" id="form_is_active">
+                        <option value="true" ${service.is_active ? 'selected' : ''}>启用</option>
+                        <option value="false" ${!service.is_active ? 'selected' : ''}>禁用</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalSaveBtn').style.display = 'inline-block';
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    } catch (error) {
+        showMessage('加载服务详情失败', 'error');
+    }
+}
+
+async function editCase(id) {
+    try {
+        const item = await apiRequest(`/cases/${id}`);
+        currentEditId = id;
+        currentEditType = 'case';
+        
+        document.getElementById('editModalTitle').textContent = '编辑案例';
+        document.getElementById('editModalBody').innerHTML = `
+            <div class="mb-3">
+                <label class="form-label fw-medium">案例标题 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="form_title" value="${item.title || ''}" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">客户名称</label>
+                    <input type="text" class="form-control" id="form_client" value="${item.client || ''}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">分类</label>
+                    <input type="text" class="form-control" id="form_category" value="${item.category || ''}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">封面图片URL</label>
+                <input type="url" class="form-control" id="form_image_url" value="${item.image_url || ''}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">简短描述</label>
+                <input type="text" class="form-control" id="form_short_desc" value="${item.short_desc || ''}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">案例内容</label>
+                <textarea class="form-control" id="form_content" rows="6">${item.content || ''}</textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-medium">排序</label>
+                    <input type="number" class="form-control" id="form_sort_order" value="${item.sort_order || 0}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-medium">推荐案例</label>
+                    <select class="form-select" id="form_is_featured">
+                        <option value="true" ${item.is_featured ? 'selected' : ''}>是</option>
+                        <option value="false" ${!item.is_featured ? 'selected' : ''}>否</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-medium">状态</label>
+                    <select class="form-select" id="form_is_active">
+                        <option value="true" ${item.is_active ? 'selected' : ''}>启用</option>
+                        <option value="false" ${!item.is_active ? 'selected' : ''}>禁用</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalSaveBtn').style.display = 'inline-block';
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    } catch (error) {
+        showMessage('加载案例详情失败', 'error');
+    }
+}
+
+async function editDocument(id) {
+    try {
+        const item = await apiRequest(`/documents/${id}`);
+        currentEditId = id;
+        currentEditType = 'document';
+        
+        document.getElementById('editModalTitle').textContent = '编辑文档';
+        document.getElementById('editModalBody').innerHTML = `
+            <div class="mb-3">
+                <label class="form-label fw-medium">文档标题 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="form_title" value="${item.title || ''}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">分类</label>
+                <input type="text" class="form-control" id="form_category" value="${item.category || ''}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">简短描述</label>
+                <input type="text" class="form-control" id="form_short_desc" value="${item.short_desc || ''}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">文档内容</label>
+                <textarea class="form-control" id="form_content" rows="8">${item.content || ''}</textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">排序</label>
+                    <input type="number" class="form-control" id="form_sort_order" value="${item.sort_order || 0}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-medium">状态</label>
+                    <select class="form-select" id="form_is_active">
+                        <option value="true" ${item.is_active ? 'selected' : ''}>启用</option>
+                        <option value="false" ${!item.is_active ? 'selected' : ''}>禁用</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalSaveBtn').style.display = 'inline-block';
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+    } catch (error) {
+        showMessage('加载文档详情失败', 'error');
+    }
+}
+</script>
+{% endblock %}
