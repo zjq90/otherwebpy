@@ -1,0 +1,95 @@
+{
+    "pages": [
+        {
+            "path": "pages/login/login",
+            "style": {
+                "navigationBarTitleText": "登录",
+                "navigationStyle": "default"
+            }
+        },
+        {
+            "path": "pages/register/register",
+            "style": {
+                "navigationBarTitleText": "注册",
+                "navigationStyle": "default"
+            }
+        },
+        {
+            "path": "pages/index/index",
+            "style": {
+                "navigationBarTitleText": "首页",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/posts/posts",
+            "style": {
+                "navigationBarTitleText": "动态广场",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/friends/friends",
+            "style": {
+                "navigationBarTitleText": "好友",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/challenges/challenges",
+            "style": {
+                "navigationBarTitleText": "挑战活动",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/invitations/invitations",
+            "style": {
+                "navigationBarTitleText": "邀请有礼",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/mine/mine",
+            "style": {
+                "navigationBarTitleText": "我的",
+                "navigationStyle": "custom"
+            }
+        }
+    ],
+    "globalStyle": {
+        "navigationBarTextStyle": "black",
+        "navigationBarTitleText": "健身社交",
+        "navigationBarBackgroundColor": "#ffffff",
+        "backgroundColor": "#f5f5f5",
+        "backgroundTextStyle": "dark"
+    },
+    "tabBar": {
+        "color": "#999999",
+        "selectedColor": "#4CAF50",
+        "borderStyle": "black",
+        "backgroundColor": "#ffffff",
+        "list": [
+            {
+                "pagePath": "pages/index/index",
+                "text": "首页"
+            },
+            {
+                "pagePath": "pages/posts/posts",
+                "text": "动态"
+            },
+            {
+                "pagePath": "pages/friends/friends",
+                "text": "好友"
+            },
+            {
+                "pagePath": "pages/challenges/challenges",
+                "text": "挑战"
+            },
+            {
+                "pagePath": "pages/mine/mine",
+                "text": "我的"
+            }
+        ]
+    }
+}
