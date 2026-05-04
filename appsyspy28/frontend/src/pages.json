@@ -1,0 +1,121 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationBarBackgroundColor": "#2563eb",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tabbar/calendar/calendar",
+      "style": {
+        "navigationBarTitleText": "课程日历",
+        "navigationBarBackgroundColor": "#2563eb",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tabbar/booking/booking",
+      "style": {
+        "navigationBarTitleText": "我的预约",
+        "navigationBarBackgroundColor": "#2563eb",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tabbar/checkin/checkin",
+      "style": {
+        "navigationBarTitleText": "签到",
+        "navigationBarBackgroundColor": "#2563eb",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tabbar/private/private",
+      "style": {
+        "navigationBarTitleText": "私教约课",
+        "navigationBarBackgroundColor": "#2563eb",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/tabbar/mine/mine",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationBarBackgroundColor": "#2563eb",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/class-detail/class-detail",
+      "style": {
+        "navigationBarTitleText": "课程详情",
+        "navigationBarBackgroundColor": "#2563eb",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/coach-detail/coach-detail",
+      "style": {
+        "navigationBarTitleText": "教练详情",
+        "navigationBarBackgroundColor": "#2563eb",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/booking-history/booking-history",
+      "style": {
+        "navigationBarTitleText": "预约记录",
+        "navigationBarBackgroundColor": "#2563eb",
+        "navigationBarTextStyle": "white"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "健身预约",
+    "navigationBarBackgroundColor": "#2563eb",
+    "backgroundColor": "#f3f4f6",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#6b7280",
+    "selectedColor": "#2563eb",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/tabbar/calendar/calendar",
+        "text": "课程",
+        "iconPath": "static/icons/calendar.png",
+        "selectedIconPath": "static/icons/calendar-active.png"
+      },
+      {
+        "pagePath": "pages/tabbar/booking/booking",
+        "text": "预约",
+        "iconPath": "static/icons/booking.png",
+        "selectedIconPath": "static/icons/booking-active.png"
+      },
+      {
+        "pagePath": "pages/tabbar/checkin/checkin",
+        "text": "签到",
+        "iconPath": "static/icons/checkin.png",
+        "selectedIconPath": "static/icons/checkin-active.png"
+      },
+      {
+        "pagePath": "pages/tabbar/private/private",
+        "text": "私教",
+        "iconPath": "static/icons/private.png",
+        "selectedIconPath": "static/icons/private-active.png"
+      },
+      {
+        "pagePath": "pages/tabbar/mine/mine",
+        "text": "我的",
+        "iconPath": "static/icons/mine.png",
+        "selectedIconPath": "static/icons/mine-active.png"
+      }
+    ]
+  }
+}
