@@ -1,0 +1,128 @@
+{
+    "pages": [
+        {
+            "path": "pages/tabbar/home/index",
+            "style": {
+                "navigationBarTitleText": "首页",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/tabbar/card/index",
+            "style": {
+                "navigationBarTitleText": "卡包"
+            }
+        },
+        {
+            "path": "pages/tabbar/shop/index",
+            "style": {
+                "navigationBarTitleText": "商城"
+            }
+        },
+        {
+            "path": "pages/tabbar/profile/index",
+            "style": {
+                "navigationBarTitleText": "我的",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/login/index",
+            "style": {
+                "navigationBarTitleText": "登录"
+            }
+        },
+        {
+            "path": "pages/register/index",
+            "style": {
+                "navigationBarTitleText": "注册"
+            }
+        },
+        {
+            "path": "pages/profile/edit/index",
+            "style": {
+                "navigationBarTitleText": "编辑资料"
+            }
+        },
+        {
+            "path": "pages/card/detail/index",
+            "style": {
+                "navigationBarTitleText": "会员卡详情"
+            }
+        },
+        {
+            "path": "pages/order/create/index",
+            "style": {
+                "navigationBarTitleText": "确认订单"
+            }
+        },
+        {
+            "path": "pages/order/pay/index",
+            "style": {
+                "navigationBarTitleText": "支付"
+            }
+        },
+        {
+            "path": "pages/order/list/index",
+            "style": {
+                "navigationBarTitleText": "我的订单"
+            }
+        },
+        {
+            "path": "pages/order/detail/index",
+            "style": {
+                "navigationBarTitleText": "订单详情"
+            }
+        },
+        {
+            "path": "pages/consumption/list/index",
+            "style": {
+                "navigationBarTitleText": "消费记录"
+            }
+        },
+        {
+            "path": "pages/consumption/bill/index",
+            "style": {
+                "navigationBarTitleText": "月度账单"
+            }
+        }
+    ],
+    "globalStyle": {
+        "navigationBarTextStyle": "white",
+        "navigationBarTitleText": "会员管理系统",
+        "navigationBarBackgroundColor": "#4A90D9",
+        "backgroundColor": "#F5F5F5"
+    },
+    "tabBar": {
+        "color": "#999999",
+        "selectedColor": "#4A90D9",
+        "borderStyle": "black",
+        "backgroundColor": "#FFFFFF",
+        "list": [
+            {
+                "pagePath": "pages/tabbar/home/index",
+                "text": "首页",
+                "iconPath": "static/tabbar/home.png",
+                "selectedIconPath": "static/tabbar/home-active.png"
+            },
+            {
+                "pagePath": "pages/tabbar/card/index",
+                "text": "卡包",
+                "iconPath": "static/tabbar/card.png",
+                "selectedIconPath": "static/tabbar/card-active.png"
+            },
+            {
+                "pagePath": "pages/tabbar/shop/index",
+                "text": "商城",
+                "iconPath": "static/tabbar/shop.png",
+                "selectedIconPath": "static/tabbar/shop-active.png"
+            },
+            {
+                "pagePath": "pages/tabbar/profile/index",
+                "text": "我的",
+                "iconPath": "static/tabbar/profile.png",
+                "selectedIconPath": "static/tabbar/profile-active.png"
+            }
+        ]
+    }
+}
