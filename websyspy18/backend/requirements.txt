@@ -1,0 +1,22 @@
+# 物业综合管理系统 - 后端依赖
+# FastAPI框架
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# 数据库
+sqlalchemy==2.0.25
+pydantic-settings==2.1.0
+
+# 数据验证
+pydantic==2.5.3
+
+# 异步支持
+python-multipart==0.0.6
+
+# 可选：用于生产环境的数据库连接池
+# psycopg2-binary==2.9.9  # PostgreSQL
+# mysqlclient==2.2.4      # MySQL
+
+# 开发工具
+# pytest==7.4.4
+# pytest-cov==4.1.0
