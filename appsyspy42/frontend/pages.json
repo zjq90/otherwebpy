@@ -1,0 +1,121 @@
+{
+    "pages": [
+        {
+            "path": "pages/login/login",
+            "style": {
+                "navigationBarTitleText": "登录",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/index/index",
+            "style": {
+                "navigationBarTitleText": "首页"
+            }
+        },
+        {
+            "path": "pages/inventory/list",
+            "style": {
+                "navigationBarTitleText": "库存查询"
+            }
+        },
+        {
+            "path": "pages/inventory/detail",
+            "style": {
+                "navigationBarTitleText": "库存详情"
+            }
+        },
+        {
+            "path": "pages/inventory/alerts",
+            "style": {
+                "navigationBarTitleText": "库存预警"
+            }
+        },
+        {
+            "path": "pages/purchase/list",
+            "style": {
+                "navigationBarTitleText": "采购申请"
+            }
+        },
+        {
+            "path": "pages/purchase/detail",
+            "style": {
+                "navigationBarTitleText": "采购详情"
+            }
+        },
+        {
+            "path": "pages/purchase/create",
+            "style": {
+                "navigationBarTitleText": "提交采购申请"
+            }
+        },
+        {
+            "path": "pages/supplier/list",
+            "style": {
+                "navigationBarTitleText": "供应商管理"
+            }
+        },
+        {
+            "path": "pages/supplier/detail",
+            "style": {
+                "navigationBarTitleText": "供应商详情"
+            }
+        },
+        {
+            "path": "pages/supplier/evaluation",
+            "style": {
+                "navigationBarTitleText": "供应商评价"
+            }
+        },
+        {
+            "path": "pages/user/profile",
+            "style": {
+                "navigationBarTitleText": "个人中心"
+            }
+        }
+    ],
+    "globalStyle": {
+        "navigationBarTextStyle": "white",
+        "navigationBarTitleText": "库存管理系统",
+        "navigationBarBackgroundColor": "#1677ff",
+        "backgroundColor": "#f5f5f5"
+    },
+    "tabBar": {
+        "color": "#999999",
+        "selectedColor": "#1677ff",
+        "backgroundColor": "#ffffff",
+        "borderStyle": "black",
+        "list": [
+            {
+                "pagePath": "pages/index/index",
+                "text": "首页",
+                "iconPath": "static/tabbar/home.png",
+                "selectedIconPath": "static/tabbar/home-active.png"
+            },
+            {
+                "pagePath": "pages/inventory/list",
+                "text": "库存",
+                "iconPath": "static/tabbar/inventory.png",
+                "selectedIconPath": "static/tabbar/inventory-active.png"
+            },
+            {
+                "pagePath": "pages/purchase/list",
+                "text": "采购",
+                "iconPath": "static/tabbar/purchase.png",
+                "selectedIconPath": "static/tabbar/purchase-active.png"
+            },
+            {
+                "pagePath": "pages/supplier/list",
+                "text": "供应商",
+                "iconPath": "static/tabbar/supplier.png",
+                "selectedIconPath": "static/tabbar/supplier-active.png"
+            },
+            {
+                "pagePath": "pages/user/profile",
+                "text": "我的",
+                "iconPath": "static/tabbar/user.png",
+                "selectedIconPath": "static/tabbar/user-active.png"
+            }
+        ]
+    }
+}
