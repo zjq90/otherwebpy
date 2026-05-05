@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      var coverSupport = 'CSS' in window && typeof CSS.supports === 'function' && (CSS.supports('top: env(a)') || CSS.supports('top: constant(a)'))
+      document.write('<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0' + (coverSupport ? ', viewport-fit=cover' : '') + '" />')
+    </script>
+    <title>运输管理系统</title>
+    
+    <!-- 基础样式 -->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      html, body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #F5F5F5;
+      }
+      
+      #app {
+        height: 100%;
+        width: 100%;
+      }
+      
+      /* 加载动画 */
+      .loading-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
+        z-index: 9999;
+      }
+      
+      .loading-logo {
+        width: 120px;
+        height: 120px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      }
+      
+      .loading-logo-text {
+        font-size: 48px;
+        font-weight: bold;
+        color: #409EFF;
+      }
+      
+      .loading-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #FFFFFF;
+        margin-bottom: 8px;
+      }
+      
+      .loading-subtitle {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 32px;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #FFFFFF;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 加载动画（Vue初始化完成后会隐藏） -->
+    <div id="loading" class="loading-container">
+      <div class="loading-logo">
+        <span class="loading-logo-text">运</span>
+      </div>
+      <h1 class="loading-title">运输管理系统</h1>
+      <p class="loading-subtitle">Transport Management System</p>
+      <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Vue应用挂载点 -->
+    <div id="app"></div>
+    
+    <!-- 隐藏加载动画 -->
+    <script>
+      // 当Vue应用初始化完成后，隐藏加载动画
+      if (window.__UNI_FEATURE__) {
+        // uni-app特有处理
+      } else {
+        // 普通Vue应用处理
+        const originalCreateApp = window.__VUE_CREATE_APP__;
+        if (typeof originalCreateApp === 'function') {
+          window.__VUE_CREATE_APP__ = function() {
+            const result = originalCreateApp.apply(this, arguments);
+            if (result && result.mount) {
+              const originalMount = result.mount;
+              result.mount = function() {
+                const mountResult = originalMount.apply(this, arguments);
+                // 隐藏加载动画
+                setTimeout(() => {
+                  const loadingEl = document.getElementById('loading');
+                  if (loadingEl) {
+                    loadingEl.style.transition = 'opacity 0.5s ease';
+                    loadingEl.style.opacity = '0';
+                    setTimeout(() => {
+                      loadingEl.style.display = 'none';
+                    }, 500);
+                  }
+                }, 300);
+                return mountResult;
+              };
+            }
+            return result;
+          };
+        }
+      }
+    </script>
+    
+    <!-- uni-app预注入 -->
+    <script>
+      var global = globalThis
+    </script>
+    
+    <!-- Vite 环境下的配置 -->
+    <script type="module">
+      // 隐藏加载动画的备用方案
+      setTimeout(() => {
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl && loadingEl.style.display !== 'none') {
+          loadingEl.style.transition = 'opacity 0.5s ease';
+          loadingEl.style.opacity = '0';
+          setTimeout(() => {
+            loadingEl.style.display = 'none';
+          }, 500);
+        }
+      }, 3000);
+    </script>
+    
+    <!-- 生产环境入口 (uni-app会自动注入) -->
+  </body>
+</html>
