@@ -1,0 +1,141 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+}
+
+/* 布局样式 */
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+  width: 220px;
+  background-color: #304156;
+  transition: width 0.3s;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+}
+
+/* 内容区域样式 */
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #f0f2f5;
+}
+
+.page-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* 卡片样式 */
+.content-card {
+  background: #fff;
+  border-radius: 4px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* 表格操作按钮样式 */
+.table-action-btn {
+  margin-right: 8px;
+}
+
+/* 搜索区域样式 */
+.search-form {
+  margin-bottom: 20px;
+}
+
+.search-form .el-form-item {
+  margin-bottom: 10px;
+}
+
+/* 对话框样式 */
+.dialog-footer {
+  text-align: right;
+}
+
+/* 统计卡片样式 */
+.stat-card {
+  background: #fff;
+  border-radius: 4px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.stat-card .stat-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #409eff;
+  margin: 10px 0;
+}
+
+.stat-card .stat-label {
+  font-size: 14px;
+  color: #909399;
+}
+
+.stat-card .stat-icon {
+  font-size: 40px;
+  color: #409eff;
+}
+
+/* 菜单样式 */
+.el-menu {
+  border-right: none;
+}
+
+/* 表头样式 */
+.el-table th {
+  background-color: #f5f7fa !important;
+}
+
+/* 表单样式 */
+.el-form-item__label {
+  font-weight: 500;
+}
+
+/* 分页样式 */
+.pagination-container {
+  margin-top: 20px;
+  text-align: right;
+}
+
+/* 加载状态 */
+.loading-container {
+  text-align: center;
+  padding: 50px;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 50px;
+  color: #909399;
+}
