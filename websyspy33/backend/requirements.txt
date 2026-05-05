@@ -1,0 +1,22 @@
+# 后端API服务器
+# 启动命令: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# FastAPI核心依赖
+fastapi==0.109.0
+uvicorn==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# 数据库相关
+sqlalchemy==2.0.25
+aiosqlite==0.19.0
+
+# 数据处理
+python-dateutil==2.8.2
+
+# 开发工具
+python-multipart==0.0.6
+
+# 测试工具
+pytest==7.4.4
+pytest-asyncio==0.23.3
