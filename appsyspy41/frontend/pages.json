@@ -1,0 +1,137 @@
+{
+	"pages": [
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "设备管理系统",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/device/list",
+			"style": {
+				"navigationBarTitleText": "设备列表",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/device/detail",
+			"style": {
+				"navigationBarTitleText": "设备详情",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/maintenance/task-list",
+			"style": {
+				"navigationBarTitleText": "保养任务",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/maintenance/task-detail",
+			"style": {
+				"navigationBarTitleText": "任务详情",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/maintenance/record-form",
+			"style": {
+				"navigationBarTitleText": "保养记录",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/fault/report-list",
+			"style": {
+				"navigationBarTitleText": "故障报修",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/fault/report-detail",
+			"style": {
+				"navigationBarTitleText": "报修详情",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/fault/report-form",
+			"style": {
+				"navigationBarTitleText": "提交报修",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/my/my",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"navigationBarBackgroundColor": "#1677ff",
+				"navigationBarTextStyle": "white"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "设备管理系统",
+		"navigationBarBackgroundColor": "#1677ff",
+		"backgroundColor": "#f5f5f5",
+		"backgroundTextStyle": "dark"
+	},
+	"tabBar": {
+		"color": "#999999",
+		"selectedColor": "#1677ff",
+		"backgroundColor": "#ffffff",
+		"borderStyle": "black",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "首页",
+				"iconPath": "static/tabbar/home.png",
+				"selectedIconPath": "static/tabbar/home-active.png"
+			},
+			{
+				"pagePath": "pages/device/list",
+				"text": "设备",
+				"iconPath": "static/tabbar/device.png",
+				"selectedIconPath": "static/tabbar/device-active.png"
+			},
+			{
+				"pagePath": "pages/maintenance/task-list",
+				"text": "保养",
+				"iconPath": "static/tabbar/maintenance.png",
+				"selectedIconPath": "static/tabbar/maintenance-active.png"
+			},
+			{
+				"pagePath": "pages/fault/report-list",
+				"text": "报修",
+				"iconPath": "static/tabbar/fault.png",
+				"selectedIconPath": "static/tabbar/fault-active.png"
+			},
+			{
+				"pagePath": "pages/my/my",
+				"text": "我的",
+				"iconPath": "static/tabbar/my.png",
+				"selectedIconPath": "static/tabbar/my-active.png"
+			}
+		]
+	}
+}
