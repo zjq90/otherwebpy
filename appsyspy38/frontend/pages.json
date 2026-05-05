@@ -1,0 +1,77 @@
+{
+    "pages": [
+        {
+            "path": "pages/login/login",
+            "style": {
+                "navigationBarTitleText": "登录",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/real-name-verify/real-name-verify",
+            "style": {
+                "navigationBarTitleText": "实名认证"
+            }
+        },
+        {
+            "path": "pages/tabbar/index/index",
+            "style": {
+                "navigationBarTitleText": "首页"
+            }
+        },
+        {
+            "path": "pages/tabbar/tasks/tasks",
+            "style": {
+                "navigationBarTitleText": "任务"
+            }
+        },
+        {
+            "path": "pages/tabbar/messages/messages",
+            "style": {
+                "navigationBarTitleText": "消息"
+            }
+        },
+        {
+            "path": "pages/tabbar/profile/profile",
+            "style": {
+                "navigationBarTitleText": "我的"
+            }
+        },
+        {
+            "path": "pages/production/production",
+            "style": {
+                "navigationBarTitleText": "生产任务"
+            }
+        }
+    ],
+    "globalStyle": {
+        "navigationBarTextStyle": "white",
+        "navigationBarTitleText": "多角色管理系统",
+        "navigationBarBackgroundColor": "#1890ff",
+        "backgroundColor": "#f5f5f5"
+    },
+    "tabBar": {
+        "color": "#999999",
+        "selectedColor": "#1890ff",
+        "borderStyle": "black",
+        "backgroundColor": "#ffffff",
+        "list": [
+            {
+                "pagePath": "pages/tabbar/index/index",
+                "text": "首页"
+            },
+            {
+                "pagePath": "pages/tabbar/tasks/tasks",
+                "text": "任务"
+            },
+            {
+                "pagePath": "pages/tabbar/messages/messages",
+                "text": "消息"
+            },
+            {
+                "pagePath": "pages/tabbar/profile/profile",
+                "text": "我的"
+            }
+        ]
+    }
+}

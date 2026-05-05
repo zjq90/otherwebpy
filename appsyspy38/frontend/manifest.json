@@ -1,0 +1,102 @@
+{
+    "name": "多角色管理系统",
+    "appid": "",
+    "description": "多角色管理系统 - 支持管理员、拌合站操作员、试验检测员、物资采购员、资源调度员",
+    "versionName": "1.0.0",
+    "versionCode": "100",
+    "transformPx": false,
+    "app-plus": {
+        "usingComponents": true,
+        "nvueStyleCompiler": "uni-app",
+        "compilerVersion": 3,
+        "splashscreen": {
+            "alwaysShowBeforeRender": true,
+            "waiting": true,
+            "autoclose": true,
+            "delay": 0
+        },
+        "modules": {},
+        "distribute": {
+            "android": {
+                "permissions": []
+            },
+            "ios": {}
+        }
+    },
+    "quickapp": {},
+    "mp-weixin": {
+        "appid": "",
+        "setting": {
+            "urlCheck": false,
+            "es6": true,
+            "enhance": true,
+            "postcss": true,
+            "preloadBackgroundData": false,
+            "minified": true,
+            "newFeature": false,
+            "coverView": true,
+            "nodeModules": false,
+            "autoAudits": false,
+            "showShadowRootInWxmlPanel": true,
+            "scopeDataCheck": false,
+            "uglifyFileName": false,
+            "checkInvalidKey": true,
+            "checkSiteMap": true,
+            "uploadWithSourceMap": true,
+            "compileHotReLoad": false,
+            "lazyloadPlaceholderEnable": false,
+            "useMultiFrameRuntime": true,
+            "useApiHook": true,
+            "useApiHostProcess": true,
+            "babelSetting": {
+                "ignore": [],
+                "disablePlugins": [],
+                "outputPath": ""
+            },
+            "enableEngineNative": false,
+            "useIsolateContext": true,
+            "userConfirmedBundleSwitch": false,
+            "packNpmManually": false,
+            "packNpmRelationList": [],
+            "minifyWXSS": true,
+            "showES6CompileOption": false,
+            "minifyWXML": true
+        },
+        "usingComponents": true,
+        "permission": {
+            "scope.userLocation": {
+                "desc": "您的位置信息将用于查看车辆位置"
+            }
+        }
+    },
+    "mp-alipay": {
+        "usingComponents": true
+    },
+    "mp-baidu": {
+        "usingComponents": true
+    },
+    "mp-toutiao": {
+        "usingComponents": true
+    },
+    "uniStatistics": {
+        "enable": false
+    },
+    "h5": {
+        "devServer": {
+            "port": 8080,
+            "disableHostCheck": true,
+            "proxy": {
+                "/api": {
+                    "target": "http://localhost:8000",
+                    "changeOrigin": true,
+                    "secure": false
+                }
+            }
+        },
+        "router": {
+            "mode": "hash",
+            "base": "./"
+        }
+    },
+    "vueVersion": "2"
+}
