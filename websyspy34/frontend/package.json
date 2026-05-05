@@ -1,0 +1,22 @@
+{
+  "name": "concrete-management-frontend",
+  "version": "1.0.0",
+  "description": "混凝土生产管理系统前端",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.0",
+    "element-plus": "^2.5.0",
+    "@element-plus/icons-vue": "^2.3.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.2",
+    "vite": "^4.5.2"
+  }
+}
