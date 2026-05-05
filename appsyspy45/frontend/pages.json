@@ -1,0 +1,233 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/register/register",
+      "style": {
+        "navigationBarTitleText": "注册",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/forgot-password/forgot-password",
+      "style": {
+        "navigationBarTitleText": "找回密码",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/order/create",
+      "style": {
+        "navigationBarTitleText": "预约回收",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/order/list",
+      "style": {
+        "navigationBarTitleText": "我的订单",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/order/detail",
+      "style": {
+        "navigationBarTitleText": "订单详情",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/order/track",
+      "style": {
+        "navigationBarTitleText": "订单跟踪",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/points/index",
+      "style": {
+        "navigationBarTitleText": "积分中心",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/points/history",
+      "style": {
+        "navigationBarTitleText": "积分明细",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/points/invite",
+      "style": {
+        "navigationBarTitleText": "邀请好友",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/mall/index",
+      "style": {
+        "navigationBarTitleText": "积分商城",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/mall/product",
+      "style": {
+        "navigationBarTitleText": "商品详情",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/mall/exchange",
+      "style": {
+        "navigationBarTitleText": "确认兑换",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/mall/orders",
+      "style": {
+        "navigationBarTitleText": "兑换订单",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/user/index",
+      "style": {
+        "navigationBarTitleText": "个人中心",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/user/profile",
+      "style": {
+        "navigationBarTitleText": "个人信息",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/user/address",
+      "style": {
+        "navigationBarTitleText": "收货地址",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/user/address-edit",
+      "style": {
+        "navigationBarTitleText": "编辑地址",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/user/statistics",
+      "style": {
+        "navigationBarTitleText": "回收统计",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/article/list",
+      "style": {
+        "navigationBarTitleText": "环保资讯",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/article/detail",
+      "style": {
+        "navigationBarTitleText": "资讯详情",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/chat/list",
+      "style": {
+        "navigationBarTitleText": "客服咨询",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/chat/detail",
+      "style": {
+        "navigationBarTitleText": "在线客服",
+        "navigationBarBackgroundColor": "#4CAF50",
+        "navigationBarTextStyle": "white"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "旧衣回收",
+    "navigationBarBackgroundColor": "#4CAF50",
+    "backgroundColor": "#F5F5F5",
+    "app-plus": {
+      "background": "#efeff4"
+    }
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#4CAF50",
+    "borderStyle": "black",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/order/create",
+        "text": "预约回收"
+      },
+      {
+        "pagePath": "pages/mall/index",
+        "text": "积分商城"
+      },
+      {
+        "pagePath": "pages/article/list",
+        "text": "环保资讯"
+      },
+      {
+        "pagePath": "pages/user/index",
+        "text": "我的"
+      }
+    ]
+  }
+}
